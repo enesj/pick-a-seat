@@ -13,6 +13,24 @@ _admin@localhost.de_ and password: _admin_ to a new database)
 3. Run `lein figwheel` to start figwheel and compile the clojurescript.
 4. Run `lein rel-jar` to generate a runnable jar file.
 
+
+1. lein repl
+(use 'figwheel-sidecar.repl-api)
+(start-figwheel!)
+(cljs-repl)
+
+SHIFT-INSERT ---> PASTE !!!!!
+
+KOMPILACIJA BEZ FIGWHEEL-a !!!!
+
+lein with-profile -dev,+uberjar cljsbuild once adv
+
+PROMJENA KONFIGURACIJE !!!!
+
+java -jar -Dclosp-config-path=./resources/jus.edn jus-new.jar
+
+
+
 ## Features
 * closp-crud integration
 * SQlite database on filesystem as a default

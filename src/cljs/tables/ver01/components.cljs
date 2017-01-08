@@ -6,7 +6,6 @@
             [tables.ver01.selection-utils :as su])
   (:import [goog.events EventType]))
 
-
 (defn drag-move-fn [on-drag start]
   (fn [evt]
     ;pageY (aget evt "event_" "pageY")  XY poyicija misa na strani
@@ -20,6 +19,7 @@
     (swap! td/tables-state update-in [:tables] (fn [x] (transform [ALL LAST] #(assoc % :hide-stools false) x)))
     (aset js/document "body" "style" "cursor" "default")))
 
+
 (defn dragging
   ([on-drag start sel-top-lefts]
    (let [drag-move (drag-move-fn (on-drag sel-top-lefts) start)
@@ -28,30 +28,26 @@
      (events/listen js/window EventType.MOUSEUP drag-end))))
 
 (defn table [{:keys [on-drag]} table-data-atom]
-  (let [settings @td/settings-base
-        table-data @table-data-atom
-        table-dims (:table-dims settings)
-        {:keys [seats sides rs selected rotation pos block]} table-data
+  (let [table-data @table-data-atom
+        {:keys [id rs selected pos block stools stroke class hide-stools]} table-data
         [x y] pos
-        r (if rotation :r :s)
         rs-dir (vals rs)
-        [width1 height1] (if seats (seats table-dims))
-        [width height] (if (= r :r) [width1 height1] [height1 width1])]
+        [width height] (td/table-dims stools)]
     [:g
-     (if-not (table-data :hide-stools)
-       (doall (for [stool (td/stool-maps x y width height seats sides r rs-dir)
+     (if-not hide-stools
+       (doall (for [stool (td/stool-maps x y width height rs-dir stools)
                     :let [stool-data (val stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))
-     [:rect (merge td/table-defaults {:class            (if (table-data :class) (table-data :class) (td/table-defaults :class))
-                                      :id               (table-data :id)
+     [:rect (merge td/table-defaults {:class            (if class class (td/table-defaults :class))
+                                      :id               id
                                       :x                x
                                       :y                y
                                       :width            width
                                       :height           height
                                       :rx               (* width 0.2)
                                       :ry               (* height 0.2)
-                                      :stroke           (if (table-data :stroke) (table-data :stroke) (td/table-defaults :stroke))
+                                      :stroke           (if stroke stroke (td/table-defaults :stroke))
                                       :stroke-dasharray (if selected "5,5")
                                       :d                (if selected "M5 20 l215 0")
                                       :on-mouse-down    (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) (:pos table-data)]]))})]
