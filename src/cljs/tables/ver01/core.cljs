@@ -22,6 +22,11 @@
    :all              (comp-paths ALL ALL)
    :all-last         (comp-paths ALL LAST)})
 
+
+
+
+
+
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
     (swap! td/tables-state assoc-in [:tables id :rs] nil)
@@ -47,28 +52,28 @@
   (fn [x-org y-org start tables ctrl]
     (let [tables-collection (into (vals tables) (:borders @td/settings-base))
           {:keys [selected show active]} (:selection @td/tables-state)
-          [xs ys] start
+          [x-start y-start] start
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
                           (let [id (first ids)
                                 [xp yp] (second ids)
-                                x-new ( - x-org ( - xs xp))
-                                y-new ( - y-org ( - ys yp))
+                                x-new ( - x-org ( - x-start xp))
+                                y-new ( - y-org ( - y-start yp))
                                 table-my (first (filterv #(= (:id %) id) tables-collection))
-                                {:keys [x y w h rs hide-stools block]} table-my
-                                x-new (if (> x-new 0) x-new x)
-                                y-new (if (> y-new 0) y-new y)
-                                table-x (assoc table-my :x x-new :rect-right (+ x-new (:width table-my)))
-                                table-y (assoc table-my :y y-new :rect-bottom (+ y-new (:height table-my)))
-                                table-xy (merge table-my {:y y-new :x x-new :rect-right (+ x-new (:width table-my)) :rect-bottom (+ y-new (:height table-my))})
                                 tables-other (filterv #(not= (:id %) id) tables-collection)
+                                {:keys [x y width height rs hide-stools block]} table-my
+                                x-new (if (pos? x-new) x-new x)
+                                y-new (if (pos? y-new) y-new y)
+                                table-x (assoc table-my :x x-new :rect-right (+ x-new width))
+                                table-y (assoc table-my :y y-new :rect-bottom (+ y-new height))
+                                table-xy (assoc table-my :x x-new :y y-new  :rect-right (+ x-new width) :rect-bottom (+ y-new height))
                                 tables-collision (if sel? (into [] (remove #((set selected) (:id %))) tables-other) tables-other)
                                 direction-xy (doall
                                                (for [table tables-collision
                                                      :let [dir (u/collides-with table table-xy)]
                                                      :when (not= false dir)]
                                                  dir))
-                                direction1 (if (and (not sel?) direction-xy)
+                                direction1 (when (and (not sel?) direction-xy)
                                              (doall
                                                (for [table tables-collision
                                                      :let [dir (u/collides-with table table-x table-y)]
@@ -85,25 +90,25 @@
                                                                                    :when (not= false dir)]
                                                                                dir)))
                                             close1)))]
-                            {:id     id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools :x (Math/round x ) :y (Math/round y) :x-new (Math/round x-new)
+                            {:id id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools :x (Math/round x ) :y (Math/round y) :x-new (Math/round x-new)
                              :x-move (Math/round x-move ) :y-new (Math/round y-new) :y-move (Math/round y-move) :block block :ctrl ctrl :close close :slected-ids selected :sel? sel?
                              :width (Math/round (:width table-my)) :height (Math/round (:height table-my))})))]
       (let [test-block (seq (flatten (mapv :dirxy result)))
             update-data (atom {})]
         (do
           (doall (for [x result]
-                   (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x]
-
-                     (if (and test-block selected)
+                   (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x
+                         [x-close y-close] close]
+                     (when (and test-block selected)
                        (do
                          (swap! update-data assoc-in [id [:selection :show]] true)))
                      (when-not (and sel? test-block)
                        (if (and ctrl (seq close))
-                         (do
-                             (swap! update-data assoc-in [id [:tables id :x]] (first close))
-                             (swap! update-data assoc-in [id [:tables id :y]] (second close))
-                             (swap! update-data assoc-in [id [:tables id :rect-bottom]] (+ (second  close) height))
-                             (swap! update-data assoc-in [id [:tables id :rect-right]] (+ (first  close) width))
+                         (do (swap! update-data #( -> %
+                                                      (assoc-in [id [:tables id :x]] x-close)
+                                                      (assoc-in [id [:tables id :y]] y-close)
+                                                      (assoc-in [id [:tables id :rect-bottom]] (+ y-close height))
+                                                      (assoc-in [id [:tables id :rect-right]] (+ x-close width))))
                              (remove-seats close id))
                          (do
                            (if (and rs dirxy) (reset-seats id tables))
@@ -118,22 +123,21 @@
                                (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])
                                (if (not= :xy dir)
                                  (do
-                                   (swap! update-data assoc-in [id [:tables id :x]] x-move)
-                                   (swap! update-data assoc-in [id [:tables id :y]] y-move)
-                                   (swap! update-data assoc-in [id [:tables id :rect-right]] (+ x-move width))
-                                   (swap! update-data assoc-in [id [:tables id :rect-bottom]] (+ y-move height))
+                                   (swap! update-data #( -> %
+                                                         (assoc-in [id [:tables id :x]] x-move)
+                                                         (assoc-in [id [:tables id :y]] y-move)
+                                                         (assoc-in [id [:tables id :rect-right]] (+ x-move width))
+                                                         (assoc-in [id [:tables id :rect-bottom]] (+ y-move height))))
                                    (aset js/document "body" "style" "cursor" "move"))
                                  (aset js/document "body" "style" "cursor" "not-allowed")))
                              (do (aset js/document "body" "style" "cursor" "move")
                                  (swap! update-data #( -> %
                                                          (assoc-in [id [:tables id :block]] nil)
-                                                         ;(assoc-in [id [:tables id :pos]] [x-new y-new])
                                                          (assoc-in [id [:tables id :x]] x-new)
                                                          (assoc-in [id [:tables id :y]] y-new)
                                                          (assoc-in [id [:tables id :rect-right]] (+ x-new width))
                                                          (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
                      (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
-          ;(println @update-data)
           (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                         (compiled-select (:all specter-paths)
                                                                          (mapv vec (compiled-select (:all-last specter-paths) @update-data))))))))))))
@@ -147,15 +151,12 @@
    (doall (for [id ids]
             ^{:key id} [c/table {:on-drag (move-tables)} (r/cursor tables [id])]))])
 
-
-
 (defn tables []
   (let [spoints @td/tables-state
         selection (:selection spoints)
         tables (:tables spoints)
         [x y] (:svg spoints)
-        {xsel :x ysel :y} (:start selection)
-        {x1sel :x1 y1sel :y1} (:end selection)
+        [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
         w (/ (.-innerWidth js/window) 1.6)
         h (/ w 1.3)
         {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths]
@@ -176,10 +177,10 @@
                              end {:x1 x-current :y1 y-current}
                              direction (filterv boolean (doall (for [table
                                                                      (conj (into (vals tables) (:borders @td/settings-base))
-                                                                           {:id :1 :x xsel :y ysel :width ( - x1sel xsel ( - 20)) :height ( - y1sel ysel ( - 20))
-                                                                            :rect-right (+ x1sel 20) :rect-bottom (+ y1sel 20) :pos [xsel ysel]})
-                                                                     :let [dir (u/collides-sel table {:id 1 :x x-current :y y-current :width 1 :height 1
-                                                                                                      :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) :pos [x-current y-current]} 0)]
+                                                                           {:id         :1 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s ( - 20)) :height ( - y-sel-e y-sel-s ( - 20))
+                                                                            :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
+                                                                     :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
+                                                                                                      :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) } 0)]
                                                                      :when (not= false dir)]
                                                                  dir)))]
                          (if (empty? direction)
@@ -207,25 +208,21 @@
                        (do
                          (swap! td/tables-state assoc-in [:selection :active] false)
                          (if (and (= :1 (u/collides-sel {:id :1 :x ( - (.-clientX e) x) :y ( - (.-clientY e) y) :width 1 :height 1 :rect-right ( - (.-clientX e) x ( - 1)) :rect-bottom ( - (.-clientY e) y ( - 1))}
-                                                        {:id :2 :x xsel :y ysel :width ( - x1sel xsel) :height ( - y1sel ysel) :rect-right x1sel :rect-bottom y1sel} 0))
+                                                        {:id :2 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s) :height ( - y-sel-e y-sel-s) :rect-right x-sel-e :rect-bottom y-sel-e} 0))
                                   (:selected selection))
                            (swap! td/tables-state #(compiled-setval selection-show true %)))))
       :on-mouse-move (fn [e]
                        (let [x-current ( - (.-clientX e) x)
                              y-current ( - (.-clientY e) y)
                              start (:start selection)
-                             offset (:offset selection)
                              end {:x1 x-current :y1 y-current}
-                             x (:x start)
-                             y (:y start)
-                             x1 (:x1 end)
-                             y1 (:y1 end)]
-
+                             offset (:offset selection)
+                             [[x y] [x1 y1]] (u/start-end start end)]
                          (when (:active selection)
                            (let [sel (filterv boolean (doall (for [table (vals tables)]
-                                                               (u/collides-sel-active table {:id  1 :x x :y y
+                                                               (u/collides-sel-active table {:id         1 :x x :y y
                                                                                              :width      ( - x1 x) :height ( - y1 y)
-                                                                                             :rect-right x1 :rect-bottom y1 :pos [x y]} 0))))
+                                                                                             :rect-right x1 :rect-bottom y1 } 0))))
                                  select-true (comp-paths :tables ALL LAST #(some (set sel) [(:id %)]) :selected)]
                              (if-not (:show selection)
                                (swap! td/tables-state assoc-in [:selection :show] true))
@@ -251,7 +248,7 @@
     (td/settings-pos (/ (.-innerWidth js/window) 1000))))
 
 
-(def tables1
+(def tables-mount
   (with-meta tables
              {:component-did-mount
               (fn [this]
@@ -266,4 +263,4 @@
   (.getElementById js/document id))
 
 (defn ^:export main []
-    (r/render [tables1] (by-id "app")))
+    (r/render [tables-mount] (by-id "app")))

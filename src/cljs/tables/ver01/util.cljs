@@ -6,13 +6,14 @@
                :let [id (key table)
                      table-v (val table)
                      {:keys [block rs x y stools]} table-v
-                     ;[x y] pos
                      [width height]  (td/table-dims stools);))
                      rect-right (+ x width)
                      rect-bottom (+ y height)
                      rect {:width width :height height :rect-right rect-right :rect-bottom rect-bottom}]]
            (swap! td/tables-state update-in [:tables id ]  #(merge % rect)))))
 
+(defn start-end [start end]
+  ((juxt (partial mapv min ) (partial mapv max))   (vals start) (vals end)))
 
 
 (def d 2)
@@ -28,14 +29,11 @@
 (defn collides-sel-active
   [one t-xy d]
   (let [{:keys [x y width height rect-right rect-bottom]} t-xy
-        [x1 width1] (if (neg? width) [rect-right ( - width)] [x width])
-        [y1 height1] (if (neg? height) [rect-bottom ( - height)] [y height])
-        [rect-right rect-bottom ] [(+ x1 width1) (+ y1 height1)]
-        { x :x y :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
+        { x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
     (cond
-      (<+ d x x1) false
+      (<+ d x1 x) false
       (>+ d rect-right1 rect-right) false
-      (<+ d y y1) false
+      (<+ d y1 y) false
       (>+ d rect-bottom1 rect-bottom) false
       :else (:id one))))
 
@@ -43,15 +41,12 @@
   [one t-xy d]
   (let [
          {:keys [x y width height rect-right rect-bottom]} t-xy
-         [x1 width1](if (neg? width) [rect-right (- width)] [x width])
-         [y1 height1](if (neg? height) [rect-bottom (- height)] [y height])
-         [rect-right rect-bottom] [(+ x1 width1) (+ y1 height1)]
-         { x :x y :y  rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
+         { x1 :x y1 :y  rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
     (cond
-      (<+ d rect-right1 x1) false
-      (>+ d x rect-right) false
-      (<+ d rect-bottom1 y1) false
-      (>+ d y rect-bottom) false
+      (<+ d rect-right1 x) false
+      (>+ d x1 rect-right) false
+      (<+ d rect-bottom1 y) false
+      (>+ d y1 rect-bottom) false
       :else (:id one))))
 
 (defn collides-with
@@ -79,8 +74,6 @@
        (<+ d rect-bottom1 y) false
        (>+ d y1 rect-bottom) false
        :else {:xy id1}))))
-
-
 
 (defn distance [p1 p2]
   (let [x1 ( - (:x p1) (:x p2))
