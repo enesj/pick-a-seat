@@ -43,7 +43,6 @@
           (swap! td/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (into #{} (conj x d2)))))
           (swap! td/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (into #{} (conj x d1))))))))))
 
-
 (defn move-table [sel-top-lefts]
   (fn [x-org y-org start tables ctrl]
     (let [tables-collection (into (vals tables) (:borders @td/settings-base))
@@ -56,12 +55,12 @@
                                 x-new ( - x-org ( - xs xp))
                                 y-new ( - y-org ( - ys yp))
                                 table-my (first (filterv #(= (:id %) id) tables-collection))
-                                {:keys [x y w h rs hide-stools block pos]} table-my
+                                {:keys [x y w h rs hide-stools block]} table-my
                                 x-new (if (> x-new 0) x-new x)
                                 y-new (if (> y-new 0) y-new y)
-                                table-x (assoc table-my :x x-new :pos [x-new (second pos)] :rect-right (+ x-new (:width table-my)))
-                                table-y (assoc table-my :y y-new :pos [(first pos) y-new] :rect-bottom (+ y-new (:height table-my)))
-                                table-xy (merge table-my {:y y-new :x x-new :pos [x-new y-new] :rect-right (+ x-new (:width table-my)) :rect-bottom (+ y-new (:height table-my))})
+                                table-x (assoc table-my :x x-new :rect-right (+ x-new (:width table-my)))
+                                table-y (assoc table-my :y y-new :rect-bottom (+ y-new (:height table-my)))
+                                table-xy (merge table-my {:y y-new :x x-new :rect-right (+ x-new (:width table-my)) :rect-bottom (+ y-new (:height table-my))})
                                 tables-other (filterv #(not= (:id %) id) tables-collection)
                                 tables-collision (if sel? (into [] (remove #((set selected) (:id %))) tables-other) tables-other)
                                 direction-xy (doall
@@ -87,7 +86,7 @@
                                                                                dir)))
                                             close1)))]
                             {:id     id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools :x (Math/round x ) :y (Math/round y) :x-new (Math/round x-new)
-                             :x-move (Math/round x-move ) :y-new (Math/round y-new) :y-move (Math/round y-move) :block block :ctrl ctrl :close (mapv Math/round  close) :slected-ids selected :sel? sel?
+                             :x-move (Math/round x-move ) :y-new (Math/round y-new) :y-move (Math/round y-move) :block block :ctrl ctrl :close close :slected-ids selected :sel? sel?
                              :width (Math/round (:width table-my)) :height (Math/round (:height table-my))})))]
       (let [test-block (seq (flatten (mapv :dirxy result)))
             update-data (atom {})]
@@ -100,7 +99,7 @@
                          (swap! update-data assoc-in [id [:selection :show]] true)))
                      (when-not (and sel? test-block)
                        (if (and ctrl (seq close))
-                         (do (swap! update-data assoc-in [id [:tables id :pos]] (take 2 close))
+                         (do
                              (swap! update-data assoc-in [id [:tables id :x]] (first close))
                              (swap! update-data assoc-in [id [:tables id :y]] (second close))
                              (swap! update-data assoc-in [id [:tables id :rect-bottom]] (+ (second  close) height))
@@ -119,7 +118,6 @@
                                (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])
                                (if (not= :xy dir)
                                  (do
-                                   (swap! update-data assoc-in [id [:tables id :pos]] [x-move y-move])
                                    (swap! update-data assoc-in [id [:tables id :x]] x-move)
                                    (swap! update-data assoc-in [id [:tables id :y]] y-move)
                                    (swap! update-data assoc-in [id [:tables id :rect-right]] (+ x-move width))
@@ -129,7 +127,7 @@
                              (do (aset js/document "body" "style" "cursor" "move")
                                  (swap! update-data #( -> %
                                                          (assoc-in [id [:tables id :block]] nil)
-                                                         (assoc-in [id [:tables id :pos]] [x-new y-new])
+                                                         ;(assoc-in [id [:tables id :pos]] [x-new y-new])
                                                          (assoc-in [id [:tables id :x]] x-new)
                                                          (assoc-in [id [:tables id :y]] y-new)
                                                          (assoc-in [id [:tables id :rect-right]] (+ x-new width))

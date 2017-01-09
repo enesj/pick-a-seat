@@ -29,8 +29,7 @@
 
 (defn table [{:keys [on-drag]} table-data-atom]
   (let [table-data @table-data-atom
-        {:keys [id rs selected pos block stools stroke class hide-stools]} table-data
-        [x y] pos
+        {:keys [x y id rs selected block stools stroke class hide-stools]} table-data
         rs-dir (vals rs)
         [width height] (td/table-dims stools)]
     [:g
@@ -50,7 +49,7 @@
                                       :stroke           (if stroke stroke (td/table-defaults :stroke))
                                       :stroke-dasharray (if selected "5,5")
                                       :d                (if selected "M5 20 l215 0")
-                                      :on-mouse-down    (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) (:pos table-data)]]))})]
+                                      :on-mouse-down    (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]]))})]
      (if block [:rect (merge td/sel-defaults {:x      (first block)
                                               :y      (second block)
                                               :rx     (* x 0.01)
@@ -61,7 +60,7 @@
 (defn selection-rect [on-drag spoints]
   (let [{:keys [selection tables]} spoints
         selected (:selected selection)
-        sel-top-lefts (mapv #(vector % (:pos (tables %))) selected)
+        sel-top-lefts (mapv #(vector % ((juxt :x :y) (tables %))) selected)
         sel-start-end (merge (:start selection) (:end selection))
         {:keys [x y x1 y1]} sel-start-end
         width (- x1 x)
