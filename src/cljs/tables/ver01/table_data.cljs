@@ -21,7 +21,6 @@
                         22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :stools [1 1 2 2]}
                         24 {:id 24 :x 300 :y 300 :hide-stools false :selected false :stools [1 1 3 3]}
                         25 {:id 25 :x 300 :y 120 :hide-stools false :selected false :stools [0 0 0 3]}}
-            :window    {}
             :timer     0
             :scale     {:zoom 1 :size 1}
             :pos       {:x 400 :y 300}
@@ -30,13 +29,15 @@
 
 
 (defonce settings-base
-         (r/atom
-           {:table-stool [30 8]
-            :stool-dims {:normal {:w 8 :h 4} :small {:w 4 :h 2}}
-            :menu-dims  [25 20 5]
-            :borders    [{:id :l :x 0 :y 0 :rect-right 5 :rect-bottom 2000}
-                         {:id :t :x 0 :y 0 :rect-right 625 :rect-bottom 5}
-                         {:id :r :x 620 :y 0 :rect-right 1000 :rect-bottom 2000}]}))
+         (let [[w h] ["2000px" "2000px"]]
+           (r/atom
+             {:window    {:w w :h w}
+              :table-stool [30 8]
+              :stool-dims {:normal {:w 8 :h 4} :small {:w 4 :h 2}}
+              :menu-dims  [25 20 5]
+              :borders    [{:id :l :x 0 :y 0 :rect-right 5 :rect-bottom h}
+                           {:id :t :x 0 :y 0 :rect-right w :rect-bottom 5}
+                           {:id :r :x 620 :y 0 :rect-right w :rect-bottom h}]})))
 
 (def menu-defaults
   {:width        30
@@ -80,7 +81,8 @@
   {:table-stool (comp-paths :table-stool)
    :menu-dims (comp-paths :menu-dims)
    :stool-dims (comp-paths :stool-dims ALL LAST ALL LAST)
-   :zoom-pos (comp-paths :tables ALL LAST :pos ALL)
+   :zoom-x (comp-paths :tables ALL LAST :x)
+   :zoom-y (comp-paths :tables ALL LAST :y)
    :sel-start (comp-paths :selection :start ALL LAST)
    :sel-end (comp-paths :selection :end ALL LAST)
    :zoom (comp-paths :scale :zoom)
@@ -107,7 +109,8 @@
         zoom (/ zoom-new zoom-old)]
     (do (swap! tables-state
                (fn [x] (->> x
-                            (compiled-transform (:zoom-pos specter-paths-data) #(* zoom %))
+                            (compiled-transform (:zoom-x specter-paths-data) #(* zoom %))
+                            (compiled-transform (:zoom-y specter-paths-data) #(* zoom %))
                             (compiled-setval (:zoom specter-paths-data) zoom-new))))
         (when (not (empty? (:selected (:selection @tables-state))))
           (swap! tables-state
