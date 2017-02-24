@@ -6,10 +6,14 @@
       [tables.ver01.components :as c]
       [tables.ver01.table_data :as td]
       [tables.ver01.themes :as t]
-      [tables.ver01.util :as u])
+      [tables.ver01.util :as u]
+      [tables.ver01.selection-utils :as su]
+      [devtools.core :as devtools]
+      [devtools.toolbox :as toolbox])
     (:import [goog.events EventType]))
 
   (enable-console-print!)
+  (devtools/install!)
 
 (def specter-paths
   {:selection-show   (comp-paths :selection :show)
@@ -21,9 +25,6 @@
    :selection-start  (comp-paths :selection :start)
    :all              (comp-paths ALL ALL)
    :all-last         (comp-paths ALL LAST)})
-
-
-
 
 
 
@@ -92,9 +93,9 @@
                                             close1)))]
                             {:id id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools :x (Math/round x ) :y (Math/round y) :x-new (Math/round x-new)
                              :x-move (Math/round x-move ) :y-new (Math/round y-new) :y-move (Math/round y-move) :block block :ctrl ctrl :close close :slected-ids selected :sel? sel?
-                             :width (Math/round (:width table-my)) :height (Math/round (:height table-my))})))]
-      (let [test-block (seq (flatten (mapv :dirxy result)))
-            update-data (atom {})]
+                             :width (Math/round (:width table-my)) :height (Math/round (:height table-my))})))
+          test-block (seq (flatten (mapv :dirxy result)))
+          update-data (atom {})]
         (do
           (doall (for [x result]
                    (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x
@@ -138,9 +139,10 @@
                                                          (assoc-in [id [:tables id :rect-right]] (+ x-new width))
                                                          (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
                      (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
+          ;(js/console.log @update-data)
           (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                         (compiled-select (:all specter-paths)
-                                                                         (mapv vec (compiled-select (:all-last specter-paths) @update-data))))))))))))
+                                                                         (mapv vec (compiled-select (:all-last specter-paths) @update-data)))))))))))
 
 
 (defn move-tables []
@@ -151,11 +153,16 @@
    (doall (for [id ids]
             ^{:key id} [c/table {:on-drag (move-tables)} (r/cursor tables [id])]))])
 
+
+(defonce init-size (r/atom 10))
+
+;(reset! init-size 5)
+
 (defn tables []
   (let [spoints @td/tables-state
         selection (:selection spoints)
         tables (:tables spoints)
-        [x y] (:svg spoints)
+        [x y] (mapv - (:svg spoints))
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
         {:keys [w h]} (:window @td/settings-base)
         {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths]
@@ -165,56 +172,63 @@
       {:fill          (:text t/palete)
        :width         w
        :height        h
-       :on-key-down   #(case (.-which %)
-                         7 (swap! td/tables-state assoc-in [:snap] true)
-                         nil)
-       :on-key-up     #(case (.-which %)
-                         7 (swap! td/tables-state assoc-in [:snap] false)
-                         nil)
-       :on-mouse-down (fn [e]
-                        (let [x-current ( - (.-clientX e) x)
-                              y-current ( - (.-clientY e) y)
-                              start {:x x-current :y y-current}
+       :on-key-down  (fn [e](.preventDefault e)
+                           (case (.-which e)
+                             7 (swap! td/tables-state assoc-in [:snap] true)
+                             nil))
+       :on-key-up     (fn [e](.preventDefault e)
+                             (case (.-which e)
+                               7 (swap! td/tables-state assoc-in [:snap] false)
+                               nil))
+       :on-mouse-down (fn [e] (.preventDefault e)
+                           (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
+                                 y-current ( + (.-clientY e)  (.-pageYOffset js/window) y)
+                                 start {:x x-current :y y-current}
+                                 end {:x1 x-current :y1 y-current}
+                                 direction (filterv boolean (doall (for [table
+                                                                         (conj (into (vals tables) (:borders @td/settings-base))
+                                                                               {:id         :1 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s ( - 20)) :height ( - y-sel-e y-sel-s ( - 20))
+                                                                                :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
+                                                                         :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
+                                                                                                          :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) } 0)]
+                                                                         :when (not= false dir)]
+                                                                     dir)))]
+                             (if (empty? direction)
+                               (do
+                                   (reset! su/selected-saved {:ids [] :tables  {}})
+                                   (swap! td/tables-state #( ->> %
+                                                              (compiled-setval selection-start start)
+                                                              (compiled-setval selection-end end)
+                                                              (compiled-setval selection-active true)
+                                                              (compiled-setval selectected-path nil)
+                                                              (compiled-setval tabale-selected false))))
+
+                               (if (some #(= :1 %) direction)
+                                   (swap! td/tables-state #( ->> %
+                                                              (compiled-setval selection-offset {:x  ( - x-current (:x (:start selection)))
+                                                                                                 :y  ( - y-current (:y (:start selection)))
+                                                                                                 :x1 ( - x-current (:x1 (:end selection)))
+                                                                                                 :y1 ( - y-current (:y1 (:end selection)))})
+                                                              (compiled-setval selection-active false)))
+                                   (swap! td/tables-state
+                                        #(compiled-setval tabale-selected false
+                                                          ( ->> %
+                                                               (compiled-setval selection-show false)
+                                                               (compiled-setval selectected-path nil)
+                                                               (compiled-setval selection-end nil)
+                                                               (compiled-setval selection-start nil))))))))
+
+       :on-mouse-up   (fn [e] (.preventDefault e)
+                        (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
+                              y-current ( + (.-clientY e) (.-pageYOffset js/window) y)
+                              start (:start selection)
                               end {:x1 x-current :y1 y-current}
-                              direction (filterv boolean (doall (for [table
-                                                                      (conj (into (vals tables) (:borders @td/settings-base))
-                                                                            {:id         :1 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s ( - 20)) :height ( - y-sel-e y-sel-s ( - 20))
-                                                                             :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
-                                                                      :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
-                                                                                                       :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) } 0)]
-                                                                      :when (not= false dir)]
-                                                                  dir)))]
-                          (if (empty? direction)
-                            (swap! td/tables-state #( ->> %
-                                                         (compiled-setval selection-start start)
-                                                         (compiled-setval selection-end end)
-                                                         (compiled-setval selection-active true)
-                                                         (compiled-setval selectected-path nil)
-                                                         (compiled-setval tabale-selected false)))
-                            (if (some #(= :1 %) direction)
-                              (swap! td/tables-state #( ->> %
-                                                           (compiled-setval selection-offset {:x  ( - x-current (:x (:start selection)))
-                                                                                              :y  ( - y-current (:y (:start selection)))
-                                                                                              :x1 ( - x-current (:x1 (:end selection)))
-                                                                                              :y1 ( - y-current (:y1 (:end selection)))})
-                                                           (compiled-setval selection-active false)))
-                              (swap! td/tables-state
-                                     #(compiled-setval tabale-selected false
-                                                       ( ->> %
-                                                            (compiled-setval selection-show false)
-                                                            (compiled-setval selectected-path nil)
-                                                            (compiled-setval selection-end nil)
-                                                            (compiled-setval selection-start nil))))))))
-       :on-mouse-up   (fn [e]
-                        (do
-                          (swap! td/tables-state assoc-in [:selection :active] false)
-                          (if (and (= :1 (u/collides-sel {:id :1 :x ( - (.-clientX e) x) :y ( - (.-clientY e) y) :width 1 :height 1 :rect-right ( - (.-clientX e) x ( - 1)) :rect-bottom ( - (.-clientY e) y ( - 1))}
-                                                         {:id :2 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s) :height ( - y-sel-e y-sel-s) :rect-right x-sel-e :rect-bottom y-sel-e} 0))
-                                   (:selected selection))
-                            (swap! td/tables-state #(compiled-setval selection-show true %)))))
-       :on-mouse-move (fn [e]
-                        (let [x-current ( - (.-clientX e) x)
-                              y-current ( - (.-clientY e) y)
+                              [[x y] [x1 y1]] (u/start-end start end)]
+                          (swap! td/tables-state assoc-in [:selection :active] false))) ; prestaje formiranje selekcije
+
+       :on-mouse-move (fn [e] (.preventDefault e)
+                        (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
+                              y-current ( + (.-clientY e) (.-pageYOffset js/window) y)
                               start (:start selection)
                               end {:x1 x-current :y1 y-current}
                               offset (:offset selection)
@@ -225,28 +239,33 @@
                                                                                               :width      ( - x1 x) :height ( - y1 y)
                                                                                               :rect-right x1 :rect-bottom y1 } 0))))
                                   select-true (comp-paths :tables ALL LAST #(some (set sel) [(:id %)]) :selected)]
-                              (if-not (:show selection)
-                                (swap! td/tables-state assoc-in [:selection :show] true))
+                              ;(if-not (:show selection)
+                              ;  (swap! td/tables-state assoc-in [:selection :show] true))
                               (swap! td/tables-state #( ->> % (compiled-setval selection-show true)
                                                            (compiled-setval tabale-selected false)
                                                            (compiled-setval select-true true)
                                                            (compiled-setval selection-end end)
                                                            (compiled-setval selectected-path sel)))))
 
-                          (if (and (not (:show selection)) (seq (:selected selection)))
+                          (when (and (not (:show selection)) (seq (:selected selection)))
+                            (reset! su/selected-saved {:ids [] :tables  {}})
                             (swap! td/tables-state #( ->> %
                                                          (compiled-setval selection-start {:x ( - x-current (:x offset)) :y ( - y-current (:y offset))})
-                                                         (compiled-setval selection-end {:x1 ( - x-current (:x1 offset)) :y1 ( - y-current (:y1 offset))}))))))}
-
-      ;[:rect {:x 10 :y 10 :width "100%" :height "100%" :fill "white" :stroke "none"}]
-      ;[:text {:x "10%" :y 5 :font-size 20 :style {:z-index 10000}} "Velika sala "]
+                                                         (compiled-setval selection-end {:x1 ( - x-current (:x1 offset)) :y1 ( - y-current (:y1 offset))})))
+                            (swap! td/tables-state assoc-in [:selection :show] true))))}
       [root (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]
-      (if (:show selection)
-        [(c/selection-rect (move-tables) spoints)])]]))
+      (let [
+            start (:start selection)
+            end (:end selection)
+            [[x y] [x1 y1]] (u/start-end start end)]
+        (if (and (:show selection) (not (or (< (- x1 x) 20) (< (- y1 y) 20))))
+          [(c/selection-rect (move-tables) spoints)]))]]))
 
 (defn resize []
   (fn [evt]
     (td/settings-pos (/ (.-innerWidth js/window) 1000))))
+    ;(td/table-props-new)))
+
 
 
 (def tables-mount
@@ -254,11 +273,13 @@
              {:component-did-mount
               (fn [this]
                 (let [bcr (.getBoundingClientRect (r/dom-node this))
-                      x (.-left bcr) y (.-top bcr)]
+                      x (.-left bcr) y (+ (.-top bcr) 28)] ;; 28 pxela visina naslova !!!
                   (swap! td/tables-state assoc-in [:svg] [x y])
+                  (td/settings-pos (/ (.-innerWidth js/window) 1000))
                   (events/listen js/window EventType.RESIZE (resize))))}))
 
-(u/table-props-new)
+
+
 
 (defn by-id [id]
   (.getElementById js/document id))

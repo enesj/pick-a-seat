@@ -7,7 +7,7 @@
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
-                 [org.clojure/clojurescript "1.9.293"]
+                 [org.clojure/clojurescript "1.9.473"]
 
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/core.async "0.2.395"]
@@ -27,8 +27,8 @@
 
                  [buddy/buddy-auth "1.2.0"]
                  [buddy/buddy-hashers "1.0.0"]
-                 [binaryage/devtools "0.8.1"]
-                 [binaryage/dirac "0.6.4"]
+                 [binaryage/devtools "0.9.1"]
+                 [binaryage/dirac "1.1.5"]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
@@ -61,7 +61,8 @@
                  [de.sveri/closp-crud "0.3.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.postgresql/postgresql "9.4.1212"]
-                 [org.clojure/java.jdbc "0.6.2-alpha3"]]
+                 [org.clojure/java.jdbc "0.6.2-alpha3"]
+                 [philoskim/debux "0.2.1"]]
 
   :plugins [[lein-cljsbuild "1.1.1"]]
 
