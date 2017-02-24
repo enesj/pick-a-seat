@@ -172,53 +172,57 @@
       {:fill          (:text t/palete)
        :width         w
        :height        h
-       :on-key-down  (fn [e](.preventDefault e)
-                           (case (.-which e)
-                             7 (swap! td/tables-state assoc-in [:snap] true)
-                             nil))
-       :on-key-up     (fn [e](.preventDefault e)
-                             (case (.-which e)
-                               7 (swap! td/tables-state assoc-in [:snap] false)
-                               nil))
-       :on-mouse-down (fn [e] (.preventDefault e)
-                           (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
-                                 y-current ( + (.-clientY e)  (.-pageYOffset js/window) y)
-                                 start {:x x-current :y y-current}
-                                 end {:x1 x-current :y1 y-current}
-                                 direction (filterv boolean (doall (for [table
-                                                                         (conj (into (vals tables) (:borders @td/settings-base))
-                                                                               {:id         :1 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s ( - 20)) :height ( - y-sel-e y-sel-s ( - 20))
-                                                                                :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
-                                                                         :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
-                                                                                                          :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) } 0)]
-                                                                         :when (not= false dir)]
-                                                                     dir)))]
-                             (if (empty? direction)
-                               (do
-                                   (reset! su/selected-saved {:ids [] :tables  {}})
-                                   (swap! td/tables-state #( ->> %
-                                                              (compiled-setval selection-start start)
-                                                              (compiled-setval selection-end end)
-                                                              (compiled-setval selection-active true)
+       :on-key-down  (fn [e]
+                         (.preventDefault e)
+                         (case (.-which e)
+                           7 (swap! td/tables-state assoc-in [:snap] true)
+                           nil))
+       :on-key-up     (fn [e]
+                          (.preventDefault e)
+                          (case (.-which e)
+                            7 (swap! td/tables-state assoc-in [:snap] false)
+                            nil))
+       :on-mouse-down (fn [e]
+                          (.preventDefault e)
+                          (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
+                                y-current ( + (.-clientY e)  (.-pageYOffset js/window) y)
+                                start {:x x-current :y y-current}
+                                end {:x1 x-current :y1 y-current}
+                                direction (filterv boolean (doall (for [table
+                                                                        (conj (into (vals tables) (:borders @td/settings-base))
+                                                                              {:id         :1 :x x-sel-s :y y-sel-s :width ( - x-sel-e x-sel-s ( - 20)) :height ( - y-sel-e y-sel-s ( - 20))
+                                                                               :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
+                                                                        :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
+                                                                                                         :rect-right (+ x-current 1) :rect-bottom (+ y-current 1) } 0)]
+                                                                        :when (not= false dir)]
+                                                                    dir)))]
+                            (if (empty? direction)
+                              (do
+                                  (reset! su/selected-saved {:ids [] :tables  {}})
+                                  (swap! td/tables-state #( ->> %
+                                                             (compiled-setval selection-start start)
+                                                             (compiled-setval selection-end end)
+                                                             (compiled-setval selection-active true)
+                                                             (compiled-setval selectected-path nil)
+                                                             (compiled-setval tabale-selected false))))
+
+                              (if (some #(= :1 %) direction)
+                                  (swap! td/tables-state #( ->> %
+                                                             (compiled-setval selection-offset {:x  ( - x-current (:x (:start selection)))
+                                                                                                :y  ( - y-current (:y (:start selection)))
+                                                                                                :x1 ( - x-current (:x1 (:end selection)))
+                                                                                                :y1 ( - y-current (:y1 (:end selection)))})
+                                                             (compiled-setval selection-active false)))
+                                  (swap! td/tables-state
+                                       #(compiled-setval tabale-selected false
+                                                         ( ->> %
+                                                              (compiled-setval selection-show false)
                                                               (compiled-setval selectected-path nil)
-                                                              (compiled-setval tabale-selected false))))
+                                                              (compiled-setval selection-end nil)
+                                                              (compiled-setval selection-start nil))))))))
 
-                               (if (some #(= :1 %) direction)
-                                   (swap! td/tables-state #( ->> %
-                                                              (compiled-setval selection-offset {:x  ( - x-current (:x (:start selection)))
-                                                                                                 :y  ( - y-current (:y (:start selection)))
-                                                                                                 :x1 ( - x-current (:x1 (:end selection)))
-                                                                                                 :y1 ( - y-current (:y1 (:end selection)))})
-                                                              (compiled-setval selection-active false)))
-                                   (swap! td/tables-state
-                                        #(compiled-setval tabale-selected false
-                                                          ( ->> %
-                                                               (compiled-setval selection-show false)
-                                                               (compiled-setval selectected-path nil)
-                                                               (compiled-setval selection-end nil)
-                                                               (compiled-setval selection-start nil))))))))
-
-       :on-mouse-up   (fn [e] (.preventDefault e)
+       :on-mouse-up   (fn [e]
+                        (.preventDefault e)
                         (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
                               y-current ( + (.-clientY e) (.-pageYOffset js/window) y)
                               start (:start selection)
@@ -226,7 +230,8 @@
                               [[x y] [x1 y1]] (u/start-end start end)]
                           (swap! td/tables-state assoc-in [:selection :active] false))) ; prestaje formiranje selekcije
 
-       :on-mouse-move (fn [e] (.preventDefault e)
+       :on-mouse-move (fn [e]
+                        (.preventDefault e)
                         (let [x-current ( + (.-clientX e) (.-pageXOffset js/window) x)
                               y-current ( + (.-clientY e) (.-pageYOffset js/window) y)
                               start (:start selection)
@@ -263,7 +268,8 @@
 
 (defn resize []
   (fn [evt]
-    (td/settings-pos (/ (.-innerWidth js/window) 1000))))
+    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
+    (js/console.log evt)))
     ;(td/table-props-new)))
 
 
