@@ -40,10 +40,11 @@
                            {:id :r :x w :y 0 :rect-right (+ w 100) :rect-bottom h}]})))
 
 (def menu-defaults
-  {:width        30
-   :height       15
+  {
+   ;:width        30
+   ;:height       15
    :fill         "rgba(255,255,255, 0.8)"
-   :stroke       "black"
+   :stroke       "orange"
    :stroke-width 0.5})
 
 (def table-defaults
