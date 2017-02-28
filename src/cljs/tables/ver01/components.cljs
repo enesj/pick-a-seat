@@ -33,7 +33,7 @@
 
 (defn table [{:keys [on-drag]} table-data-atom]
   (let [table-data @table-data-atom
-        {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity ]} table-data
+        {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity]} table-data
         rs-dir (vals rs)
         [width height] (td/table-dims stools)]
     [:g
@@ -83,16 +83,19 @@
                             :width         width
                             :height        height
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
-                            :on-mouse-up (fn [e]
-                                           (let [selection-state (:state @su/selected-current)]
-                                             (when (not (:active selection))
-                                               (js/console.log "c" selection-state)
-                                               (swap! su/selected-current update-in [:state] inc)
-                                               (((su/anlalize-tables spoints) selection-state) spoints))))})]
+                            :on-mouse-up   (fn [e]
+                                             (let [selection-state (:state @su/selected-current)
+                                                   all-states (su/anlalize-tables spoints)
+                                                   new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
+                                                   current-state (all-states new-state)]
+                                               (when (not (:active selection))
+                                                 (current-state spoints)
+                                                 (swap! su/selected-current assoc-in [:state] new-state))))})]
+
           (if (seq ids)
             (doall (for [id selected]
                      ^{:key id} [table {:on-drag nil} (r/cursor su/selected-current [:tables id])])))
-          (if (and (not (:active selection)) (> (count selected) 1))
+          (if (and (not (:active selection)) (> (count selected) 1) (not= (:state @su/selected-current) 0))
             (su/sel-menu x-s y-s width height spoints))])})))
 
 

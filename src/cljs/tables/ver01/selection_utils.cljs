@@ -5,7 +5,6 @@
             [reagent.core :as r]))
 
 
-(def selected-current (r/atom {:ids [] :tables {}}))
 
 (defn rec-path [x y & z]
   (apply str "M" x "," y z))
@@ -51,6 +50,7 @@
                :h-menu-last [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a3]}]
     {:d (apply rec-path (dir paths))}))
 
+(def selected-current (r/atom {:state 0 :ids [] :tables {}}))
 
 
 (defn sel-modifications [data]
@@ -59,44 +59,55 @@
       (assoc-in [:fill-opacity] 0.9)
       (assoc-in [:stroke] "orange")))
 
+(defn clear-modifications [data]
+  (-> data
+      (assoc-in [:hide-stools] false)
+      (assoc-in [:fill-opacity] 0.8)
+      (assoc-in [:stroke] "black")))
+
+
+(defn zero-state []
+  (reset! selected-current  {:state 0 :ids [] :tables {}}))
+
+
 (defn a-top [spoints]
   (let [selected (:selected (:selection spoints))]
-    (reset! selected-current {:ids  selected
-                              :tables (transform [ALL LAST] #(-> %
-                                                                 (update-in [:y] (fn [y] (- y 20)))
-                                                                 sel-modifications)
-                                                 (select-keys (:tables spoints) selected))})))
+    (swap! selected-current assoc-in  [:ids] selected)
+    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
+                                                                            (update-in [:y] (fn [y] ( - y 20)))
+                                                                            sel-modifications)
+                                                                 (select-keys (:tables spoints) selected)))))
 
 (defn a-down [spoints]
   (let [selected (:selected (:selection spoints))]
-    (reset! selected-current {:ids  selected
-                              :tables (transform [ALL LAST] #(-> %
-                                                                  (update-in [:y] (fn [y] (+ y 20)))
-                                                                  sel-modifications)
-                                                             (select-keys (:tables spoints) selected))})))
+    (swap! selected-current assoc-in  [:ids] selected)
+    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
+                                                                            (update-in [:y] (fn [y] ( + y 20)))
+                                                                            sel-modifications)
+                                                            (select-keys (:tables spoints) selected)))))
 
 (defn a-left [spoints]
   (let [selected (:selected (:selection spoints))]
-    (reset! selected-current {:ids  selected
-                              :tables (transform [ALL LAST] #(-> %
-                                                                 (update-in [:x] (fn [x] (- x 20)))
-                                                                 sel-modifications)
-                                                 (select-keys (:tables spoints) selected))})))
+    (swap! selected-current assoc-in  [:ids] selected)
+    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
+                                                                            (update-in [:x] (fn [x] ( - x 20)))
+                                                                            sel-modifications)
+                                                            (select-keys (:tables spoints) selected)))))
 
 (defn a-right [spoints]
   (let [selected (:selected (:selection spoints))]
-    (reset! selected-current {:ids  selected
-                              :tables (transform [ALL LAST] #(-> %
-                                                                 (update-in [:x] (fn [x] (+ x 20)))
-                                                                 (sel-modifications))
-                                                 (select-keys (:tables spoints) selected))})))
+    (swap! selected-current assoc-in  [:ids] selected)
+    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
+                                                                            (update-in [:x] (fn [x] (+ x 20)))
+                                                                            sel-modifications)
+                                                            (select-keys (:tables spoints) selected)))))
 
 
 (defn ok [spoints]
-      (println "ok"))
+  (swap! td/tables-state update-in  [:tables]  (fn [x] (merge x (transform [ALL LAST] #(clear-modifications %) (:tables @selected-current))))))
 
 (defn cancel [spoints]
-  (println "cancel"))
+  (reset! selected-current  {:state 0 :ids [] :tables {}}))
 
 (defn merege-path [x]
   [:path (merge td/menu-defaults x)])
@@ -141,14 +152,13 @@
 (defn anlalize-tables [spoints]
   ;(remove #{:cancel} (keys all-tabs))
   ;(keys all-tabs)
-  [:empty a-top a-down a-left a-right])
+  [zero-state a-top a-down a-left a-right])
 
 
 
 (defn sel-menu-tabs [spoints]
   (let [
-        ;all-tabs (all-tabs)
-        ;tabs-data (anlalize-tables  spoints)
+        all-tabs (all-tabs)
         tabs-data [:ok :cancel]
         ft 0
         lt (- (count tabs-data) 1)
