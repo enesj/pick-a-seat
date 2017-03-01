@@ -89,7 +89,7 @@
                                                    new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))
-                                                 (current-state spoints)
+                                                 (su/preview-state new-state spoints)
                                                  (swap! su/selected-current assoc-in [:state] new-state))))})]
 
           (if (seq ids)
