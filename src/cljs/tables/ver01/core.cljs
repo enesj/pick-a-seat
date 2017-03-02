@@ -8,6 +8,7 @@
     [tables.ver01.themes :as t]
     [tables.ver01.util :as u]
     [tables.ver01.selection-utils :as su]
+    [tables.ver01.templates :as tt]
     [devtools.core :as devtools]
     [devtools.toolbox :as toolbox])
   (:import [goog.events EventType]))
@@ -167,10 +168,10 @@
         [(c/selection-rect (move-tables) spoints)])]))
 
 (defn tables []
-  (let [spoints @td/tables-state
-        selection (:selection spoints)
-        tables (:tables spoints)
-        [x y] (mapv - (:svg spoints))
+  (let [full-state @td/tables-state
+        selection (:selection full-state)
+        tables (:tables full-state)
+        [x y] (mapv - (:svg full-state))
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
         {:keys [w h]} (:window @td/settings-base)
         {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths]
@@ -207,7 +208,7 @@
                                                                   dir)))]
                           (if (empty? direction)
                             (do
-                              (reset! su/selected-current {:state 0 :ids [] :tables {}})
+                              (reset! su/selected-current {:current-state 0 :ids [] :tables {}})
                               (swap! td/tables-state #(->> %
                                                            (compiled-setval selection-start start)
                                                            (compiled-setval selection-end end)
@@ -256,7 +257,7 @@
                                                            (compiled-setval selectected-path sel)))))
 
                           (when (and (not (:show selection)) (seq (:selected selection)))
-                            (if (not (= @su/selected-current {:state 0 :ids [] :tables {}})) (reset! su/selected-current {:state 0 :ids [] :tables {}}))
+                            (if (not (= @su/selected-current {:current-state 0 :ids [] :tables {}})) (reset! su/selected-current {:current-state 0 :ids [] :tables {}}))
                             (swap! td/tables-state #(->> %
                                                          (compiled-setval selection-start {:x (- x-current (:x offset)) :y (- y-current (:y offset))})
                                                          (compiled-setval selection-end {:x1 (- x-current (:x1 offset)) :y1 (- y-current (:y1 offset))}))))))}
@@ -264,7 +265,7 @@
       [root (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]
       ;[tables-small]
       (if (:show selection)
-          [(c/selection-rect (move-tables) spoints)])]]))
+          [(c/selection-rect (move-tables) full-state)])]]))
 
 
 
@@ -284,7 +285,7 @@
                 (let [bcr (.getBoundingClientRect (r/dom-node this))
                       x (.-left bcr) y (+ (.-top bcr) 28)]  ;; 28 pxela visina naslova !!!
                   (swap! td/tables-state assoc-in [:svg] [x y])
-                  (td/settings-pos (/ (.-innerWidth js/window) 1000))
+                  (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
                   (events/listen js/window EventType.RESIZE (resize))))}))
 
 
@@ -293,5 +294,12 @@
 (defn by-id [id]
   (.getElementById js/document id))
 
+(defn init [template]
+  (swap! td/tables-state assoc-in [:tables] (tt/table-templates template)))
+
+
+(init :2)
+
+
 (defn ^:export main []
-  (r/render [tables-mount]  (by-id "app")))
+ (r/render [tables-mount]  (by-id "app")))

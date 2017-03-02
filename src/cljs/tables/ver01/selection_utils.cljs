@@ -7,31 +7,33 @@
             [reagent.core :as r]))
 
 
-(def selected-current (r/atom {:state 0 :ids [] :tables {}}))
+(def selected-current (r/atom {:current-state 0 :ids [] :tables {}}))
 
 
 (def tab-events
   {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @selected-current))))
-                    (swap! selected-current assoc-in [:state] 0)))
-   :cancel (fn [] (reset! selected-current {:state 0 :ids [] :tables {}}))})
+                         (swap! selected-current assoc-in [:current-state] 0)))
+   :cancel (fn [] (reset! selected-current {:current-state 0 :ids [] :tables {}}))})
 
 
-(defn anlalize-tables [spoints]
-  (let [selected (:selected (:selection spoints))
-        zero-state (select-keys (:tables spoints) selected)
-        a-top (an/a-top spoints selected)
-        a-down (an/a-down spoints selected)
-        a-left (an/a-left spoints selected)
-        a-right (an/a-right spoints selected)]
+(defn anlalize-tables [full-state]
+  (let [selected (:selected (:selection full-state))
+        tables-state (:tables full-state)
+        zero-state (select-keys tables-state selected)
+        a-top (an/a-top full-state selected)
+        a-down (an/a-down full-state selected)
+        a-left (an/a-left full-state selected)
+        a-right (an/a-right full-state selected)]
     [zero-state a-top a-down a-left a-right]))
 
-(defn preview-state [state spoints]
-  (let [selected (:selected (:selection spoints))]
+
+(defn preview-state [current-state full-state]
+  (let [selected (:selected (:selection full-state))]
     (swap! selected-current assoc-in [:ids] selected)
-    (swap! selected-current assoc-in [:tables] ((anlalize-tables spoints) state))))
+    (swap! selected-current assoc-in [:tables] ((anlalize-tables full-state) current-state))))
 
 
-(defn sel-menu-tabs [spoints]
+(defn sel-menu-tabs [full-state]
   (let [
         all-tabs (svg/all-tabs)
         tabs-data [:ok :cancel]
@@ -40,7 +42,8 @@
         active-tabs (map-indexed #(vector %1 %2) tabs-data)]
     (mapv #(hash-map :pos (first %)
                      :type (second %)
-                     :func [((second %) tab-events) spoints]
+                     :func ((second %) tab-events)
+                     :full-state full-state
                      :h-menu (condp = (first %)
                                ft :h-menu-1
                                lt :h-menu-last
@@ -52,21 +55,20 @@
           active-tabs)))
 
 (defn sel-menu-tab [tab [x y w h r dir]]
-  (let [{:keys [type func]} tab
-        [func spoints] func
+  (let [{:keys [type func full-state]} tab
         x1 (+ x (* 1 r))
         y1 (+ y (* 1 r))
         w2 (- w (* 2 r))
         h2 (- h (* 2 r))
         arr1 (/ w 4)
         arr2 (/ w 12)
-        menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func spoints))})]
+        menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func full-state))})]
     ^{:key type} [:g [:path (merge menu-defaults (svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]
                   (:icon (type (svg/all-tabs x1 y1 w2 h2 arr1 arr2)))]))
 
 
-(defn sel-menu [x y w h spoints]
-  (let [tabs (sel-menu-tabs spoints)
+(defn sel-menu [x y w h full-state]
+  (let [tabs (sel-menu-tabs full-state)
         tabs-count (count tabs)
         [w1 h1 r] (:menu-dims @td/settings-base)
         per-tab (if (> w h) (/ w tabs-count) (/ h tabs-count))

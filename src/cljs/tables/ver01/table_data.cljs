@@ -15,14 +15,7 @@
                         :end    {:x1 0, :y1 0}
                         :selected []
                         :offset {}}
-            :tables    {
-                        3  {:id 3  :x 120 :y 120 :hide-stools false :selected false :stools [1 0 2 2]}
-                        23 {:id 23 :x 350 :y 180 :hide-stools false :selected false :stools [3 3 1 1]}
-                        1  {:id 1  :x 180 :y 60 :hide-stools false :selected false :stools [0 0 10 10]}
-                        21 {:id 21 :x 180 :y 180 :hide-stools false :selected false :stools [2 2 1 1]}
-                        22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :stools [1 1 2 2]}
-                        24 {:id 24 :x 300 :y 300 :hide-stools false :selected false :stools [1 1 3 3]}
-                        25 {:id 25 :x 300 :y 120 :hide-stools false :selected false :stools [0 0 0 3]}}
+            :tables    {}
             :scale     {:zoom 1 :size 1}
             :pos       {:x 400 :y 300}
             :svg []}))
@@ -121,9 +114,6 @@
                                    (compiled-transform (:table-stool specter-paths-data) #(mapv (partial * size) %))
                                    (compiled-transform (:menu-dims specter-paths-data) #(mapv (partial * size) %))
                                    (compiled-transform (:stool-dims specter-paths-data) #(* size %))))))
-                                   ;(compiled-transform (:borders-right specter-paths-data) #(* size %))
-                                   ;(compiled-transform (:borders-right-x specter-paths-data) #(* size %))
-                                   ;(compiled-transform (:borders-top specter-paths-data) #(* size %))))))
 
 (defn settings-pos [zoom-new]
  "Preracunava x i y pozicije svih stolova i pamti tekucu vrijednost zum-a.

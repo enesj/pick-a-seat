@@ -26,17 +26,6 @@
   (< x ( - y d)))
 
 
-(defn collides-sel-active
-  [one t-xy d]
-  (let [{:keys [x y width height rect-right rect-bottom]} t-xy
-        { x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
-    (cond
-      (<+ d x1 x) false
-      (>+ d rect-right1 rect-right) false
-      (<+ d y1 y) false
-      (>+ d rect-bottom1 rect-bottom) false
-      :else (:id one))))
-
 (defn collides-sel
   [one t-xy d]
   (let [
@@ -47,6 +36,17 @@
       (>+ d x1 rect-right) false
       (<+ d rect-bottom1 y) false
       (>+ d y1 rect-bottom) false
+      :else (:id one))))
+
+(defn collides-sel-active
+  [one t-xy d]
+  (let [{:keys [x y width height rect-right rect-bottom]} t-xy
+        { x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
+    (cond
+      (<+ d x1 x) false
+      (>+ d rect-right1 rect-right) false
+      (<+ d y1 y) false
+      (>+ d rect-bottom1 rect-bottom) false
       :else (:id one))))
 
 (defn collides-with

@@ -31,12 +31,14 @@
      (events/listen js/window EventType.MOUSEMOVE drag-move)
      (events/listen js/window EventType.MOUSEUP drag-end))))
 
+
 (defn table [{:keys [on-drag]} table-data-atom]
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity]} table-data
         rs-dir (vals rs)
         [width height] (td/table-dims stools)]
     [:g
+
      (if-not hide-stools
        (doall (for [stool (td/stool-maps x y width height rs-dir stools)
                     :let [stool-data (val stool)
@@ -55,6 +57,7 @@
                                       :stroke-dasharray (if selected "5,5")
                                       :d                (if selected "M5 20 l215 0")
                                       :on-mouse-down    (if (= on-drag nil) nil (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
+     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
      (if (and block on-drag)
        [:rect (merge td/sel-defaults {:x      (first block)
                                       :y      (second block)
@@ -65,8 +68,8 @@
 
 
 
-(defn selection-rect [on-drag spoints]
-  (let [{:keys [selection tables]} spoints
+(defn selection-rect [on-drag full-state]
+  (let [{:keys [selection tables]} full-state
         selected (:selected selection)
         sel-top-lefts (mapv #(vector % ((juxt :x :y) (tables %))) selected)
         [[x-s y-s] [x-e y-e]] (u/start-end (:start selection) (:end selection))
@@ -84,19 +87,19 @@
                             :height        height
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
                             :on-mouse-up   (fn [e]
-                                             (let [selection-state (:state @su/selected-current)
-                                                   all-states (su/anlalize-tables spoints)
+                                             (let [selection-state (:current-state @su/selected-current)
+                                                   all-states (su/anlalize-tables full-state)
                                                    new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))
-                                                 (su/preview-state new-state spoints)
-                                                 (swap! su/selected-current assoc-in [:state] new-state))))})]
+                                                 (su/preview-state new-state full-state)
+                                                 (swap! su/selected-current assoc-in [:current-state] new-state))))})]
 
           (if (seq ids)
             (doall (for [id selected]
                      ^{:key id} [table {:on-drag nil} (r/cursor su/selected-current [:tables id])])))
-          (if (and (not (:active selection)) (> (count selected) 1) (not= (:state @su/selected-current) 0))
-            (su/sel-menu x-s y-s width height spoints))])})))
+          (if (and (not (:active selection)) (> (count selected) 1) (not= (:current-state @su/selected-current) 0))
+            (su/sel-menu x-s y-s width height full-state))])})))
 
 
 
