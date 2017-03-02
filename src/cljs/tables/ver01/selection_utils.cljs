@@ -1,190 +1,46 @@
 (ns tables.ver01.selection-utils
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [tables.ver01.table_data :as td]
+            [tables.ver01.svg :as svg]
+            [tables.ver01.analize :as  an]
             [debux.cs.core :refer-macros [clog dbg break]]
             [reagent.core :as r]))
 
 
-
-(defn rec-path [x y & z]
-  (apply str "M" x "," y z))
-
-(defn RoundedRect [x, y, w, h, r dir]
-  (let [up (str " v" (- h))
-        up1 (str " v" (- r h))
-        up2 (str " v" (- (* 2 r) h))
-        dw (str " v" h)
-        dw1 (str " v" (- h r))
-        dw2 (str " v" (- h (* 2 r)))
-        lft (str " h" (- w))
-        lft1 (str " h" (- r w))
-        lft2 (str " h" (- (* 2 r) w))
-        rgh (str " h" w)
-        rgh1 (str " h" (- w r))
-        rgh2 (str " h" (- w (* 2 r)))
-        a1 (str " a" r "," r " 0 0 1 " r "," (- r))
-        a2 (str " a" r "," r " 0 0 1 " r "," r)
-        a3 (str " a" r "," r " 0 0 1 " (- r) "," r)
-        a4 (str " a" r "," r " 0 0 1 " (- r) "," (- r))
-        a5 (str " a" r "," r " 0 0 0 " r "," r)
-        a6 (str " a" r "," r " 0 0 0 " (- r) "," (- r))
-        paths {:l           [(+ x w) (+ y h), lft1, a4, up2, a1, rgh1]
-               :t           [x (+ y h), up1, a1, rgh2, a2, dw1]
-               :r           [x y, rgh1, a2, dw2, a3, lft1]
-               :d           [(+ x w) y, dw1, a3, lft2, a4, up1]
-               :lt1         [x (+ y h), up1, a1, rgh1, dw]
-               :lt0         [x y, rgh1, a2, dw2, a3, lft2, a4]
-               :rt1         [x y, rgh1, a2, dw1, lft]
-               :rt0         [(+ x w) y, dw1, a3, lft2, a4, up2, a1]
-               :rd1         [(+ x w) y, dw1, a3, lft2, up]
-               :rd0         [(+ x w) (+ y h), lft1, a4, up2, a1, rgh2, a2]
-               :ld1         [(+ x w) (+ y h), lft1, a4, up1, rgh]
-               :ld0         [x (+ y h), up1, a1, rgh2, a2, dw2, a3]
-               :td          [x (+ y h), up1, a1, rgh1, dw1, a3]
-               :dt          [(+ x w) (+ y h), lft1, a4, up1, rgh1, a2]
-               :v-menu      [(+ x w (- r)) (+ y h), lft2, a4, up, a5, rgh2, a2, dw, a6]
-               :v-menu-1    [(+ x w (- r)) (+ y h), lft2, a4, up1, rgh1, a2, dw, a6]
-               :v-menu-last [(+ x w (- r)) (+ y h), lft2, a4, up, a5, rgh2, a2, dw2, a3]
-               :h-menu      [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a5 " z"]
-               :h-menu-1    [(+ x w (- r)) (+ y h), lft2, a4, up1, rgh1, a2, dw2, a5 " z"]
-               :h-menu-last [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a3]}]
-    {:d (apply rec-path (dir paths))}))
-
-(defn merege-path [x]
-  [:path (merge td/menu-defaults x)])
-
-(declare ok cancel a-top a-down a-left a-right)
-
-(defn all-tabs
-  ([] (all-tabs nil nil nil nil nil nil))
-  ([x1 y1 w2 h2 arr1 arr2]
-   {:ok {:icon       [:g
-                      (merege-path {:d (str "M" (+ x1 (/ w2 8 )) "," (+ y1 (/ h2 2.5 )) " l" (/ w2 4) " " (/ h2 2) ) :stroke-width 3 :stroke "blue" :stroke-opacity 0.6})
-                      (merege-path {:d (str "M" (+ x1 (/ w2 3 ) ) "," (+ y1 (/ h2 1.1 )) " l" (/ w2 2) " " (/ (- h2 ) 1.2)) :stroke-width 1.5 :stroke "blue" :stroke-opacity 0.6})]
-         :func       ok}
-    :cancel {:icon   [:g {:view-box "0 0 1024 1024"}
-                      (merege-path {:d (str "M" (+ x1 (/ w2 8 )) "," (+ y1 (/ h2 8 )) " l" (/ w2 1.5 ) " " (/ h2 1.3 )) :stroke-width 2 :stroke "red" :stroke-opacity 0.6})
-                      (merege-path {:d (str "M" (+ x1 (/ w2 8 )) "," (+ y1 (/ h2 8 ) (/ h2 1.3 )) " l" (/ w2 1.5 ) " " (/ (- h2) 1.3 )) :stroke-width 2 :stroke "red" :stroke-opacity 0.6})]
-             :func   cancel}
-    :at {:icon       [:g
-                      (merege-path {:d (str "M" x1 "," y1 " h" w2 ) :stroke-width 1.5})
-                      (merege-path {:d (str " M" (+ x1 (/ w2 2)) "," y1 " v" h2)})
-                      (merege-path {:d (str "M" (+ x1 (/ w2 2)) "," y1 " l" (- arr2) "," arr1 " h" (* arr2 2) " l" (- arr2) ", " (- arr1) "z") :fill "orange"})]
-         :func       a-top}
-    :ad {:icon       [:g
-                      (merege-path {:d (str "M" x1 "," (+ y1 h2) " h" w2) :stroke-width 1.5})
-                      (merege-path {:d (str " M" (+ x1 (/ w2 2)) "," (+ y1 h2) " v" (- h2))})
-                      (merege-path {:d (str "M" (+ x1 (/ w2 2)) "," (+ y1 h2) " l" (- arr2) "," (- arr1) " h" (* arr2 2) " l" (- arr2) "," arr1 " z") :fill "orange"})]
-         :func       a-down}
-    :al {:icon       [:g
-                      (merege-path {:d (str "M" x1 "," y1 " v" h2) :stroke-width 1.5})
-                      (merege-path {:d (str " M" x1 "," (+ y1 (/ h2 2)) " h" w2)})
-                      (merege-path {:d (str "M" x1 "," (+ y1 (/ h2 2)) " l" arr1 "," arr2 " v" (- (* arr2 2)) " l" (- arr1) "," arr2 " z") :fill "orange"})]
-         :func       a-left}
-    :ar {:icon       [:g
-                      (merege-path {:d (str "M" (+ x1 w2) "," y1 " v" h2) :stroke-width 1.5})
-                      (merege-path {:d (str " M" (+ x1 w2) "," (+ y1 (/ h2 2)) " h" (- w2))})
-                      (merege-path {:d (str "M" (+ x1 w2) "," (+ y1 (/ h2 2)) " l" (- arr1) ", " arr2 " v" (- (* arr2 2)) " l" arr1 ", " arr2 " z") :fill "orange"})]
-         :func       a-right}}))
-
 (def selected-current (r/atom {:state 0 :ids [] :tables {}}))
 
 
-(defn sel-modifications [data]
-  (-> data
-      (assoc-in [:hide-stools] true)
-      (assoc-in [:fill-opacity] 0.9)
-      (assoc-in [:stroke] "orange")))
-
-(defn clear-modifications [data]
-  (-> data
-      (assoc-in [:hide-stools] false)
-      (assoc-in [:fill-opacity] 0.8)
-      (assoc-in [:stroke] "black")))
-
-
-
-;(defn a-top [spoints]
-;  (let [selected (:selected (:selection spoints))]
-;    (swap! selected-current assoc-in  [:ids] selected)
-;    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
-;                                                                            (update-in [:y] (fn [y] ( - y 20)))
-;                                                                            sel-modifications)
-;                                                                 (select-keys (:tables spoints) selected)))))
-;
-;(defn a-down [spoints]
-;  (let [selected (:selected (:selection spoints))]
-;    (swap! selected-current assoc-in  [:ids] selected)
-;    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
-;                                                                            (update-in [:y] (fn [y] ( + y 20)))
-;                                                                            sel-modifications)
-;                                                            (select-keys (:tables spoints) selected)))))
-;
-;(defn a-left [spoints]
-;  (let [selected (:selected (:selection spoints))]
-;    (swap! selected-current assoc-in  [:ids] selected)
-;    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
-;                                                                            (update-in [:x] (fn [x] ( - x 20)))
-;                                                                            sel-modifications)
-;                                                            (select-keys (:tables spoints) selected)))))
-;
-;(defn a-right [spoints]
-;  (let [selected (:selected (:selection spoints))]
-;    (swap! selected-current assoc-in  [:ids] selected)
-;    (swap! selected-current assoc-in  [:tables]  (transform [ALL LAST] #(-> %
-;                                                                            (update-in [:x] (fn [x] (+ x 20)))
-;                                                                            sel-modifications)
-;                                                            (select-keys (:tables spoints) selected)))))
-
-
-(defn ok [spoints]
-  (swap! td/tables-state update-in  [:tables]  (fn [x] (merge x (transform [ALL LAST] #(clear-modifications %) (:tables @selected-current)))))
-  (swap! selected-current  assoc-in [:state] 0))
-
-(defn cancel [spoints]
-  (reset! selected-current  {:state 0 :ids [] :tables {}}))
-
+(def tab-events
+  {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @selected-current))))
+                    (swap! selected-current assoc-in [:state] 0)))
+   :cancel (fn [] (reset! selected-current {:state 0 :ids [] :tables {}}))})
 
 
 (defn anlalize-tables [spoints]
   (let [selected (:selected (:selection spoints))
-
         zero-state (select-keys (:tables spoints) selected)
-
-        a-top (transform [ALL LAST] #(-> %
-                                         (update-in [:y] (fn [y] ( - y 20)))
-                                         sel-modifications)
-                         (select-keys (:tables spoints) selected))
-        a-down (transform [ALL LAST] #(-> %
-                                          (update-in [:y] (fn [y] ( + y 20)))
-                                          sel-modifications)
-                          (select-keys (:tables spoints) selected))
-        a-left (transform [ALL LAST] #(-> %
-                                          (update-in [:x] (fn [x] ( - x 20)))
-                                          sel-modifications)
-                          (select-keys (:tables spoints) selected))
-        a-right (transform [ALL LAST] #(-> %
-                                           (update-in [:x] (fn [x] (+ x 20)))
-                                           sel-modifications)
-                           (select-keys (:tables spoints) selected))]
+        a-top (an/a-top spoints selected)
+        a-down (an/a-down spoints selected)
+        a-left (an/a-left spoints selected)
+        a-right (an/a-right spoints selected)]
     [zero-state a-top a-down a-left a-right]))
 
 (defn preview-state [state spoints]
   (let [selected (:selected (:selection spoints))]
-    (swap! selected-current assoc-in  [:ids] selected)
-    (swap! selected-current assoc-in  [:tables] ((anlalize-tables spoints) state))))
+    (swap! selected-current assoc-in [:ids] selected)
+    (swap! selected-current assoc-in [:tables] ((anlalize-tables spoints) state))))
 
 
 (defn sel-menu-tabs [spoints]
   (let [
-        all-tabs (all-tabs)
+        all-tabs (svg/all-tabs)
         tabs-data [:ok :cancel]
         ft 0
         lt (- (count tabs-data) 1)
-        active-tabs (map-indexed #(vector %1 %2 ) tabs-data)]
+        active-tabs (map-indexed #(vector %1 %2) tabs-data)]
     (mapv #(hash-map :pos (first %)
                      :type (second %)
-                     :func [(:func ((second %) all-tabs)) spoints]
+                     :func [((second %) tab-events) spoints]
                      :h-menu (condp = (first %)
                                ft :h-menu-1
                                lt :h-menu-last
@@ -195,8 +51,6 @@
                                :v-menu))
           active-tabs)))
 
-
-
 (defn sel-menu-tab [tab [x y w h r dir]]
   (let [{:keys [type func]} tab
         [func spoints] func
@@ -206,15 +60,9 @@
         h2 (- h (* 2 r))
         arr1 (/ w 4)
         arr2 (/ w 12)
-        menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e]
-                                                                (.stopPropagation e)
-                                                                (.preventDefault e)
-                                                                (func spoints))})]
-    ^{:key type} [:g [:path (merge menu-defaults (RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]
-                  (:icon (type (all-tabs x1 y1 w2 h2 arr1 arr2)))]))
-
-
-
+        menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func spoints))})]
+    ^{:key type} [:g [:path (merge menu-defaults (svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]
+                  (:icon (type (svg/all-tabs x1 y1 w2 h2 arr1 arr2)))]))
 
 
 (defn sel-menu [x y w h spoints]
