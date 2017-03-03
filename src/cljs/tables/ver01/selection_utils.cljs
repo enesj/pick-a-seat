@@ -7,13 +7,13 @@
             [reagent.core :as r]))
 
 
-(def selected-current (r/atom {:current-state 0 :ids [] :tables {}}))
+
 
 
 (def tab-events
-  {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @selected-current))))
-                         (swap! selected-current assoc-in [:current-state] 0)))
-   :cancel (fn [] (reset! selected-current {:current-state 0 :ids [] :tables {}}))})
+  {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @an/selected-current))))
+                         (swap! an/selected-current assoc-in [:current-state] 0)))
+   :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))})
 
 
 (defn anlalize-tables [full-state]
@@ -29,8 +29,8 @@
 
 (defn preview-state [current-state full-state]
   (let [selected (:selected (:selection full-state))]
-    (swap! selected-current assoc-in [:ids] selected)
-    (swap! selected-current assoc-in [:tables] ((anlalize-tables full-state) current-state))))
+    (swap! an/selected-current assoc-in [:ids] selected)
+    (swap! an/selected-current assoc-in [:tables] ((anlalize-tables full-state) current-state))))
 
 
 (defn sel-menu-tabs [full-state]

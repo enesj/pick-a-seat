@@ -8,6 +8,7 @@
     [tables.ver01.themes :as t]
     [tables.ver01.util :as u]
     [tables.ver01.selection-utils :as su]
+    [tables.ver01.analize :as  an]
     [tables.ver01.templates :as tt]
     [devtools.core :as devtools]
     [devtools.toolbox :as toolbox])
@@ -15,6 +16,7 @@
 
 (enable-console-print!)
 (devtools/install!)
+
 
 (def specter-paths
   {:selection-show   (comp-paths :selection :show)
@@ -208,7 +210,7 @@
                                                                   dir)))]
                           (if (empty? direction)
                             (do
-                              (reset! su/selected-current {:current-state 0 :ids [] :tables {}})
+                              (reset! an/selected-current {:current-state 0 :ids [] :tables {}})
                               (swap! td/tables-state #(->> %
                                                            (compiled-setval selection-start start)
                                                            (compiled-setval selection-end end)
@@ -257,7 +259,7 @@
                                                            (compiled-setval selectected-path sel)))))
 
                           (when (and (not (:show selection)) (seq (:selected selection)))
-                            (if (not (= @su/selected-current {:current-state 0 :ids [] :tables {}})) (reset! su/selected-current {:current-state 0 :ids [] :tables {}}))
+                            (if (not (= @an/selected-current {:current-state 0 :ids [] :tables {}})) (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))
                             (swap! td/tables-state #(->> %
                                                          (compiled-setval selection-start {:x (- x-current (:x offset)) :y (- y-current (:y offset))})
                                                          (compiled-setval selection-end {:x1 (- x-current (:x1 offset)) :y1 (- y-current (:y1 offset))}))))))}
@@ -290,7 +292,6 @@
 
 
 
-
 (defn by-id [id]
   (.getElementById js/document id))
 
@@ -298,7 +299,7 @@
   (swap! td/tables-state assoc-in [:tables] (tt/table-templates template)))
 
 
-(init :2)
+;(init :2)
 
 
 (defn ^:export main []

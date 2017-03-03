@@ -4,6 +4,7 @@
             [goog.events :as events]
             [tables.ver01.table_data :as td]
             [tables.ver01.util :as u]
+            [tables.ver01.analize :as  an]
             [tables.ver01.selection-utils :as su])
   (:import [goog.events EventType]))
 
@@ -76,7 +77,7 @@
         width (- x-e x-s)
         height (- y-e y-s)
         table-dim (first (:table-stool @td/settings-base))
-        ids (:ids @su/selected-current)]
+        ids (:ids @an/selected-current)]
     (r/create-class
       {:reagent-render
        (fn []
@@ -87,18 +88,18 @@
                             :height        height
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
                             :on-mouse-up   (fn [e]
-                                             (let [selection-state (:current-state @su/selected-current)
+                                             (let [selection-state (:current-state @an/selected-current)
                                                    all-states (su/anlalize-tables full-state)
                                                    new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))
                                                  (su/preview-state new-state full-state)
-                                                 (swap! su/selected-current assoc-in [:current-state] new-state))))})]
+                                                 (swap! an/selected-current assoc-in [:current-state] new-state))))})]
 
           (if (seq ids)
             (doall (for [id selected]
-                     ^{:key id} [table {:on-drag nil} (r/cursor su/selected-current [:tables id])])))
-          (if (and (not (:active selection)) (> (count selected) 1) (not= (:current-state @su/selected-current) 0))
+                     ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
+          (if (and (not (:active selection)) (> (count selected) 1) (not= (:current-state @an/selected-current) 0))
             (su/sel-menu x-s y-s width height full-state))])})))
 
 
