@@ -62,29 +62,32 @@
       (update-in [:rect-bottom] #(+ % y))))
 
 
-(defn test-top []
+(defn test-one [sel-tables-state sel-tables extern-tables y-min]
+    (doall
+      (for [current-table (rest sel-tables)
+            :let [new-table (move-table current-table [ 0 (- y-min (:y current-table))])]]
+        (if (and (empty? (test-collision new-table (remove (set [current-table]) (vals @sel-tables-state))))
+                 (empty? (test-collision new-table extern-tables)))
+          (do
+            (swap! sel-tables-state update-in [(:id current-table)]
+                   #(-> %
+                        sel-modifications
+                        (assoc-in [:y] (:y new-table))
+                        (assoc-in [:rect-bottom] (:rect-bottom new-table)))))))))
+
+
+
+
+(defn test-all []
   (let [tables-state (:tables @td/tables-state)
         selected (:selected (:selection @td/tables-state))
         {:keys [all-tables sel-tables other-tables
                  other-ids sel-tables-x sel-tables-y extern-tables
                  x-min x-max x1-max y-min y-max y1-max]}
         (data-preparation tables-state selected)
-        sel-tables-y-state (atom (into {}  (map #(vector (:id %) %) sel-tables-y)))]
-
-     (doall
-       (for [current-table (rest sel-tables-y)
-             :let [new-table (move-table current-table [ 0 (- y-min (:y current-table))])]]
-         (if (and (empty? (test-collision new-table (remove (set [current-table]) (vals @sel-tables-y-state))))
-                  (empty? (test-collision new-table extern-tables)))
-            (do
-              (swap! sel-tables-y-state update-in [(:id current-table)]
-                     #(-> %
-                        sel-modifications
-                        (assoc-in [:y] (:y new-table))
-                        (assoc-in [:rect-bottom] (:rect-bottom new-table))))
-              (reset! selected-current {:state 1 :ids selected :tables @sel-tables-y-state}))
-           (println (test-collision new-table extern-tables)))))))
-
+        sel-tables-state (atom (into {}  (map #(vector (:id %) %) sel-tables-y)))
+        tables-top (test-one sel-tables-state sel-tables-y extern-tables y-min)]
+     (reset! selected-current {:state 1 :ids selected :tables (last (remove nil? tables-top))})))
 
 
 

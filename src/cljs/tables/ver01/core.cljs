@@ -15,7 +15,7 @@
   (:import [goog.events EventType]))
 
 (enable-console-print!)
-(devtools/install!)
+(devtools/install! [:formatters :hints])
 
 
 (def specter-paths
