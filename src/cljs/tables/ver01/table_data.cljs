@@ -17,7 +17,7 @@
                         :offset {}}
             :tables    {
                         3  {:id 3 :x 120 :y 120 :hide-stools false :selected false :stools [1 1 1 1]}
-                        23 {:id 23 :x 350 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}
+                        23 {:id 23 :x 350 :y 180 :hide-stools false :selected false :stools [1 1 2 2]}
                         11 {:id 11 :x 180 :y 60 :hide-stools false :selected false :stools [1 1 1 1]}
                         21 {:id 21 :x 180 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}
                         22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}

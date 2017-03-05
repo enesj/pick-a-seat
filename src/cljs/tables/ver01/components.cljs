@@ -5,7 +5,8 @@
             [tables.ver01.table_data :as td]
             [tables.ver01.util :as u]
             [tables.ver01.analize :as  an]
-            [tables.ver01.selection-utils :as su])
+            [tables.ver01.selection-utils :as su]
+            [debux.cs.core :refer-macros [clog dbg break]])
   (:import [goog.events EventType]))
 
 (defn drag-move-fn [on-drag start]
