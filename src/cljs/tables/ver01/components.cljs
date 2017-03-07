@@ -16,6 +16,7 @@
     (.preventDefault evt)
     (on-drag (.-clientX evt) (.-clientY evt) start (:tables @td/tables-state) (.-ctrlKey evt))))
 
+
 (defn drag-end-fn [drag-move]
   (fn [evt]
     (.preventDefault evt)
@@ -90,7 +91,7 @@
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
                             :on-mouse-up   (fn [e]
                                              (let [selection-state (:current-state @an/selected-current)
-                                                   all-states (su/anlalize-tables full-state)
+                                                   all-states (an/test-all)
                                                    new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))

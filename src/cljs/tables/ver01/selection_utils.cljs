@@ -7,36 +7,19 @@
             [reagent.core :as r]))
 
 
-
-
-
 (def tab-events
   {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @an/selected-current))))
                          (swap! an/selected-current assoc-in [:current-state] 0)))
    :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))})
 
-
-(defn anlalize-tables [full-state]
-  (let [selected (:selected (:selection full-state))
-        tables-state (:tables full-state)
-        zero-state (select-keys tables-state selected)
-        a-top (an/a-top full-state selected)
-        a-down (an/a-down full-state selected)
-        a-left (an/a-left full-state selected)
-        a-right (an/a-right full-state selected)]
-    [zero-state a-top a-down a-left a-right]))
-
-
 (defn preview-state [current-state full-state]
   (let [selected (:selected (:selection full-state))]
     (swap! an/selected-current assoc-in [:ids] selected)
-    (swap! an/selected-current assoc-in [:tables] ((anlalize-tables full-state) current-state))))
+    (swap! an/selected-current assoc-in [:tables] ((an/test-all) current-state))))
 
 
 (defn sel-menu-tabs [full-state]
-  (let [
-        all-tabs (svg/all-tabs)
-        tabs-data [:ok :cancel]
+  (let [tabs-data [:ok :cancel]
         ft 0
         lt (- (count tabs-data) 1)
         active-tabs (map-indexed #(vector %1 %2) tabs-data)]

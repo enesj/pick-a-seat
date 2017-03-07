@@ -59,8 +59,8 @@
         selection-table {:id 1 :x x-min :y y-min :rect-right x1-max :rect-bottom y1-max}
         extern-collision (test-collision selection-table other-tables)
         extern-tables (filter #((set extern-collision) (:id %)) other-tables)]
-    (swap! td/tables-state assoc-in [:selection :start] {:x x-min :y y-min})
-    (swap! td/tables-state assoc-in [:selection :end] {:x1 x1-max :y1 y1-max})
+    ;(swap! td/tables-state assoc-in [:selection :start] {:x x-min :y y-min})
+    ;(swap! td/tables-state assoc-in [:selection :end] {:x1 x1-max :y1 y1-max})
     {:all-tables       all-tables :sel-tables sel-tables :other-tables other-tables
      :other-ids        other-ids :sel-tables-left sel-tables-left :sel-tables-top sel-tables-top
      :sel-tables-right sel-tables-right :sel-tables-down sel-tables-down :extern-tables extern-tables
@@ -89,21 +89,26 @@
                       (assoc-in [:rect-right] (:rect-right new-table))
                       (assoc-in [:rect-bottom] (:rect-bottom new-table)))))))))
 
-(defn adjust-v-space [tables y-min y1-max]
-  (let [sel-heght (- y1-max y-min)
+(defn adjust-space [tables sel-min sel-max orientation join]
+  (let [sel-extent (- sel-max sel-min)
         count-tables (count tables)
-        total-height (reduce  + (map :height tables))
-        v-space   (/ (- sel-heght total-height) (dec count-tables))]
+        [a b dim dir-back dir-forward ] (if (= orientation :y) [:y :rect-bottom :height :t :d] [:x :rect-right :width  :l :r])
+        occupied (reduce  + (map dim tables))
+        space   (if join 0 (/ (- sel-extent occupied) (dec count-tables)))]
     (loop [old-tables (rest tables)
-           distance  (+ y-min (:height (first tables)) v-space)
-           new-tables [(first tables)]]
-      (js/console.log new-tables)
+           distance  (+ sel-min (dim (first tables)) space)
+           new-tables [(if join  (assoc-in (first tables) [:rs] {(:id (second tables)) #{dir-forward}})
+                                 (first tables))]]
       (if (empty? old-tables)
         new-tables
-        (recur (rest old-tables) (+ distance (:height (first old-tables)) v-space)
+        (recur (rest old-tables) (+ distance (dim (first old-tables)) space)
                (conj new-tables  (-> (first old-tables)
-                                     (assoc-in [:y] distance)
-                                     (assoc-in [:rect-bottom] (+ distance (:height (first old-tables)))))))))))
+                                     sel-modifications
+                                     (assoc-in [:rs] (if join (dissoc {(:id (last new-tables)) #{dir-back}
+                                                                       (:id (second old-tables)) #{dir-forward}} nil)
+                                                              nil))
+                                     (assoc-in [a] distance)
+                                     (assoc-in [b] (+ distance (dim (first old-tables)))))))))))
 
 
 
@@ -129,44 +134,19 @@
         tables-down (if (empty? downs)
                       '()
                       (remove nil? (test-one sel-tables-state sel-tables-down downs extern-tables x-min x-max x1-max y-min y-max y1-max :d)))
-        tables-new (sort-by count (remove empty? [tables-right tables-down tables-left tables-top]))
-        tables-v-space (if (or (empty? lefts))
-                           (adjust-v-space sel-tables-top y-min y1-max)
-                           '())
-        tables-h-space (if (or (empty? tops) (empty? downs))
-                           (adjust-v-space sel-tables-left y-min y1-max)
-                           '())]
-    (js/console.log (into {} (map #(vector (:id %) %) tables-v-space)) (last (last tables-new)))
-    (if-not (empty? tables-new)
-      (reset! selected-current {:state 1 :ids selected :tables (last (last tables-new))})
-      (if-not (empty? tables-v-space)
-        (let [tvs (into {} (map #(vector (:id %) %)  tables-v-space))]
-          (reset! selected-current {:state 1 :ids selected :tables tvs}))))))
+        tables-new (map last (sort-by count (remove empty? [tables-right tables-down tables-left tables-top])))
+        space-fn (fn [test-1 test-2 tables min max orientation close]
+                   (into {} (map #(vector (:id %) %)
+                                 (if (or (empty? test-1) (empty? test-2))
+                                   (adjust-space tables min max orientation close)
+                                   '()))))
+        tables-v-space (space-fn lefts rights sel-tables-top y-min y1-max :y false)
+        tables-h-space (space-fn tops downs sel-tables-left x-min x1-max :x false)
+        tables-v-join (space-fn lefts rights sel-tables-top y-min y1-max :y true)
+        tables-h-join (space-fn tops downs sel-tables-left x-min x1-max :x true)]
+    (vec
+           (cond
+             (> (count tables-new) 1) (merge tables-new (select-keys tables-state selected))
+             (seq tables-v-space) (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-v-space tables-v-join]))
+             (seq tables-h-space) (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-h-space tables-h-join]))))))
 
-
-
-(defn a-top [tables-state selected]
-  (transform [ALL LAST] #(-> %
-                             (update-in [:y] (fn [y] (- y 20)))
-                             sel-modifications)
-             (select-keys (:tables tables-state) selected)))
-
-
-
-(defn a-down [tables-state selected]
-  (transform [ALL LAST] #(-> %
-                             (update-in [:y] (fn [y] (+ y 20)))
-                             sel-modifications)
-             (select-keys (:tables tables-state) selected)))
-
-(defn a-left [tables-state selected]
-  (transform [ALL LAST] #(-> %
-                             (update-in [:x] (fn [x] (- x 20)))
-                             sel-modifications)
-             (select-keys (:tables tables-state) selected)))
-
-(defn a-right [tables-state selected]
-  (transform [ALL LAST] #(-> %
-                             (update-in [:x] (fn [x] (+ x 20)))
-                             sel-modifications)
-             (select-keys (:tables tables-state) selected)))
