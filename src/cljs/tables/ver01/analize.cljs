@@ -59,8 +59,6 @@
         selection-table {:id 1 :x x-min :y y-min :rect-right x1-max :rect-bottom y1-max}
         extern-collision (test-collision selection-table other-tables)
         extern-tables (filter #((set extern-collision) (:id %)) other-tables)]
-    ;(swap! td/tables-state assoc-in [:selection :start] {:x x-min :y y-min})
-    ;(swap! td/tables-state assoc-in [:selection :end] {:x1 x1-max :y1 y1-max})
     {:all-tables       all-tables :sel-tables sel-tables :other-tables other-tables
      :other-ids        other-ids :sel-tables-left sel-tables-left :sel-tables-top sel-tables-top
      :sel-tables-right sel-tables-right :sel-tables-down sel-tables-down :extern-tables extern-tables
@@ -100,7 +98,9 @@
            new-tables [(if join  (assoc-in (first tables) [:rs] {(:id (second tables)) #{dir-forward}})
                                  (first tables))]]
       (if (empty? old-tables)
-        new-tables
+        (if (= (map #(select-keys % [:x :y]) new-tables)  (map #(select-keys % [:x :y]) tables))
+          nil
+          new-tables)
         (recur (rest old-tables) (+ distance (dim (first old-tables)) space)
                (conj new-tables  (-> (first old-tables)
                                      sel-modifications
@@ -109,7 +109,6 @@
                                                               nil))
                                      (assoc-in [a] distance)
                                      (assoc-in [b] (+ distance (dim (first old-tables)))))))))))
-
 
 
 (defn test-all []
@@ -136,10 +135,13 @@
                       (remove nil? (test-one sel-tables-state sel-tables-down downs extern-tables x-min x-max x1-max y-min y-max y1-max :d)))
         tables-new (map last (sort-by count (remove empty? [tables-right tables-down tables-left tables-top])))
         space-fn (fn [test-1 test-2 tables min max orientation close]
-                   (into {} (map #(vector (:id %) %)
-                                 (if (or (empty? test-1) (empty? test-2))
-                                   (adjust-space tables min max orientation close)
-                                   '()))))
+                  (let [adjusted (adjust-space tables min max orientation close)]
+                    (if adjusted
+                       (into {} (map #(vector (:id %) %)
+                                     (if (or (empty? test-1) (empty? test-2))
+                                       adjusted
+                                       '())))
+                       nil)))
         tables-v-space (space-fn lefts rights sel-tables-top y-min y1-max :y false)
         tables-h-space (space-fn tops downs sel-tables-left x-min x1-max :x false)
         tables-v-join (space-fn lefts rights sel-tables-top y-min y1-max :y true)
@@ -147,6 +149,8 @@
     (vec
            (cond
              (> (count tables-new) 1) (merge tables-new (select-keys tables-state selected))
-             (seq tables-v-space) (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-v-space tables-v-join]))
-             (seq tables-h-space) (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-h-space tables-h-join]))))))
+             (or (seq tables-v-space) (seq tables-v-join))
+             (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-v-space tables-v-join]))
+             (or (seq tables-h-space) (seq tables-h-join))
+             (vec (remove nil? [(select-keys tables-state selected) (first tables-new) tables-h-space tables-h-join]))))))
 

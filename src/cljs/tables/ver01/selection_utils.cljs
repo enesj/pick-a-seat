@@ -15,7 +15,8 @@
 (defn preview-state [current-state full-state]
   (let [selected (:selected (:selection full-state))]
     (swap! an/selected-current assoc-in [:ids] selected)
-    (swap! an/selected-current assoc-in [:tables] ((an/test-all) current-state))))
+    (swap! an/selected-current assoc-in [:tables]
+           ((an/test-all) current-state))))
 
 
 (defn sel-menu-tabs [full-state]

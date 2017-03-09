@@ -1,19 +1,8 @@
 (ns tables.ver01.util
   (:require [tables.ver01.table_data :as td]))
 
-(defn table-props-new []
-  (doall (for [table (:tables @td/tables-state)
-               :let [id (key table)
-                     table-v (val table)
-                     {:keys [block rs x y stools]} table-v
-                     [width height]  (td/table-dims stools);))
-                     rect-right (+ x width)
-                     rect-bottom (+ y height)
-                     rect {:width width :height height :rect-right rect-right :rect-bottom rect-bottom}]]
-           (swap! td/tables-state update-in [:tables id ]  #(merge % rect)))))
-
 (defn start-end [start end]
-  ((juxt (partial mapv min ) (partial mapv max))   (vals start) (vals end)))
+  ((juxt (partial mapv min) (partial mapv max)) (vals start) (vals end)))
 
 
 (def d 2)
@@ -23,14 +12,14 @@
   (> x (+ y d)))
 
 (defn <+ [d x y]
-  (< x ( - y d)))
+  (< x (- y d)))
 
 
 (defn collides-sel
   [one t-xy d]
   (let [
-         {:keys [x y width height rect-right rect-bottom]} t-xy
-         { x1 :x y1 :y  rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
+        {:keys [x y rect-right rect-bottom]} t-xy
+        {x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
     (cond
       (<+ d rect-right1 x) false
       (>+ d x1 rect-right) false
@@ -40,8 +29,8 @@
 
 (defn collides-sel-active
   [one t-xy d]
-  (let [{:keys [x y width height rect-right rect-bottom]} t-xy
-        { x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
+  (let [{:keys [x y rect-right rect-bottom]} t-xy
+        {x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one]
     (cond
       (<+ d x1 x) false
       (>+ d rect-right1 rect-right) false
@@ -51,7 +40,7 @@
 
 (defn collides-with
   ([one t-x t-y]
-   (let [{x1 :x y1 :y   rect-right1 :rect-right rect-bottom1 :rect-bottom} one
+   (let [{x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one
          {:keys [x y rect-right rect-bottom]} t-x
          dir-y (cond
                  (<+ d rect-right1 x) :y
@@ -76,9 +65,9 @@
        :else {:xy id1}))))
 
 (defn distance [p1 p2]
-  (let [x1 ( - (:x p1) (:x p2))
+  (let [x1 (- (:x p1) (:x p2))
         x2 (* x1 x1)
-        y1 ( - (:y p1) (:y p2))
+        y1 (- (:y p1) (:y p2))
         y2 (* y1 y1)]
     (if (< (Math/sqrt (+ x2 y2)) 10) true false)))
 
@@ -102,14 +91,14 @@
             :let [one-k (key one-p) two-k (key two-p)]]
         (if (distance (val one-p) (val two-p))
           (cond
-            (and (= one-k :lt) (= two-k :ld)) [x ( - y height-t) id :ltd]
-            (and (= one-k :lt) (= two-k :rt)) [( - x width-t) y id :tlr]
-            (and (= one-k :rd) (= two-k :rt)) [( - (+ x width) width-t) (+ y height) id :rdt]
-            (and (= one-k :rd) (= two-k :ld)) [(+ x width) ( - (+ y height) height-t) id :drl]
+            (and (= one-k :lt) (= two-k :ld)) [x (- y height-t) id :ltd]
+            (and (= one-k :lt) (= two-k :rt)) [(- x width-t) y id :tlr]
+            (and (= one-k :rd) (= two-k :rt)) [(- (+ x width) width-t) (+ y height) id :rdt]
+            (and (= one-k :rd) (= two-k :ld)) [(+ x width) (- (+ y height) height-t) id :drl]
             (and (= one-k :ld) (= two-k :lt)) [x (+ y height) id :ldt]
             (and (= one-k :rt) (= two-k :lt)) [(+ x width) y id :trl]
-            (and (= one-k :rt) (= two-k :rd)) [( - (+ x width) width-t) ( - y height-t) id :rtd]
-            (and (= one-k :ld) (= two-k :rd)) [( - x width-t) ( - (+ y height) height-t) id :dlr]
+            (and (= one-k :rt) (= two-k :rd)) [(- (+ x width) width-t) (- y height-t) id :rtd]
+            (and (= one-k :ld) (= two-k :rd)) [(- x width-t) (- (+ y height) height-t) id :dlr]
             :else false) false)))))
 
 

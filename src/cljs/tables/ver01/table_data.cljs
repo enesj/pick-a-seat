@@ -77,17 +77,17 @@
    :stroke-width 0.5})
 
 (def specter-paths-data
-  {:table-stool (comp-paths :table-stool)
-   :menu-dims (comp-paths :menu-dims)
-   :stool-dims (comp-paths :stool-dims ALL LAST ALL LAST)
-   :zoom-x (comp-paths :tables ALL LAST :x)
-   :zoom-y (comp-paths :tables ALL LAST :y)
-   :sel-start (comp-paths :selection :start ALL LAST)
-   :sel-end (comp-paths :selection :end ALL LAST)
-   :zoom (comp-paths :scale :zoom)
+  {:table-stool     (comp-paths :table-stool)
+   :menu-dims       (comp-paths :menu-dims)
+   :stool-dims      (comp-paths :stool-dims ALL LAST ALL LAST)
+   :scale-x         (comp-paths :tables ALL LAST :x)
+   :scale-y         (comp-paths :tables ALL LAST :y)
+   :sel-start       (comp-paths :selection :start ALL LAST)
+   :sel-end         (comp-paths :selection :end ALL LAST)
+   :zoom            (comp-paths :scale :zoom)
    :borders-right-x (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :x)
-   :borders-right (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :rect-right)
-   :borders-top (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)})
+   :borders-right   (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :rect-right)
+   :borders-top     (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)})
 
 
 (defn table-dims [stools]
@@ -107,11 +107,11 @@
                :let [id (key table)
                      table-v (val table)
                      {:keys [x y stools]} table-v
-                     [width height]  (table-dims stools);))
+                     [width height] (table-dims stools) ;))
                      rect-right (+ x width)
                      rect-bottom (+ y height)
-                     rect {:width width :height height :rect-right rect-right :rect-bottom rect-bottom}]]
-            (swap! tables-state update-in [:tables id ]  #(merge % rect)))))
+                     rect {:width (Math/round width) :height (Math/round height) :rect-right (Math/round rect-right) :rect-bottom (Math/round rect-bottom)}]]
+             (swap! tables-state update-in [:tables id ]  #(merge % rect)))))
 
 (defn settings
   [size]
@@ -119,9 +119,9 @@
    Poziva je (settings-pos [zoom-new]) na startu i kod resajzinga."
 
  (swap! settings-base (fn [x] (->> x
-                                   (compiled-transform (:table-stool specter-paths-data) #(mapv (partial * size) %))
-                                   (compiled-transform (:menu-dims specter-paths-data) #(mapv (partial * size) %))
-                                   (compiled-transform (:stool-dims specter-paths-data) #(* size %))))))
+                                   (compiled-transform (:table-stool specter-paths-data) #(mapv (fn [x] (Math/round (* size x ))) %))
+                                   (compiled-transform (:menu-dims specter-paths-data) #(mapv (fn [x] (Math/round (* size x )))  %))
+                                   (compiled-transform (:stool-dims specter-paths-data) #(Math/round (* size %)))))))
 
 (defn settings-pos [zoom-new]
  "Preracunava x i y pozicije svih stolova i pamti tekucu vrijednost zum-a.
@@ -134,13 +134,13 @@
       (do
         (swap! tables-state
                  (fn [x] (->> x
-                              (compiled-transform (:zoom-x specter-paths-data) #(* zoom %))
-                              (compiled-transform (:zoom-y specter-paths-data) #(* zoom %))
+                              (compiled-transform (:scale-x specter-paths-data) #(Math/round (* zoom %)))
+                              (compiled-transform (:scale-y specter-paths-data) #(Math/round (* zoom %)))
                               (compiled-setval (:zoom specter-paths-data) zoom-new))))
         (when (not (empty? (:selected (:selection @tables-state))))
             (swap! tables-state
-                   (fn [x] (->> x (compiled-transform (:sel-start specter-paths-data) #(* zoom %))
-                                (compiled-transform (:sel-end specter-paths-data) #(* zoom %))))))
+                   (fn [x] (->> x (compiled-transform (:sel-start specter-paths-data) #(Math/round (* zoom %)))
+                                (compiled-transform (:sel-end specter-paths-data) #(Math/round (* zoom %)))))))
         (settings zoom)
         (table-props)))))
 
