@@ -83,7 +83,11 @@
     (r/create-class
       {:reagent-render
        (fn []
-         [:g [:rect (merge td/sel-defaults
+         [:g
+          (if (seq ids)
+            (doall (for [id selected]
+                     ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
+          [:rect (merge td/sel-defaults
                            {:x             x-s
                             :y             y-s
                             :width         width
@@ -98,11 +102,9 @@
                                                  (su/preview-state new-state full-state)
                                                  (swap! an/selected-current assoc-in [:current-state] new-state))))})]
 
-          (if (seq ids)
-            (doall (for [id selected]
-                     ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
           (if (and (not (:active selection)) (> (count selected) 1) (not= (:current-state @an/selected-current) 0))
             (su/sel-menu x-s y-s width height full-state))])})))
+
 
 
 

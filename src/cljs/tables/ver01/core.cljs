@@ -55,7 +55,11 @@
 (defn move-table [sel-top-lefts]
   (fn [x-org y-org start tables ctrl]
     (let [tables-collection (into (vals tables) (:borders @td/settings-base))
-          {:keys [selected show active]} (:selection @td/tables-state)
+          {:keys [selected show active offset]} (:selection @td/tables-state)
+          {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths
+          [x y] (mapv - (:svg @td/tables-state))
+          x-current (+  x-org (.-pageXOffset js/window) x)
+          y-current (+  y-org (.-pageYOffset js/window) y)
           [x-start y-start] start
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
@@ -100,12 +104,10 @@
           test-block (seq (flatten (mapv :dirxy result)))
           update-data (atom {})]
       (do
+
         (doall (for [x result]
                  (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x
                        [x-close y-close] close]
-                   (when (and test-block selected)
-                     (do
-                       (swap! update-data assoc-in [id [:selection :show]] true)))
                    (when-not (and sel? test-block)
                      (if (and ctrl (seq close))
                        (do (swap! update-data #(-> %
@@ -142,6 +144,12 @@
                                                        (assoc-in [id [:tables id :rect-right]] (+ x-new width))
                                                        (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
                    (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
+        (when   (not (and test-block selected))
+                (swap! update-data #(-> %
+                                        (assoc-in [1 [:selection :start ]] {:x (- (+  x-org (.-pageXOffset js/window) x) (:x offset))
+                                                                            :y (- (+  y-org (.-pageXOffset js/window) y) (:y offset))})
+                                        (assoc-in [1 [:selection :end ]] {:x1 (- (+  x-org (.-pageXOffset js/window) x) (:x1 offset))
+                                                                          :y1 (- (+  y-org (.-pageXOffset js/window) y) (:y1 offset))}))))
         (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                       (compiled-select (:all specter-paths)
                                                                        (mapv vec (compiled-select (:all-last specter-paths) @update-data)))))))))))
@@ -201,8 +209,8 @@
                               end {:x1 x-current :y1 y-current}
                               direction (filterv boolean (doall (for [table
                                                                       (conj (into (vals tables) (:borders @td/settings-base))
-                                                                            {:id         :1 :x x-sel-s :y y-sel-s :width (- x-sel-e x-sel-s (- 20)) :height (- y-sel-e y-sel-s (- 20))
-                                                                             :rect-right (+ x-sel-e 20) :rect-bottom (+ y-sel-e 20)})
+                                                                            {:id         :1 :x x-sel-s :y y-sel-s :width (- x-sel-e x-sel-s (- 0)) :height (- y-sel-e y-sel-s (- 0))
+                                                                             :rect-right (+ x-sel-e 0) :rect-bottom (+ y-sel-e 0)})
                                                                       :let [dir (u/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
                                                                                                        :rect-right (+ x-current 1) :rect-bottom (+ y-current 1)} 0)]
                                                                       :when (not= false dir)]
@@ -234,8 +242,14 @@
 
        :on-mouse-up   (fn [e]
                         (.preventDefault e)
-                        (swap! td/tables-state assoc-in [:selection :active] false) ; prestaje formiranje selekcije
-                        (swap! td/tables-state assoc-in [:selection :show] true))
+                        (if (not-empty (:selected selection))
+                          (do
+                            (swap! td/tables-state assoc-in [:selection :show] true)
+                            (swap! td/tables-state assoc-in [:selection :active] false)) ; prestaje formiranje
+                          (do
+                            (swap! td/tables-state assoc-in [:selection :show] false)
+                            (swap! td/tables-state assoc-in [:selection :active] false))))
+
 
        :on-mouse-move (fn [e]
                         (.preventDefault e)
@@ -249,7 +263,7 @@
                             (let [sel (filterv boolean (doall (for [table (vals tables)]
                                                                 (u/collides-sel-active table {:id         1 :x x :y y
                                                                                               :width      (- x1 x) :height (- y1 y)
-                                                                                              :rect-right x1 :rect-bottom y1} 0))))
+                                                                                              :rect-right x1 :rect-bottom y1} 16))))
                                   select-true (comp-paths :tables ALL LAST #(some (set sel) [(:id %)]) :selected)]
                               (swap! td/tables-state #(->> % (compiled-setval selection-show true)
                                                            (compiled-setval tabale-selected false)
@@ -258,13 +272,14 @@
                                                            (compiled-setval selectected-path sel)))))
 
                           (when (and (not (:show selection)) (seq (:selected selection)))
-                            (if (not (= @an/selected-current {:current-state 0 :ids [] :tables {}})) (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))
-                            (swap! td/tables-state #(->> %
-                                                         (compiled-setval selection-start {:x (- x-current (:x offset)) :y (- y-current (:y offset))})
-                                                         (compiled-setval selection-end {:x1 (- x-current (:x1 offset)) :y1 (- y-current (:y1 offset))}))))))}
+                            (if  (not= @an/selected-current {:current-state 0 :ids [] :tables {}})
+                              (reset! an/selected-current {:current-state 0 :ids [] :tables {}})))))}
+                            ;(swap! td/tables-state #(->> %
+                            ;                             (compiled-setval selection-start {:x (- x-current (:x offset)) :y (- y-current (:y offset))})
+                            ;                             (compiled-setval selection-end {:x1 (- x-current (:x1 offset)) :y1 (- y-current (:y1 offset))}))))))}
 
       [root (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]
-      ;[tables-small]
+      ;(js/console.log (:show selection))
       (if (:show selection)
         [(c/selection-rect (move-tables) full-state)])]]))
 

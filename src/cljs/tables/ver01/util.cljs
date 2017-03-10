@@ -5,7 +5,7 @@
   ((juxt (partial mapv min) (partial mapv max)) (vals start) (vals end)))
 
 
-(def d 2)
+(def d 16)
 (def d1 25)
 
 (defn >+ [d x y]

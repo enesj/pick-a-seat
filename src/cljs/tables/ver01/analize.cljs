@@ -23,7 +23,7 @@
 
 (defn test-collision [test-table tables]
   (let [dir (doall (for [table tables
-                         :let [dir (u/collides-sel table test-table 8)]
+                         :let [dir (u/collides-sel table test-table 16)]
                          :when (not= false dir)]
                      ;(do (println "coll" table test-table)
                      dir))]
