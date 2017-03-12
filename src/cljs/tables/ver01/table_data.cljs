@@ -107,7 +107,7 @@
                :let [id (key table)
                      table-v (val table)
                      {:keys [x y stools]} table-v
-                     [width height] (table-dims stools) ;))
+                     [width height] (table-dims stools)
                      rect-right (+ x width)
                      rect-bottom (+ y height)
                      rect {:width (Math/round width) :height (Math/round height) :rect-right (Math/round rect-right) :rect-bottom (Math/round rect-bottom)}]]

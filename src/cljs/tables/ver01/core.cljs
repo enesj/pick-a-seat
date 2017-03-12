@@ -118,7 +118,7 @@
                            (remove-seats close id))
                        (do
                          (if (and rs dirxy) (reset-seats id tables))
-                         (if (or show active hide-stools)
+                         (if (or show hide-stools)
                            (do
                              (swap! update-data #(-> %
                                                      (assoc-in [id [:selection :show]] false)
@@ -145,11 +145,19 @@
                                                        (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
                    (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
         (when   (not (and test-block selected))
-                (swap! update-data #(-> %
-                                        (assoc-in [1 [:selection :start ]] {:x (- (+  x-org (.-pageXOffset js/window) x) (:x offset))
-                                                                            :y (- (+  y-org (.-pageXOffset js/window) y) (:y offset))})
-                                        (assoc-in [1 [:selection :end ]] {:x1 (- (+  x-org (.-pageXOffset js/window) x) (:x1 offset))
-                                                                          :y1 (- (+  y-org (.-pageXOffset js/window) y) (:y1 offset))}))))
+                (swap! update-data #(let [x-sel (- (+  x-org (.-pageXOffset js/window) x) (:x offset))
+                                          y-sel (- (+  y-org (.-pageYOffset js/window) y) (:y offset))
+                                          x1-sel (- (+  x-org (.-pageXOffset js/window) x) (:x1 offset))
+                                          y1-sel (- (+  y-org (.-pageYOffset js/window) y) (:y1 offset))
+                                          x-sel (if (pos? x-sel) x-sel 0)
+                                          y-sel (if (pos? y-sel) y-sel 0)
+                                          x1-sel (if (pos? x1-sel) x1-sel 0)
+                                          y1-sel (if (pos? y1-sel) y1-sel 0)]
+                                      (-> %
+                                        (assoc-in [1 [:selection :start ]] {:x x-sel
+                                                                            :y y-sel})
+                                        (assoc-in [1 [:selection :end ]] {:x1 x1-sel
+                                                                          :y1 y1-sel})))))
         (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                       (compiled-select (:all specter-paths)
                                                                        (mapv vec (compiled-select (:all-last specter-paths) @update-data)))))))))))
@@ -186,7 +194,6 @@
         {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [:div {:style {:padding-left "5%"}} "Velika Sala"]
-
      [:svg
       {:fill          (:text t/palete)
        :width         w
@@ -217,7 +224,7 @@
                                                                   dir)))]
                           (if (empty? direction)
                             (do
-                              (reset! an/selected-current {:current-state 0 :ids [] :tables {}})
+                              (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {}})
                               (swap! td/tables-state #(->> %
                                                            (compiled-setval selection-start start)
                                                            (compiled-setval selection-end end)
@@ -232,25 +239,14 @@
                                                                                               :x1 (- x-current (:x1 (:end selection)))
                                                                                               :y1 (- y-current (:y1 (:end selection)))})
                                                            (compiled-setval selection-active false)))
-                              (swap! td/tables-state
-                                     #(compiled-setval tabale-selected false
-                                                       (->> %
-                                                            (compiled-setval selection-show false)
-                                                            (compiled-setval selectected-path nil)
-                                                            (compiled-setval selection-end nil)
-                                                            (compiled-setval selection-start nil))))))))
-
-       :on-mouse-up   (fn [e]
-                        (.preventDefault e)
-                        (if (not-empty (:selected selection))
-                          (do
-                            (swap! td/tables-state assoc-in [:selection :show] true)
-                            (swap! td/tables-state assoc-in [:selection :active] false)) ; prestaje formiranje
-                          (do
-                            (swap! td/tables-state assoc-in [:selection :show] false)
-                            (swap! td/tables-state assoc-in [:selection :active] false))))
-
-
+                              (do (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {}})
+                                  (swap! td/tables-state
+                                       #(compiled-setval tabale-selected false
+                                                         (->> %
+                                                              (compiled-setval selection-show false)
+                                                              (compiled-setval selectected-path nil)
+                                                              (compiled-setval selection-end nil)
+                                                              (compiled-setval selection-start nil)))))))))
        :on-mouse-move (fn [e]
                         (.preventDefault e)
                         (let [x-current (+ (.-clientX e) (.-pageXOffset js/window) x)
@@ -271,20 +267,22 @@
                                                            (compiled-setval selection-end end)
                                                            (compiled-setval selectected-path sel)))))
 
-                          (when (and (not (:show selection)) (seq (:selected selection)))
+                          (when  (and (not (:show selection))  (seq (:selected selection)))
                             (if  (not= @an/selected-current {:current-state 0 :ids [] :tables {}})
                               (reset! an/selected-current {:current-state 0 :ids [] :tables {}})))))}
-                            ;(swap! td/tables-state #(->> %
-                            ;                             (compiled-setval selection-start {:x (- x-current (:x offset)) :y (- y-current (:y offset))})
-                            ;                             (compiled-setval selection-end {:x1 (- x-current (:x1 offset)) :y1 (- y-current (:y1 offset))}))))))}
-
       [root (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]
-      ;(js/console.log (:show selection))
       (if (:show selection)
         [(c/selection-rect (move-tables) full-state)])]]))
 
 
 
+(defn mouse-up []
+  (fn [e]
+    (.preventDefault e)
+    (swap! td/tables-state assoc-in [:selection :active] false)
+    (if  (or (not-empty (:selected (:selection @td/tables-state))) (not-empty (:ids @an/selected-current)))
+        (swap! td/tables-state assoc-in [:selection :show] true)
+        (swap! td/tables-state assoc-in [:selection :show] false))))
 
 
 
@@ -302,7 +300,8 @@
                       x (.-left bcr) y (+ (.-top bcr) 28)]  ;; 28 pxela visina naslova !!!
                   (swap! td/tables-state assoc-in [:svg] [x y])
                   (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
-                  (events/listen js/window EventType.RESIZE (resize))))}))
+                  (events/listen js/window EventType.RESIZE (resize))
+                  (events/listen js/window EventType.MOUSEUP (mouse-up))))}))
 
 
 

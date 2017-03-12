@@ -17,3 +17,9 @@
        22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}
        24 {:id 24 :x 300 :y 300 :hide-stools false :selected false :stools [1 1 1 1]}
        25 {:id 25 :x 300 :y 120 :hide-stools false :selected false :stools [1 1 1 1]}}})
+
+(def table-types
+  [{:stools [1 1 1 1]}
+   {:stools [2 2 0 0]}
+   {:stools [1 1 2 2]}
+   {:stools [1 1 3 3]}])

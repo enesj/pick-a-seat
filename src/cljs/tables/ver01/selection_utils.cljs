@@ -13,8 +13,14 @@
    :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))})
 
 (defn preview-state [current-state full-state]
-  (let [selected (:selected (:selection full-state))]
-    (swap! an/selected-current assoc-in [:ids] selected)
+  (let [selected (:selected (:selection full-state))
+        tables-state (:tables full-state)
+        {:keys [next-id x-min  y-min x1-max  y1-max sel-type]} (an/data-preparation tables-state selected)]
+    ;(js/console.log "active" (:active (:selection full-state)))
+    (when (= sel-type :many)
+       (swap! td/tables-state assoc-in [:selection :start] {:x x-min :y y-min})
+       (swap! td/tables-state assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))
+    (swap! an/selected-current assoc-in [:ids] (if (not-empty selected) selected [next-id]))
     (swap! an/selected-current assoc-in [:tables]
            ((an/test-all) current-state))))
 

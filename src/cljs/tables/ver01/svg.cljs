@@ -79,3 +79,8 @@
                     (merege-path {:d (str "M" (+ x1 w2) "," y1 " v" h2) :stroke-width 1.5})
                     (merege-path {:d (str " M" (+ x1 w2) "," (+ y1 (/ h2 2)) " h" (- w2))})
                     (merege-path {:d (str "M" (+ x1 w2) "," (+ y1 (/ h2 2)) " l" (- arr1) ", " arr2 " v" (- (* arr2 2)) " l" arr1 ", " arr2 " z") :fill "orange"})]}}))
+
+(defn  delete-tables [x y w2 h2]
+  [:g
+   (merege-path {:d (str "M" (+ x (/ w2 8)) "," (+ y (/ h2 8)) " l" (/ w2 1.5) " " (/ h2 1.3)) :stroke-width 2 :stroke "red" :stroke-opacity 0.6})
+   (merege-path {:d (str "M" (+ x (/ w2 8)) "," (+ y (/ h2 8) (/ h2 1.3)) " l" (/ w2 1.5) " " (/ (- h2) 1.3)) :stroke-width 2 :stroke "red" :stroke-opacity 0.6})])

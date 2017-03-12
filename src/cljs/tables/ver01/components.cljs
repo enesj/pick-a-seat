@@ -6,6 +6,7 @@
             [tables.ver01.util :as u]
             [tables.ver01.analize :as  an]
             [tables.ver01.selection-utils :as su]
+            [tables.ver01.svg :as svg]
             [debux.cs.core :refer-macros [clog dbg break]])
   (:import [goog.events EventType]))
 
@@ -34,14 +35,17 @@
      (events/listen js/window EventType.MOUSEMOVE drag-move)
      (events/listen js/window EventType.MOUSEUP drag-end))))
 
+(defn merege-path [x]
+  [:path (merge td/menu-defaults x)])
 
-(defn table [{:keys [on-drag]} table-data-atom]
+
+(defn table [{:keys [on-drag]} table-data-atom & args]
   (let [table-data @table-data-atom
-        {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity]} table-data
+        {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
-        [width height] (td/table-dims stools)]
+        [width height] (td/table-dims stools)
+        [w2 h2] [width height]]
     [:g
-
      (if-not hide-stools
        (doall (for [stool (td/stool-maps x y width height rs-dir stools)
                     :let [stool-data (val stool)
@@ -60,6 +64,8 @@
                                       :stroke-dasharray (if selected "5,5")
                                       :d                (if selected "M5 20 l215 0")
                                       :on-mouse-down    (if (= on-drag nil) nil (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
+
+     (if del (svg/delete-tables x y width height))
      [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
      (if (and block on-drag)
        [:rect (merge td/sel-defaults {:x      (first block)
@@ -68,7 +74,6 @@
                                       :ry     (* y 0.01)
                                       :width  width
                                       :height height})])]))
-
 
 
 (defn selection-rect [on-drag full-state]
@@ -85,8 +90,9 @@
        (fn []
          [:g
           (if (seq ids)
-            (doall (for [id selected]
-                     ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
+              (doall (for [id ids
+                           :when (not-empty ((:tables @an/selected-current) id))]
+                       ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
           [:rect (merge td/sel-defaults
                            {:x             x-s
                             :y             y-s
@@ -96,13 +102,19 @@
                             :on-mouse-up   (fn [e]
                                              (let [selection-state (:current-state @an/selected-current)
                                                    all-states (an/test-all)
-                                                   new-state (if (= selection-state (- (count all-states) 1)) 0 (inc selection-state))
+                                                   new-state  (if (and (or
+                                                                         (= (:start selection) (:start  @an/selected-current))
+                                                                         (= (:start  @an/selected-current) {}))
+                                                                       (< selection-state (- (count all-states) 1)))
+                                                                  (inc selection-state) 0)
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))
                                                  (su/preview-state new-state full-state)
-                                                 (swap! an/selected-current assoc-in [:current-state] new-state))))})]
+                                                 (swap! an/selected-current assoc-in [:current-state] new-state)
+                                                 (swap! an/selected-current assoc-in [:start] (:start selection))
+                                                 (swap! an/selected-current assoc-in [:end] (:end selection)))))})]
 
-          (if (and (not (:active selection)) (> (count selected) 1) (not= (:current-state @an/selected-current) 0))
+          (if (and (not (:active selection)) (> (count ids) 0) (not= (:current-state @an/selected-current) 0))
             (su/sel-menu x-s y-s width height full-state))])})))
 
 
