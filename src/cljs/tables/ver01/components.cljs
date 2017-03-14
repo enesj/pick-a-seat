@@ -84,14 +84,16 @@
         width (- x-e x-s)
         height (- y-e y-s)
         table-dim (first (:table-stool @td/settings-base))
-        ids (:ids @an/selected-current)]
+        selected-current @an/selected-current
+        selection-state (:current-state selected-current)
+        ids (:ids selected-current)]
     (r/create-class
       {:reagent-render
        (fn []
          [:g
           (if (seq ids)
               (doall (for [id ids
-                           :when (not-empty ((:tables @an/selected-current) id))]
+                           :when (not-empty ((:tables selected-current) id))]
                        ^{:key id} [table {:on-drag nil} (r/cursor an/selected-current [:tables id])])))
           [:rect (merge td/sel-defaults
                            {:x             x-s
@@ -100,21 +102,20 @@
                             :height        height
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
                             :on-mouse-up   (fn [e]
-                                             (let [selection-state (:current-state @an/selected-current)
-                                                   all-states (an/test-all)
+                                             (let [all-states (an/test-all)
                                                    new-state  (if (and (or
-                                                                         (= (:start selection) (:start  @an/selected-current))
-                                                                         (= (:start  @an/selected-current) {}))
+                                                                         (= (:start selection) (:start  selected-current))
+                                                                         (= (:start  selected-current) {}))
                                                                        (< selection-state (- (count all-states) 1)))
                                                                   (inc selection-state) 0)
                                                    current-state (all-states new-state)]
                                                (when (not (:active selection))
-                                                 (su/preview-state new-state full-state)
-                                                 (swap! an/selected-current assoc-in [:current-state] new-state)
-                                                 (swap! an/selected-current assoc-in [:start] (:start selection))
-                                                 (swap! an/selected-current assoc-in [:end] (:end selection)))))})]
-
-          (if (and (not (:active selection)) (> (count ids) 0) (not= (:current-state @an/selected-current) 0))
+                                                 (su/preview-state new-state full-state all-states)
+                                                 (swap! an/selected-current #(-> %
+                                                                                 (assoc-in [:current-state] new-state)
+                                                                                 (assoc-in [:start] (:start (:selection @td/tables-state))) ;; mora citati najnovije podatke jer ih mijenja
+                                                                                 (assoc-in [:end] (:end (:selection @td/tables-state))))))))})] ;; funkcija preview-state
+          (if (and (not (:active selection)) (> (count ids) 0) (not= selection-state 0))
             (su/sel-menu x-s y-s width height full-state))])})))
 
 

@@ -8,21 +8,37 @@
 
 
 (def tab-events
-  {:ok     (fn [] (swap! td/tables-state update-in [:tables] (fn [x] (merge x (transform [ALL LAST] #(an/clear-modifications %) (:tables @an/selected-current))))
-                         (swap! an/selected-current assoc-in [:current-state] 0)))
-   :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {}}))})
+  {:ok     (fn [] (let [selected-current @an/selected-current
+                        del (= (:del selected-current) (:current-state selected-current))]
+                    (swap! td/tables-state  (fn [x]
+                                                (if del
+                                                  (-> x
+                                                    (assoc-in  [:selection :selected] [])
+                                                    (update-in  [:tables] #(apply dissoc % (:ids selected-current))))
+                                                  (update-in x [:tables] (fn [y] (merge y (transform [ALL LAST] #(an/clear-modifications %) (:tables selected-current))))))))
+                    (swap! an/selected-current (fn [x]
+                                                 (-> x
+                                                  (assoc-in [:ids] (if del [] (:ids selected-current)))
+                                                  (assoc-in [:tables] {})
+                                                  (assoc-in [:current-state] 0)
+                                                  (assoc-in [:del] false))))))
+   :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false}))})
 
-(defn preview-state [current-state full-state]
+(defn preview-state [current-state full-state all-states]
   (let [selected (:selected (:selection full-state))
         tables-state (:tables full-state)
         {:keys [next-id x-min  y-min x1-max  y1-max sel-type]} (an/data-preparation tables-state selected)]
     ;(js/console.log "active" (:active (:selection full-state)))
     (when (= sel-type :many)
-       (swap! td/tables-state assoc-in [:selection :start] {:x x-min :y y-min})
-       (swap! td/tables-state assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))
-    (swap! an/selected-current assoc-in [:ids] (if (not-empty selected) selected [next-id]))
-    (swap! an/selected-current assoc-in [:tables]
-           ((an/test-all) current-state))))
+       (swap! td/tables-state #(-> %
+                                (assoc-in [:selection :start] {:x x-min :y y-min})
+                                (assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))))
+    (swap! an/selected-current #(-> %
+                                    (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
+                                    (assoc-in [:del] (if (= sel-type :many) (- (count all-states ) 1) nil))
+                                    (assoc-in [:tables] (all-states current-state))))))
+
+
 
 
 (defn sel-menu-tabs [full-state]

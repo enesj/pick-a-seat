@@ -7,7 +7,7 @@
             [tables.ver01.templates :as tt]
             [debux.cs.core :refer-macros [clog dbg break]]))
 
-(def selected-current (r/atom {:current-state 0 :ids [] :tables {} :start {} :end {}}))
+(def selected-current (r/atom {:current-state 0 :ids [] :tables {} :start {} :end {} :del false}))
 
 (defn sel-modifications [data]
   (-> data
@@ -23,12 +23,11 @@
 
 
 (defn test-collision [test-table tables]
-  (let [dir (doall (for [table tables
-                         :let [dir (u/collides-sel table test-table 16)]
-                         :when (not= false dir)]
-                       dir))]
-    ;(do (println  test-table tables "test" dir)
-    dir))
+  (doall (for [table tables
+               :let [dir (u/collides-sel table test-table 16)]
+               :when (not= false dir)]
+             dir)))
+
 
 (defn move-table [table [x y]]
   (-> table
@@ -37,6 +36,8 @@
       (update-in [:y] #(+ % y))
       (update-in [:rect-bottom] #(+ % y))))
 
+(defn extract-ids [table-data]
+  (into {} (mapv #(vector (:id %) %) table-data)))
 
 (defn data-preparation [tables-state selected]
   (let [selection (:selection @td/tables-state)
@@ -68,14 +69,14 @@
           {:sel-type sel-type :start start :end end :next-id next-id
            :table-types table-types :x-sel x-sel :y-sel y-sel :x1-sel x1-sel :y1-sel y1-sel
            :extern-tables extern-tables :selection-table selection-table})
+
       1 (let [sel-type :one]
           {:sel-type sel-type :start start :end end :next-id next-id})
 
       (let [sel-type :many
             all-tables (map second tables-state)
             sel-tables (map second (select-keys tables-state selected))
-            del-sel-tables (into {} (map #(vector (:id %) %)
-                                         (map #(assoc-in % [:del] true) sel-tables)))
+            del-sel-tables (extract-ids  (map #(assoc-in % [:del] true) sel-tables))
             other-tables (remove (set sel-tables) all-tables)
             other-ids (mapv :id other-tables)
             sel-tables-left (sort-by :x sel-tables)
@@ -107,7 +108,7 @@
 
 
 (defn test-one [sel-tables-state sel-tables-all sel-tables extern-tables x-min x-max x1-max y-min y-max y1-max type]
-  (reset! sel-tables-state (into {} (map #(vector (:id %) %) sel-tables-all)))
+  (reset! sel-tables-state (extract-ids sel-tables-all))
   (doall
     (for [current-table sel-tables
           :let [new-table-left (move-table current-table [(- x-min (:x current-table)) 0])
@@ -182,19 +183,17 @@
             space-fn (fn [test-1 test-2 tables min max orientation close]
                        (let [adjusted (adjust-space tables min max orientation close)]
                          (if adjusted
-                           (into {} (map #(vector (:id %) %)
-                                         (if (or (empty? test-1) (empty? test-2))
+                           (extract-ids  (if (or (empty? test-1) (empty? test-2))
                                            adjusted
-                                           '())))
+                                           '()))
                            nil)))
             tables-v-space (space-fn lefts rights sel-tables-top y-min y1-max :y false)
             tables-h-space (space-fn tops downs sel-tables-left x-min x1-max :x false)
             tables-v-join (space-fn lefts rights sel-tables-top y-min y1-max :y true)
             tables-h-join (space-fn tops downs sel-tables-left x-min x1-max :x true)]
-
         (vec
           (cond
-            (> (count tables-new) 1) (merge tables-new {})
+            (> (count tables-new) 1) (merge  (vec (conj tables-new {})) del-sel-tables)
             (or (seq tables-v-space) (seq tables-v-join))
             (vec (remove nil? [{} (first tables-new) tables-v-space tables-v-join del-sel-tables]))
             (or (seq tables-h-space) (seq tables-h-join))

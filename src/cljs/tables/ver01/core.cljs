@@ -224,7 +224,7 @@
                                                                   dir)))]
                           (if (empty? direction)
                             (do
-                              (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {}})
+                              (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false})
                               (swap! td/tables-state #(->> %
                                                            (compiled-setval selection-start start)
                                                            (compiled-setval selection-end end)
@@ -239,7 +239,7 @@
                                                                                               :x1 (- x-current (:x1 (:end selection)))
                                                                                               :y1 (- y-current (:y1 (:end selection)))})
                                                            (compiled-setval selection-active false)))
-                              (do (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {}})
+                              (do (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false})
                                   (swap! td/tables-state
                                        #(compiled-setval tabale-selected false
                                                          (->> %
@@ -259,7 +259,7 @@
                             (let [sel (filterv boolean (doall (for [table (vals tables)]
                                                                 (u/collides-sel-active table {:id         1 :x x :y y
                                                                                               :width      (- x1 x) :height (- y1 y)
-                                                                                              :rect-right x1 :rect-bottom y1} 16))))
+                                                                                              :rect-right x1 :rect-bottom y1} 0))))
                                   select-true (comp-paths :tables ALL LAST #(some (set sel) [(:id %)]) :selected)]
                               (swap! td/tables-state #(->> % (compiled-setval selection-show true)
                                                            (compiled-setval tabale-selected false)
@@ -269,7 +269,7 @@
 
                           (when  (and (not (:show selection))  (seq (:selected selection)))
                             (if  (not= @an/selected-current {:current-state 0 :ids [] :tables {}})
-                              (reset! an/selected-current {:current-state 0 :ids [] :tables {}})))))}
+                              (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false})))))}
       [root (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]
       (if (:show selection)
         [(c/selection-rect (move-tables) full-state)])]]))
