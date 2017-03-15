@@ -69,7 +69,7 @@
         x2 (* x1 x1)
         y1 (- (:y p1) (:y p2))
         y2 (* y1 y1)]
-    (if (< (Math/sqrt (+ x2 y2)) 10) true false)))
+    (if (< (Math/sqrt (+ x2 y2)) (+ d 3) ) true false)))
 
 (defn angles [table]
   (let [{:keys [x y rect-right rect-bottom]} table]

@@ -102,6 +102,7 @@
                             :height        height
                             :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
                             :on-mouse-up   (fn [e]
+                                             ;(.preventDefault e)
                                              (let [all-states (an/test-all)
                                                    new-state  (if (and (or
                                                                          (= (:start selection) (:start  selected-current))
