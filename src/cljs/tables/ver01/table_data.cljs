@@ -87,7 +87,16 @@
    :zoom            (comp-paths :scale :zoom)
    :borders-right-x (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :x)
    :borders-right   (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :rect-right)
-   :borders-top     (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)})
+   :borders-top     (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)
+   :selection-show   (comp-paths :selection :show)
+   :tabale-selected  (comp-paths :tables ALL LAST :selected)
+   :selectected-path (comp-paths :selection :selected)
+   :selection-active (comp-paths :selection :active)
+   :selection-offset (comp-paths :selection :offset)
+   :selection-end    (comp-paths :selection :end)
+   :selection-start  (comp-paths :selection :start)
+   :all              (comp-paths ALL ALL)
+   :all-last         (comp-paths ALL LAST)})
 
 
 (defn table-dims [stools]

@@ -20,18 +20,6 @@
 
 (def svg-state (atom :tables))
 
-(def specter-paths
-  {:selection-show   (comp-paths :selection :show)
-   :tabale-selected  (comp-paths :tables ALL LAST :selected)
-   :selectected-path (comp-paths :selection :selected)
-   :selection-active (comp-paths :selection :active)
-   :selection-offset (comp-paths :selection :offset)
-   :selection-end    (comp-paths :selection :end)
-   :selection-start  (comp-paths :selection :start)
-   :all              (comp-paths ALL ALL)
-   :all-last         (comp-paths ALL LAST)})
-
-
 
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
@@ -44,7 +32,7 @@
 
 
 (defn remove-seats [close id]
-  (let [cs (map #(first (val %)) (group-by :id (map #(zipmap [:w :h :id :dir] %) (partition 4 close))))]
+  (let [cs (->> (partition 4 close) (map #(zipmap [:w :h :id :dir] %)) (group-by :id) (map #(first (val %))))]
     (doseq [c cs]
       (let [id1 (:id c)
             d (rest (name (:dir c)))
@@ -58,10 +46,10 @@
   (fn [x-org y-org start tables ctrl]
     (let [tables-collection (into (vals tables) (:borders @td/settings-base))
           {:keys [selected show active offset]} (:selection @td/tables-state)
-          {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths
+          {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} td/specter-paths-data
           [x y] (mapv - (:svg @td/tables-state))
-          x-current (+  x-org (.-pageXOffset js/window) x)
-          y-current (+  y-org (.-pageYOffset js/window) y)
+          x-current (+ x-org (.-pageXOffset js/window) x)
+          y-current (+ y-org (.-pageYOffset js/window) y)
           [x-start y-start] start
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
@@ -82,7 +70,7 @@
                                                (for [table tables-collision
                                                      :let [dir (u/collides-with table table-xy)]
                                                      :when dir]
-                                                   dir))
+                                                 dir))
                                 direction1 (when (and (not sel?) direction-xy)
                                              (doall
                                                (for [table tables-collision
@@ -100,13 +88,16 @@
                                                                                    :when (not= false dir)]
                                                                                dir)))
                                             close1)))]
-                            {:id     id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools :x (Math/round x) :y (Math/round y) :x-new (Math/round x-new)
-                             :x-move (Math/round x-move) :y-new (Math/round y-new) :y-move (Math/round y-move) :block block :ctrl ctrl :close close :slected-ids selected :sel? sel?
-                             :width  (Math/round (:width table-my)) :height (Math/round (:height table-my)) :table-xy table-xy})))
+                            {:id       id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools
+                             :x        (Math/round x) :y (Math/round y)
+                             :x-new    (Math/round x-new) :x-move (Math/round x-move)
+                             :y-new    (Math/round y-new) :y-move (Math/round y-move)
+                             :block    block :ctrl ctrl :close close :slected-ids selected :sel? sel?
+                             :width    (Math/round (:width table-my)) :height (Math/round (:height table-my))
+                             :table-xy table-xy})))
           test-block (seq (flatten (mapv :dirxy result)))
           update-data (atom {})]
       (do
-
         (doall (for [x result]
                  (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x
                        [x-close y-close] close]
@@ -146,23 +137,23 @@
                                                        (assoc-in [id [:tables id :rect-right]] (+ x-new width))
                                                        (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
                    (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
-        (when   (not (and test-block selected))
-                (swap! update-data #(let [x-sel (- (+  x-org (.-pageXOffset js/window) x) (:x offset))
-                                          y-sel (- (+  y-org (.-pageYOffset js/window) y) (:y offset))
-                                          x1-sel (- (+  x-org (.-pageXOffset js/window) x) (:x1 offset))
-                                          y1-sel (- (+  y-org (.-pageYOffset js/window) y) (:y1 offset))
-                                          x-sel (if (pos? x-sel) x-sel 0)
-                                          y-sel (if (pos? y-sel) y-sel 0)
-                                          x1-sel (if (pos? x1-sel) x1-sel 0)
-                                          y1-sel (if (pos? y1-sel) y1-sel 0)]
-                                      (-> %
-                                        (assoc-in [1 [:selection :start ]] {:x x-sel
-                                                                            :y y-sel})
-                                        (assoc-in [1 [:selection :end ]] {:x1 x1-sel
-                                                                          :y1 y1-sel})))))
+        (when (not (and test-block selected))
+          (swap! update-data #(let [x-sel (- (+ x-org (.-pageXOffset js/window) x) (:x offset))
+                                    y-sel (- (+ y-org (.-pageYOffset js/window) y) (:y offset))
+                                    x1-sel (- (+ x-org (.-pageXOffset js/window) x) (:x1 offset))
+                                    y1-sel (- (+ y-org (.-pageYOffset js/window) y) (:y1 offset))
+                                    x-sel (if (pos? x-sel) x-sel 0)
+                                    y-sel (if (pos? y-sel) y-sel 0)
+                                    x1-sel (if (pos? x1-sel) x1-sel 0)
+                                    y1-sel (if (pos? y1-sel) y1-sel 0)]
+                                (-> %
+                                    (assoc-in [1 [:selection :start]] {:x x-sel
+                                                                       :y y-sel})
+                                    (assoc-in [1 [:selection :end]] {:x1 x1-sel
+                                                                     :y1 y1-sel})))))
         (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
-                                                      (compiled-select (:all specter-paths)
-                                                                       (mapv vec (compiled-select (:all-last specter-paths) @update-data)))))))))))
+                                                      (compiled-select (:all td/specter-paths-data)
+                                                                       (mapv vec (compiled-select (:all-last td/specter-paths-data) @update-data)))))))))))
 
 
 (defn move-tables []
@@ -171,7 +162,7 @@
 (defn root [tables ids]
   [:g
    (doall (for [id ids]
-            ^{:key id} [c/table {:on-drag (if (= @svg-state :tables)  (move-tables) nil)} (r/cursor tables [id])]))])
+            ^{:key id} [c/table {:on-drag (if (= @svg-state :tables) (move-tables) nil)} (r/cursor tables [id])]))])
 
 
 (defn tables-small [view-box]
@@ -197,9 +188,7 @@
         [x y] (mapv - (:svg full-state))
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
         {:keys [w h]} (:window @td/settings-base)
-        {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} specter-paths
-        table-events (tev/table-events full-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e w h
-                                   tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show)]
+        table-events (tev/table-events full-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e w h)]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [:div {:style {:padding-left "5%"}} "Velika Sala"]
      [:svg
@@ -215,12 +204,9 @@
         (if (:show selection)
           [(c/selection-rect (move-tables) full-state)]))]]))
 
-
-
 (defn resize []
   (fn [evt]
     (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))))
-
 
 (def tables-mount
   (with-meta tables
@@ -232,7 +218,6 @@
                   (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
                   (events/listen js/window EventType.RESIZE (resize))
                   (events/listen js/window EventType.MOUSEUP (tev/mouse-up))))}))
-
 
 
 (defn by-id [id]
