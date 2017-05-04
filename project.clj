@@ -64,7 +64,7 @@
                  [org.clojure/java.jdbc "0.6.2-alpha3"]
                  [philoskim/debux "0.2.1"]]
 
-  :plugins [[lein-cljsbuild "1.1.1"]
+  :plugins [[lein-cljsbuild "1.1.4"]
             [lein-kibit "0.1.3"]]
 
   :min-lein-version "2.5.0"

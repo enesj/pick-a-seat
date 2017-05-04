@@ -10,7 +10,7 @@
     [tables.ver01.selection-utils :as su]
     [tables.ver01.analize :as an]
     [tables.ver01.templates :as tt]
-    [tables.ver01.svg-events :as tev]
+    [tables.ver01.table-events :as tev]
     [devtools.core :as devtools]
     [devtools.toolbox :as toolbox])
   (:import [goog.events EventType]))

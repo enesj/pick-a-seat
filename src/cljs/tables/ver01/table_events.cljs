@@ -1,4 +1,4 @@
-(ns tables.ver01.svg-events
+(ns tables.ver01.table-events
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
     [goog.events :as events]
