@@ -28,7 +28,9 @@
                  [buddy/buddy-auth "1.2.0"]
                  [buddy/buddy-hashers "1.0.0"]
                  [binaryage/devtools "0.9.1"]
-                 [binaryage/dirac "1.1.5"]
+                 [devcards "0.2.2" :exclusions [org.clojure/tools.reader
+                                                cljs/react
+                                                cljsjs/react-dom-server]]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
@@ -76,7 +78,7 @@
 
   :cljsbuild
   {:builds {:dev {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                  :figwheel     {:on-jsload "closp-tables.dev/main"}
+                  :figwheel     {:on-jsload "closp-tables.dev/main" :devcards true}
                   :compiler     {:main           "closp-tables.dev"
                                  :asset-path     "/js/compiled/out"
                                  :output-to      "resources/public/js/compiled/app.js"
@@ -90,7 +92,7 @@
 
   :figwheel {:css-dirs   ["resources/public/css"]} ;; watch and update CSS
 
-  :profiles {:dev     {:repl-options {:init-ns          tables.ver01.user
+  :profiles {:dev     {:repl-options {:init-ns          pickaseat.ver01.user
                                       :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
                        :plugins      [[lein-ring "0.9.0"]
                                       [lein-figwheel "0.5.6"]
@@ -121,7 +123,7 @@
 
   :test2junit-output-dir "test-results"
 
-  :main tables.ver01.core
+  :main pickaseat.ver01.core
 
   :uberjar-name "closp-tables.jar"
 

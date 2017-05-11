@@ -1,8 +1,8 @@
 {:jdbc-url               "jdbc:sqlite:./db/closp-crud-webinterface.sqlite"
  :migrations-output-path "./resources/migrators/sqlite"
  :clj-src                "src/clj"
- :ns-db                  "tables.ver01.db"
- :ns-db-entities         "tables.ver01.db.entities"
- :ns-routes              "tables.ver01.routes"
- :ns-layout              "tables.ver01.layout"
+ :ns-db                  "pickaseat.ver01.db"
+ :ns-db-entities         "pickaseat.ver01.db.entities"
+ :ns-routes              "pickaseat.ver01.routes"
+ :ns-layout              "pickaseat.ver01.layout"
  :templates              "resources/templates"}

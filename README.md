@@ -196,7 +196,7 @@ Closp comes with some examples on how to use clj webdriver in your projects for 
 `integtest\clj`.
 
 Per default the tests are run with the :htlmunit driver, which is fast, but not that good on javascript. To change that,
-open: tables.ver01.web.setup and adapt the driver in `browser-setup` to `:firefor` or `:chrome`.
+open: pickaseat.ver01.web.setup and adapt the driver in `browser-setup` to `:firefor` or `:chrome`.
 
 ## Internationalization
 

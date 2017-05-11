@@ -1,6 +1,6 @@
 (ns closp-tables.dev
   (:require [schema.core :as s]
-            [tables.ver01.core :as core]))
+            [pickaseat.ver01.core :as core]))
 
 (s/set-fn-validation! true)
 
