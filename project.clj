@@ -24,7 +24,7 @@
                  [prone "1.1.2"]
                  [im.chit/hara.io.scheduler "2.4.7"]
                  [noir-exception "0.2.5"]
-
+                 [complex/complex "0.1.10"]
                  [buddy/buddy-auth "1.2.0"]
                  [buddy/buddy-hashers "1.0.0"]
                  [binaryage/devtools "0.9.1"]

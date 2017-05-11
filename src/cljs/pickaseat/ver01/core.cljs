@@ -5,6 +5,8 @@
     [pickaseat.ver01.helper :as h]
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.tables-core :as tc]
+    [pickaseat.ver01.floor-map.core :as floor-core]
+    [pickaseat.ver01.floor-map.testboard :as floor]
     [pickaseat.ver01.tables.themes :as t]
     [pickaseat.ver01.tables.templates :as tt]
     [pickaseat.ver01.tables.table-events :as tev]
@@ -17,7 +19,8 @@
 (enable-console-print!)
 (devtools/install! [:formatters :hints])
 
-(def current-mode (atom tc/table-mode))  ; table-mode, floor-edit, floor-draw, preview, reservations
+;(def current-mode (atom tc/table-mode))
+(def current-mode (atom floor-core/floor-mode))
 
 (defn modes []
   (let [mode (@current-mode)
@@ -26,7 +29,7 @@
      :root   root}))
 
 (defn stage []
-  (let [{:keys [w h events root]} (modes)
+  (let [{:keys [events root]} (modes)
         {:keys [key-down key-up mouse-down mouse-move]} events
          common-data @cd/common-data]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
@@ -39,7 +42,7 @@
        :on-key-up     key-up
        :on-mouse-down mouse-down
        :on-mouse-move mouse-move}
-      root]]))
+      [floor/draw-floor]]]))
 
 (def resize-fn
   (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window))))
