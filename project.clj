@@ -28,9 +28,9 @@
                  [buddy/buddy-auth "1.2.0"]
                  [buddy/buddy-hashers "1.0.0"]
                  [binaryage/devtools "0.9.1"]
-                 [devcards "0.2.2" :exclusions [org.clojure/tools.reader
-                                                cljs/react
-                                                cljsjs/react-dom-server]]
+                 ;[devcards "0.2.2" :exclusions [org.clojure/tools.reader
+                 ;                               cljs/react
+                 ;                               cljsjs/react-dom-server]]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
@@ -78,7 +78,8 @@
 
   :cljsbuild
   {:builds {:dev {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                  :figwheel     {:on-jsload "closp-tables.dev/main" :devcards true}
+                  :figwheel     {:on-jsload "closp-tables.dev/main"}
+                                 ;:devcards true}
                   :compiler     {:main           "closp-tables.dev"
                                  :asset-path     "/js/compiled/out"
                                  :output-to      "resources/public/js/compiled/app.js"

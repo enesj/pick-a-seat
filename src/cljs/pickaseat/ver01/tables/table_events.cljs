@@ -15,7 +15,7 @@
       (swap! td/tables-state assoc-in [:selection :show] false))))
 
 
-(defn table-events [full-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e ]
+(defn table-events [full-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e]
   (let [{:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} td/specter-paths-data]
     {:mouse-down (fn [e]
                    (.preventDefault e)

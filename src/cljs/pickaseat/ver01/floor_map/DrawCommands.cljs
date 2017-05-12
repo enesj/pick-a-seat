@@ -1,7 +1,12 @@
-(ns pickaseat.ver01.floor-map.DrawCommand
+(ns pickaseat.ver01.floor-map.DrawCommands
   (:require
     [complex.number :as n]
-    [pickaseat.ver01.floor-map.settings :as s]))
+    [pickaseat.ver01.floor-map.settings :as s]
+    [pickaseat.ver01.floor-map.components :as comps]
+    [cljs.core.async :as async :refer [>! <! put! chan alts! timeout]]
+    [pickaseat.ver01.floor-map.pixie :as p])
+  (:require-macros
+    [cljs.core.async.macros :refer [go]]))
 
 (defrecord Penup [])
 (defrecord Pendown [])
@@ -104,3 +109,103 @@
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))
+
+
+
+(defn exec [commands]
+  (-> list (apply commands) flatten vec))
+
+(defn undo []
+  (exec [(->Undo)]))
+
+(defn redo []
+  (exec [(->Redo)]))
+
+(defn draw-poly [x y]
+  (exec [(->Penup)]))
+
+(defn draw-start [x y]
+  (exec [(->Pendown)]))
+
+(defn draw-line [x y snap]
+  (exec [(->Drawline) (p/->Forward [x y])]))
+
+
+(defn run-program [chan program]
+  (go
+    (doseq [command program]
+      (cond
+        (instance? Pause command) (<! (timeout (:delay command)))
+        :else (>! chan command)))))
+
+
+(defn pixie? [command]
+  (satisfies? p/Command command))
+
+(defn update-state
+  "return new state for given command"
+  [state command]
+  (let [{:keys [turtle polyline squares pen line]} state]
+    (if (pixie? command)
+      (let [new-turtle (p/process-command command turtle)]
+        (assoc-in state [:turtle] new-turtle))
+      (process-command command state))))
+
+(defn process-channel [turtle-channel app-state]
+  (go (loop []
+        (let [command (<! turtle-channel)]
+          (swap! app-state #(update-state % command))
+          (recur)))))
+
+(defn draw-menu [app-state ui-channel]
+  (let [{:keys [mode tables]}  @app-state
+        history @s/history
+        undo? (not-empty (rest (:performed history)))
+        redo? (not-empty (:recalled history))]
+    [:svg {:width "400px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
+     [:text {:opacity       0.8
+
+             :on-mouse-down (fn [e] (.preventDefault e)
+                              (swap! app-state assoc-in [:mode]
+                                     (if (= mode :drawing) :editing :drawing)))
+             :x             10 :y 20}
+      (name mode)]
+     [:text {:opacity       (if undo? 0.8 0.1)
+             :on-mouse-down (fn [e] (.preventDefault e)
+                              (run-program ui-channel (undo)))
+             :x             90 :y 20} "Undo"]
+     [:text {:opacity       (if redo? 0.8 0.1)
+             :on-mouse-down (fn [e] (.preventDefault e)
+                              (run-program ui-channel (redo)))
+             :x             140 :y 20} "Redo"]
+     [:text {:on-mouse-down (fn [e] (.preventDefault e)
+                              (swap! app-state update-in [:tables] not))
+             :x             200 :y 20} (if tables "hide(tables)" "show(tables)")]]))
+
+
+(defn draw-figures [figures polyline opacity]
+  (for [figure (sort-by key figures)]
+    (let [fig (first (val figure))
+          opacity (if (> (count polyline) 1) (:low opacity) (:high polyline))]
+      (case (key fig)
+        :polygon (comps/polygon
+                   {:key     (key figure)
+                    :stroke  "black"
+                    :fill    "white"
+                    :opacity opacity
+                    :filter  "url(#s1)"}
+                   ;{:key       (rand 1000)
+                   ; :stroke    "black"
+                   ; :fill      "white"
+                   ; :opacity   opacity
+                   ; :transform "translate(0 0)"}
+                   (val fig))))))
+
+
+(defn draw-snap-points [snap-points line connection-point-style]
+  [:g
+   (comps/circle (last line) 0 connection-point-style)
+   (for [snap-point snap-points]
+     [:g {:key (rand 1000)}
+      (comps/circle snap-point 1 connection-point-style)
+      (comps/color-line "orange" [snap-point (last line)] {:stroke-dasharray "5, 5"})])])

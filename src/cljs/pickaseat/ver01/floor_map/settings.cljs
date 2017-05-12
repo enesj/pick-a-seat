@@ -10,35 +10,36 @@
    :history-length         15})
 
 (def init-turtle
-  {:position           [0 0]
-   :heading            :drawing
-   :pen                :up
-   :polyline           []
-   :line               [[0 0] [0 0]]
-   :line-angle         0
-   :snap-points        []
-   :snap-xs            []
-   :snap-ys            []
-   :cut-poly           []
-   :cut-line           []
-   :end                false
-   :scale              1})
+  {:position    [0 0]
+   :heading     :drawing
+   :pen         :up
+   :polyline    []
+   :line        [[0 0] [0 0]]
+   :line-angle  0
+   :snap-points []
+   :snap-xs     []
+   :snap-ys     []
+   :cut-poly    []
+   :cut-line    []
+   :end         false
+   :scale       1})
 
 (defn initial-app-state [base resolution]
-  {:mode       :drawing
-   :turtle     init-turtle
-   :figures    {}
-   :start      []
-   :opacity    {:high 0.9 :low 0.1}
-   :base       base
-   :resolution resolution
-   :selection {:active false
-               :show false
-               :stop false
-               :start  {:x 0, :y 0}
-               :end    {:x1 0, :y1 0}
+  {:mode      :drawing
+   :tables    false
+   :turtle    init-turtle
+   :figures   {}
+   :start     []
+   :opacity   {:high 0.9 :low 0.1}
+   ;:base       base
+   ;:resolution resolution
+   :selection {:active   false
+               :show     false
+               :stop     false
+               :start    {:x 0, :y 0}
+               :end      {:x1 0, :y1 0}
                :selected []
-               :offset {}}})
+               :offset   {}}})
 
 (def init-floor-state
   (initial-app-state 0 800))

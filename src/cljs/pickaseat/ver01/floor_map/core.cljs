@@ -1,12 +1,12 @@
 (ns pickaseat.ver01.floor-map.core
   (:require
-   [devcards.core]
+   ;[devcards.core]
    [complex.number :as n :refer [zero one i negative-one negative-i infinity add sub mult div]]
-   [pickaseat.ver01.floor-map.testboard :as floor]
+   [pickaseat.ver01.floor-map.draw :as floor]
    [reagent.core :as reagent])
   (:require-macros
-   [reagent.ratom :as ratom :refer [reaction]]
-   [devcards.core :as dc :refer [defcard deftest defcard-rg defcard-doc]]))
+   [reagent.ratom :as ratom :refer [reaction]]))
+   ;[devcards.core :as dc :refer [defcard deftest defcard-rg defcard-doc]]))
 
 (enable-console-print!)
 

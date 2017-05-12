@@ -1,0 +1,96 @@
+/* hello-devcards CSS */
+
+.turtle {
+    fill: green;
+}
+.position {
+    fill: yellow;
+    stroke: blue;
+}
+svg.board {
+  margin: 32px;
+}
+button.command {
+    margin: 1px;
+    padding-top:    4px;
+    padding-bottom: 4px;
+    padding-left:   4px;
+    padding-right:  4px;
+}
+rect.white {
+    fill: grey;
+    stroke: black;
+}
+rect.black {
+    fill: black;
+    stroke: black;
+}
+polygon.white {
+    fill: grey;
+    stroke: black;
+}
+polygon.black {
+    fill: black;
+    stroke: black;
+}
+polyline {
+  stroke: grey;
+  fill: none;
+}
+line-1 {
+  stroke: yellow;
+  fill: none;
+}
+candidate {
+  stroke: red;
+  fill: none;
+}
+g#turtle {
+  stroke: black;
+  fill: hsla(270, 100%, 50%, 0.2);
+}
+g#turtle2 {
+  stroke: black;
+  fill: transparent;
+}
+polygon.left {
+  fill: hsla(330, 100%, 50%, 0.5);
+}
+polygon.right {
+ fill: hsla(150, 100%, 50%, 0.5);
+}
+g#lattice {
+  stroke: black;
+  fill: blue;
+}
+polygon.red {
+  fill: transparent;
+  stroke: black;
+}
+g#projective-lines {
+  stroke: orange;
+}
+polygon.forward-arrow {
+  stroke: transparent;
+  fill: hsla(240, 100%, 50%, 0.8);
+}
+polygon.backward-arrow {
+  stroke: transparent;
+  fill: hsla(60, 100%, 50%, 0.8);
+}
+polygon.left-arrow {
+  stroke: transparent;
+  fill: hsla(330, 100%, 50%, 0.8);
+}
+polygon.right-arrow {
+  stroke: transparent;
+  fill: hsla(150, 100%, 50%, 0.8);
+}
+div.control-panel circle {
+  fill: transparent;
+  stroke: pink;
+}
+polygon.shadow {
+    -webkit-filter: drop-shadow( -5px -5px 5px #000 );
+    filter: drop-shadow( -5px -5px 5px #000 );
+}
