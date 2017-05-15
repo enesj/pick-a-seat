@@ -19,7 +19,7 @@
    (if (:show (:selection state))
      [(c/selection-rect (move-tables) state)])])
 
-(defn root-preview [state tables ids]
+(defn root-preview [ tables ids]
   [:g {:opacity "0.4"}
    (doall (for [id ids]
             ^{:key id} [c/table {:on-drag nil} (r/cursor tables [id])]))])
@@ -33,9 +33,8 @@
         common-data @cd/common-data
         [x y] (mapv - (:svg common-data))
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
-        {:keys [key-down key-up mouse-down mouse-move]} (tev/table-events tables-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
+        {:keys [key-down key-up mouse-down mouse-move]} (tev/table-events selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
         root [root tables-state (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]]
-    ;{:keys [w h]} (:window @td/settings-base)]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [:div {:style {:padding-left "5%"}} "Velika Sala"]
      [:svg

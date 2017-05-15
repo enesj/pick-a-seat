@@ -1,5 +1,5 @@
-(ns pickaseat.ver01.tables.util
-  (:require [pickaseat.ver01.data.table_data :as td]))
+(ns pickaseat.ver01.tables.util)
+  ;(:require [pickaseat.ver01.data.table_data :as td]))
 
 (defn start-end [start end]
   ((juxt (partial mapv min) (partial mapv max)) (vals start) (vals end)))
@@ -58,7 +58,7 @@
      (if (and dir-x dir-y) false (or dir-x dir-y :xy))))
   ([one t-xy]
    (let [{id1 :id x1 :x y1 :y rect-right1 :rect-right rect-bottom1 :rect-bottom} one
-         {:keys [id x y rect-right rect-bottom]} t-xy]
+         {:keys [x y rect-right rect-bottom]} t-xy]
      (cond
        (<+ d rect-right1 x) false
        (>+ d x1 rect-right) false

@@ -43,8 +43,7 @@
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
-        [width height] (td/table-dims stools)
-        [w2 h2] [width height]]
+        [width height] (td/table-dims stools)]
     [:g
      (if-not hide-stools
        (doall (for [stool (td/stool-maps x y width height rs-dir stools)
@@ -83,7 +82,6 @@
         [[x-s y-s] [x-e y-e]] (u/start-end (:start selection) (:end selection))
         width (- x-e x-s)
         height (- y-e y-s)
-        table-dim (first (:table-stool @td/settings-base))
         selected-current @an/selected-current
         selection-state (:current-state selected-current)
         ids (:ids selected-current)]
@@ -108,8 +106,7 @@
                                                                          (= (:start selection) (:start  selected-current))
                                                                          (= (:start  selected-current) {}))
                                                                        (< selection-state (- (count all-states) 1)))
-                                                                  (inc selection-state) 0)
-                                                   current-state (all-states new-state)]
+                                                                  (inc selection-state) 0)]
                                                (when (not (:active selection))
                                                  (su/preview-state new-state full-state all-states)
                                                  (swap! an/selected-current #(-> %

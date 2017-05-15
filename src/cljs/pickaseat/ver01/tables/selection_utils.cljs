@@ -3,8 +3,7 @@
   (:require [pickaseat.ver01.data.table_data :as td]
             [pickaseat.ver01.tables.svg :as svg]
             [pickaseat.ver01.tables.analize :as  an]
-            [debux.cs.core :refer-macros [clog dbg break]]
-            [reagent.core :as r]))
+            [debux.cs.core :refer-macros [clog dbg break]]))
 
 
 (def tab-events

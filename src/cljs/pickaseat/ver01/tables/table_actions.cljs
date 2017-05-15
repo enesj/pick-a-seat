@@ -1,13 +1,9 @@
 (ns pickaseat.ver01.tables.table-actions
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
-    [reagent.core :as r]
-    [goog.events :as events]
-    [pickaseat.ver01.tables.tables-components :as c]
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.util :as u]
     [pickaseat.ver01.data.common-data :as cd]))
-
 
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
@@ -34,10 +30,7 @@
   (fn [x-org y-org start tables ctrl]
     (let [tables-collection (into (vals tables) (:borders @td/settings-base))
           {:keys [selected show active offset]} (:selection @td/tables-state)
-          {:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} td/specter-paths-data
           [x y] (mapv - (:svg @cd/common-data))
-          x-current (+ x-org (.-pageXOffset js/window) x)
-          y-current (+ y-org (.-pageYOffset js/window) y)
           [x-start y-start] start
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
@@ -65,7 +58,11 @@
                                                      :let [dir (u/collides-with table table-x table-y)]
                                                      :when dir]
                                                  dir)))
-                                direction (when direction1 (if (or (and (some #(= :x %) direction1) (some #(= :y %) direction1)) (some #(= :xy %) direction1)) :xy (first direction1)))
+                                direction (when direction1 (if (or (and (some #(= :x %) direction1)
+                                                                        (some #(= :y %) direction1))
+                                                                   (some #(= :xy %) direction1))
+                                                             :xy
+                                                             (first direction1)))
                                 x-move (if (= :x direction) x x-new)
                                 y-move (if (= :y direction) y y-new)
                                 close (if ctrl
@@ -87,7 +84,7 @@
           update-data (atom {})]
       (do
         (doall (for [x result]
-                 (let [{:keys [id x-new y-new x-move y-move dir show active hide-stools rs block close slected-ids dirxy sel? width height]} x
+                 (let [{:keys [id x-new y-new x-move y-move dir show  hide-stools rs  close dirxy sel? width height]} x
                        [x-close y-close] close]
                    (when-not (and sel? test-block)
                      (if (and ctrl (seq close))

@@ -1,10 +1,10 @@
 (ns pickaseat.ver01.data.table_data
-  (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select compiled-transform collect-one compiled-setval]])
+  (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath
+                                filterer srange comp-paths compiled-select compiled-transform
+                                collect-one compiled-setval]])
   (:require [pickaseat.ver01.tables.themes :as t]
             [reagent.core :as r]
             [debux.cs.core :refer-macros [clog dbg break]]))
-            ;[tables.selection-utils :as su]
-
 
 (defonce tables-state
          (r/atom

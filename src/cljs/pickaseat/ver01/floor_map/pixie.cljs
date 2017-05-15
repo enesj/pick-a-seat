@@ -84,8 +84,6 @@
 (defn snap-test [polyline possition]
   (if (> (count polyline) 2)
     (let [polyline-nolast (map #(map Math/round %)  (butlast polyline))
-          xs  (map first polyline-nolast)
-          ys  (map second polyline-nolast)
           x-match (filter #(= (Math/round (first possition)) (first %)) polyline-nolast)
           y-match (filter #(= (Math/round (second possition)) (second %)) polyline-nolast)]
       [(into x-match y-match) [(first x-match) (first y-match)]])))

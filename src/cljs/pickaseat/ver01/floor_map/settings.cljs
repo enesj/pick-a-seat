@@ -1,6 +1,6 @@
 (ns pickaseat.ver01.floor-map.settings
   (:require
-    [reagent.core :as reagent]))
+    [reagent.core :as r]))
 
 (def base-settings
   {:end-point-style        {:r 15 :fill "rgba(255,255,255,0.1)" :stroke "orange" :stroke-dasharray "5, 5"}
@@ -24,7 +24,7 @@
    :end         false
    :scale       1})
 
-(defn initial-app-state [base resolution]
+(defn initial-app-state []
   {:mode      :drawing
    :tables    false
    :turtle    init-turtle
@@ -42,8 +42,8 @@
                :offset   {}}})
 
 (def init-floor-state
-  (initial-app-state 0 800))
+  (initial-app-state))
 
-(def data (reagent/atom init-floor-state))
+(def data (r/atom init-floor-state))
 
-(def history (atom {:performed [] :recalled []}))
+(def history (atom {:performed [init-floor-state] :recalled []}))

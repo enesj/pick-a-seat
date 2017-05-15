@@ -1,7 +1,6 @@
 (ns pickaseat.ver01.tables.table-events
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
-    [goog.events :as events]
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.util :as u]
     [pickaseat.ver01.tables.analize :as an]))
@@ -15,7 +14,7 @@
       (swap! td/tables-state assoc-in [:selection :show] false))))
 
 
-(defn table-events [full-state selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e]
+(defn table-events [ selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e]
   (let [{:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show]} td/specter-paths-data]
     {:mouse-down (fn [e]
                    (.preventDefault e)
@@ -62,7 +61,6 @@
                            y-current (+ (.-clientY e) (.-pageYOffset js/window) y)
                            start (:start selection)
                            end {:x1 x-current :y1 y-current}
-                           offset (:offset selection)
                            [[x y] [x1 y1]] (u/start-end start end)]
 
                        (when (:active selection)

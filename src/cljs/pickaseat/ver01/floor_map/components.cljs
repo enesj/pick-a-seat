@@ -1,6 +1,5 @@
 (ns pickaseat.ver01.floor-map.components
   (:require
-    [pickaseat.ver01.floor-map.svg :as svg]
     [goog.events :as events])
   (:import [goog.events EventType]))
 
@@ -32,28 +31,7 @@
 (defn group-svg [id & elements]
   (into [:g {:id id}] elements))
 
-(def origin [0 0])
 
-(defn straight-arrow [id l]
-  (let [q (* (/ 4) l)
-        tip [l 0]
-        v1 [(- q) q]
-        v2 [0 (+ (- q) (- q))]
-        v3 [q q]]
-    (group-svg id
-               [:circle {:cx 0 :cy 0 :r 3 :class "position"}]
-               (path (svg/reduce-path (svg/->M origin)
-                                  (svg/->l tip)
-                                  (svg/->l v1)
-                                  (svg/->l v2)
-                                  (svg/->l v3))))))
-
-(defn square
-  [class-name position base]
-  (let [[x y] position]
-    [:rect {:class class-name
-            :x x :y y
-            :width base :height base}]))
 
 (defn point-str [[x y]]
   (str x "," y))

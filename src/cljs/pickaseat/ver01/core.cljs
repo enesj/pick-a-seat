@@ -5,15 +5,12 @@
     [pickaseat.ver01.helper :as h]
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.tables-core :as tc]
-    [pickaseat.ver01.floor-map.core :as floor-core]
     [pickaseat.ver01.floor-map.draw :as floor]
-    [pickaseat.ver01.tables.themes :as t]
     [pickaseat.ver01.tables.templates :as tt]
     [pickaseat.ver01.tables.table-events :as tev]
     [pickaseat.ver01.data.common-data :as cd]
-    [devtools.core :as devtools]
-    [devtools.toolbox :as toolbox])
-    ;[devcards.core])
+    [devtools.core :as devtools])
+    ;[devtools.toolbox :as toolbox])
   (:import [goog.events EventType]))
 
 

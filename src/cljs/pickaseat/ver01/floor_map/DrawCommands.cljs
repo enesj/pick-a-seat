@@ -29,12 +29,12 @@
           near (n/distance (n/c position) (n/c (last polyline)))
           end (n/distance (n/c position) (n/c (first polyline)))
           end-test (:r (:end-point-style s/base-settings))
-          performed (if (= (count performed) 0) (conj performed app) performed)
+          ;performed (if (= (count performed) 0) (conj performed app) performed)
           shift-performed (if (= (count performed) (:history-length s/base-settings))
                             (vec (rest performed)) performed)]
       (if (= pen :down)
         (do
-          (reset! s/history {:performed (conj shift-performed (dissoc app :history)) :recalled []})
+          (reset! s/history {:performed (conj shift-performed app) :recalled []})
           (as-> app $
                 (assoc-in $ [:turtle :pen] :up)
                 (if cut-poly
@@ -45,7 +45,6 @@
                   (if (and (< end end-test) (> (count polyline) 2))
                     (-> $
                         (assoc-in [:turtle :line] [position position])
-                        ;(assoc-in [:turtle :candidate-line] [position position])
                         (assoc-in [:figures (inc (count (:figures app)))] {:polygon polyline})
                         (assoc-in [:turtle :polyline] []))
                     (if (> near 10)
@@ -57,7 +56,8 @@
 
                       (-> $
                           (assoc-in [:turtle :line] [])
-                          (assoc-in [:turtle :polyline] [])))))))
+                          (assoc-in [:turtle :polyline] [])))))
+                (do (reset! s/history {:performed (conj shift-performed $) :recalled []}) $)))
         app)))
   Pendown
   (process-command [_ app]
@@ -92,7 +92,7 @@
     (let [history @s/history
           {:keys [performed recalled]} history
           butlast-performed (vec (butlast performed))]
-      (if (> (count performed) 1)
+      (if (> (count performed) 0)
         (do
           (reset! s/history {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
           (-> (last butlast-performed)
@@ -121,13 +121,13 @@
 (defn redo []
   (exec [(->Redo)]))
 
-(defn draw-poly [x y]
+(defn draw-poly []
   (exec [(->Penup)]))
 
-(defn draw-start [x y]
+(defn draw-start []
   (exec [(->Pendown)]))
 
-(defn draw-line [x y snap]
+(defn draw-line [x y]
   (exec [(->Drawline) (p/->Forward [x y])]))
 
 
@@ -170,14 +170,20 @@
                                      (if (= mode :drawing) :editing :drawing)))
              :x             10 :y 20}
       (name mode)]
-     [:text {:opacity       (if undo? 0.8 0.1)
-             :on-mouse-down (fn [e] (.preventDefault e)
-                              (run-program ui-channel (undo)))
-             :x             90 :y 20} "Undo"]
-     [:text {:opacity       (if redo? 0.8 0.1)
-             :on-mouse-down (fn [e] (.preventDefault e)
-                              (run-program ui-channel (redo)))
-             :x             140 :y 20} "Redo"]
+     [:text {:opacity     (if undo? 0.8 0.1)
+             :on-mouse-up (fn [e]
+                            (when undo?
+                              (.preventDefault e)
+                              (.stopPropagation e)
+                              (run-program ui-channel (undo))))
+             :x           90 :y 20} "Undo"]
+     [:text {:opacity     (if redo? 0.8 0.1)
+             :on-mouse-up (fn [e]
+                            (when redo?
+                              (.preventDefault e)
+                              (.stopPropagation e)
+                              (run-program ui-channel (redo))))
+             :x           140 :y 20} "Redo"]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
                               (swap! app-state update-in [:tables] not))
              :x             200 :y 20} (if tables "hide(tables)" "show(tables)")]]))

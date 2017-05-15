@@ -1,31 +1,18 @@
 (ns pickaseat.ver01.floor-map.draw
   (:require
     ;[devcards.core]
-    [pickaseat.ver01.floor-map.pixie :as p]
     [pickaseat.ver01.floor-map.components :as comps]
     [pickaseat.ver01.floor-map.settings :as s]
-    [complex.number :as n]
-    [complex.geometry :as g]
-    [reagent.core :as reagent]
-    [devtools.core :as devtools]
-    [devtools.toolbox :as toolbox]
-    [pickaseat.ver01.floor-map.edit-events :as eev]
+    [reagent.core :as r]
     [pickaseat.ver01.floor-map.DrawCommands :as dc]
-    [goog.events :as events]
     [cljs.core.async :as async :refer [>! <! put! chan alts! timeout]]
     [pickaseat.ver01.data.common-data :as cd]
     [pickaseat.ver01.tables.tables-core :as tc]
-    [pickaseat.ver01.data.table_data :as td]
-    [reagent.core :as r]
-    [pickaseat.ver01.tables.themes :as t])
-  (:import [goog.events EventType])
+    [pickaseat.ver01.data.table_data :as td])
   (:require-macros
-    ;[devcards.core :as dc :refer [defcard deftest defcard-rg defcard-doc]]
     [cljs.core.async.macros :refer [go]]))
 
-
 (enable-console-print!)
-(devtools/install! [:formatters])
 
 (def filters
   [:defs
@@ -47,25 +34,24 @@
 
 (defn get-bcr [svg-root]
   (-> svg-root
-      reagent/dom-node
+      r/dom-node
       .getBoundingClientRect))
 
 (defn tables-back []
   (let [full-state @td/tables-state
         tables (:tables full-state)]
-     [tc/root-preview full-state (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
+     [tc/root-preview (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
 
 (defn draw-floor []
   (let [data s/data
         {:keys [start-point-style end-point-style connection-point-style opacity]} s/base-settings
-        {:keys [turtle base resolution figures mode selection]} @data
-        {:keys [snap-points line-angle line polyline pen cut-poly cut-line]} turtle
+        {:keys [turtle figures]} @data
+        {:keys [snap-points line polyline pen cut-poly cut-line]} turtle
         common-data @cd/common-data
         ui-channel (chan)
         _ (dc/process-channel ui-channel data)
         x-bcr (atom 0)
-        y-bcr (atom 0)
-        xx-bcr @x-bcr]
+        y-bcr (atom 0)]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [:div {:style {:padding-left "5%"}} "Velika Sala"]
      (dc/draw-menu data ui-channel)
@@ -79,20 +65,19 @@
        :on-mouse-down (fn [e]
                         (.preventDefault e)
                         (dc/run-program ui-channel
-                                     (dc/draw-start (- (.-clientX e) @x-bcr)
-                                                 (- (.-clientY e) @y-bcr))))
+                                     (dc/draw-start)))
        :on-mouse-up   (fn [e]
                         (.preventDefault e)
                         (dc/run-program ui-channel
-                                     (dc/draw-poly (- (.-clientX e) @x-bcr)
-                                                (- (.-clientY e) @y-bcr))))
+                                     (dc/draw-poly)))
+
        :on-mouse-move (fn [e]
                         (.preventDefault e)
                         (dc/run-program ui-channel
                                      (dc/draw-line
                                        (- (.-clientX e) @x-bcr)
-                                       (- (.-clientY e) @y-bcr)
-                                       (if (not-empty snap-points) true false))))}
+                                       (- (.-clientY e) @y-bcr))))}
+
       filters
       [:g
        (when-not (empty? figures)

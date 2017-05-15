@@ -1,7 +1,6 @@
 (ns pickaseat.ver01.tables.analize
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.table_data :as td]
-            [pickaseat.ver01.tables.svg :as svg]
             [pickaseat.ver01.tables.util :as u]
             [reagent.core :as r]
             [debux.cs.core :refer-macros [clog dbg break]]))
