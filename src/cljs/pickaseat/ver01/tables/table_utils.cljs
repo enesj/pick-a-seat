@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.tables.util)
+(ns pickaseat.ver01.tables.table-utils)
   ;(:require [pickaseat.ver01.data.table_data :as td]))
 
 (defn start-end [start end]

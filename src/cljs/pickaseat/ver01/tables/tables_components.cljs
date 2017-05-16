@@ -3,10 +3,10 @@
   (:require [reagent.core :as r]
             [goog.events :as events]
             [pickaseat.ver01.data.table_data :as td]
-            [pickaseat.ver01.tables.util :as u]
-            [pickaseat.ver01.tables.analize :as  an]
+            [pickaseat.ver01.tables.table-utils :as u]
+            [pickaseat.ver01.tables.tables-analize :as  an]
             [pickaseat.ver01.tables.selection-utils :as su]
-            [pickaseat.ver01.tables.svg :as svg]
+            [pickaseat.ver01.tables.table-svg :as svg]
             [debux.cs.core :refer-macros [clog dbg break]])
   (:import [goog.events EventType]))
 
@@ -38,6 +38,55 @@
 (defn merege-path [x]
   [:path (merge td/menu-defaults x)])
 
+(defn stool-data [stool dir id t1 t2]
+  (conj [:rect] (assoc stool :dir dir :id id :transform (str " translate(" t1 ", " t2 ")"))))
+
+
+(defn stool-maps [x y w h rs stools]
+  (let [dims (:stool-dims @td/base-settings)
+        {{n-h :h  n-w :w } :normal {s-h :h s-w :w } :small } dims
+        wr2 (/ n-h 2)
+        h-wr (+ h n-h)
+        h-wr2 (+ h wr2)
+        w-wr (+ w n-h)
+        w-wr2 (+ w wr2)
+        h2 (/ h 2)
+        w2 (/ w 2)
+        stool-h (merge td/stool-defaults-normal  {:width n-h :height n-w} {:x ( - x n-h)        :y (+ y h2 ( - n-h))})
+        stool-v (merge td/stool-defaults-normal  {:width n-w :height n-h} {:x (+ x w2 ( - n-h)) :y ( - y n-h)})
+        stool-h-s (merge td/stool-defaults-small {:width s-h :height s-w} {:x ( - x wr2)        :y (+ y h2 ( - wr2))})
+        stool-v-s (merge td/stool-defaults-small {:width s-w :height s-h} {:x (+ x w2 ( - wr2)) :y ( - y wr2)})
+        all-seats-new (->>  (doall (for [side (range 0 4)
+                                         :let [stools-side (inc (stools side))]]
+                                     (for [i (range 1 stools-side)
+                                           :let [id1 (keyword (str side "-" (+ (* i 2) 1)))
+                                                 id1s (keyword (str id1 "-s"))
+                                                 id2 (keyword (str side "-" (+ (* i 2) 2)))
+                                                 id2s (keyword (str id1 "-s"))
+                                                 t-h (- (* i (/ w stools-side)) w2)
+                                                 t-v (- (* i (/ h stools-side)) h2)]]
+                                       (case side
+                                         0
+                                         [(stool-data stool-v :t id1 t-h 0)
+                                          (stool-data stool-v-s :t id1s t-h 0)]
+                                         1
+                                         [(stool-data stool-v :d id2 t-h h-wr)
+                                          (stool-data stool-v-s :d id2s t-h h-wr2)]
+                                         2
+                                         [(stool-data stool-h :l id1 0 t-v)
+                                          (stool-data stool-h-s :l id1s 0 t-v)]
+                                         3
+                                         [(stool-data stool-h :r id2 w-wr t-v)
+                                          (stool-data stool-h-s :r id2s w-wr2 t-v)]))))
+                            flatten
+                            (partition 2)
+                            (mapv vec)
+                            (into []))]
+    (loop [rs rs
+           all-seats all-seats-new]
+      (if (> (count rs) 0)
+        (recur (next rs) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs))) all-seats)))
+        all-seats))))
 
 (defn table [{:keys [on-drag]} table-data-atom & args]
   (let [table-data @table-data-atom
@@ -46,7 +95,7 @@
         [width height] (td/table-dims stools)]
     [:g
      (if-not hide-stools
-       (doall (for [stool (td/stool-maps x y width height rs-dir stools)
+       (doall (for [stool (stool-maps x y width height rs-dir stools)
                     :let [stool-data (val stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))

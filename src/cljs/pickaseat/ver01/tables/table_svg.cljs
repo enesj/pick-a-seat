@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.tables.svg
+(ns pickaseat.ver01.tables.table-svg
   (:require [pickaseat.ver01.data.table_data :as td]))
 
 

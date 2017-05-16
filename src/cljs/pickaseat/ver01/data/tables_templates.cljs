@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.tables.templates)
+(ns pickaseat.ver01.data.tables-templates)
 
 (def table-templates
   {:1 {

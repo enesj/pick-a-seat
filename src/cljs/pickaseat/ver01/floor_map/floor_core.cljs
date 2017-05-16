@@ -1,8 +1,8 @@
-(ns pickaseat.ver01.floor-map.core
+(ns pickaseat.ver01.floor-map.floor-core
   (:require
    ;[devcards.core]
    [complex.number :as n :refer [zero one i negative-one negative-i infinity add sub mult div]]
-   [pickaseat.ver01.floor-map.draw :as floor]
+   [pickaseat.ver01.floor-map.floor-draw :as floor]
    [reagent.core :as reagent])
   (:require-macros
    [reagent.ratom :as ratom :refer [reaction]]))

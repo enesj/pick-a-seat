@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.tables.themes)
+(ns pickaseat.ver01.data.themes)
 (def paletes
 
   {:0 {:table-fill "rgb(250, 250, 250)"

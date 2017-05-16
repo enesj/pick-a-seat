@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.floor-map.components
+(ns pickaseat.ver01.floor-map.floor-components
   (:require
     [goog.events :as events])
   (:import [goog.events EventType]))

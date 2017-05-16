@@ -1,8 +1,8 @@
 (ns pickaseat.ver01.tables.selection-utils
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.table_data :as td]
-            [pickaseat.ver01.tables.svg :as svg]
-            [pickaseat.ver01.tables.analize :as  an]
+            [pickaseat.ver01.tables.table-svg :as svg]
+            [pickaseat.ver01.tables.tables-analize :as  an]
             [debux.cs.core :refer-macros [clog dbg break]]))
 
 
@@ -75,7 +75,7 @@
 (defn sel-menu [x y w h full-state]
   (let [tabs (sel-menu-tabs full-state)
         tabs-count (count tabs)
-        [w1 h1 r] (:menu-dims @td/settings-base)
+        [w1 h1 r] (:menu-dims @td/base-settings)
         per-tab (if (> w h) (/ w tabs-count) (/ h tabs-count))
         hs (* per-tab (/ h1 w1))
         rs (* r (/ h1 w1))

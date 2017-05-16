@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.floor-map.settings
+(ns pickaseat.ver01.data.floor-data
   (:require
     [reagent.core :as r]))
 
@@ -46,4 +46,4 @@
 
 (def data (r/atom init-floor-state))
 
-(def history (atom {:performed [init-floor-state] :recalled []}))
+(def history (atom {:performed [init-floor-state] :recalled []} :tables    false))

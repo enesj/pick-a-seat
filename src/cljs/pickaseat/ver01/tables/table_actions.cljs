@@ -2,8 +2,9 @@
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
     [pickaseat.ver01.data.table_data :as td]
-    [pickaseat.ver01.tables.util :as u]
-    [pickaseat.ver01.data.common-data :as cd]))
+    [pickaseat.ver01.tables.table-utils :as u]
+    [pickaseat.ver01.data.common-data :as cd]
+    [pickaseat.ver01.floor-map.floor-draw-events :as de]))
 
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
@@ -28,7 +29,7 @@
 
 (defn move-table [sel-top-lefts]
   (fn [x-org y-org start tables ctrl]
-    (let [tables-collection (into (vals tables) (:borders @td/settings-base))
+    (let [tables-collection (into (vals tables) (:borders @td/base-settings))
           {:keys [selected show active offset]} (:selection @td/tables-state)
           [x y] (mapv - (:svg @cd/common-data))
           [x-start y-start] start
@@ -139,4 +140,5 @@
         (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                       (compiled-select (:all td/specter-paths-data)
                                                                        (mapv vec (compiled-select (:all-last td/specter-paths-data) @update-data)))))))))))
+
 

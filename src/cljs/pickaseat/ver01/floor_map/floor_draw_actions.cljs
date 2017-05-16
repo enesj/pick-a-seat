@@ -1,13 +1,11 @@
-(ns pickaseat.ver01.floor-map.pixie
+(ns pickaseat.ver01.floor-map.floor-draw-actions
   (:require
     [complex.vector :as v]
     [complex.number :as n]
     [complex.geometry :as g]
     [cljs.core.match :refer-macros [match]]))
 
-
 (defrecord Forward [d])
-
 
 (defn segment-collision [new-line polyline]
   (let [test-polylines (butlast polyline)]
@@ -77,10 +75,6 @@
     [mouse-possition nil]))
 
 
-(defprotocol Command
-  (process-command [command app-state]))
-
-
 (defn snap-test [polyline possition]
   (if (> (count polyline) 2)
     (let [polyline-nolast (map #(map Math/round %)  (butlast polyline))
@@ -117,6 +111,8 @@
                           (assoc-in $ [:snap-points]  snap-points)
                           (assoc-in $ [:position] constrain-position)))))
 
+(defprotocol Command
+  (process-command [command app-state]))
 
 (extend-protocol Command
   Forward
