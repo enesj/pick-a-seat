@@ -4,7 +4,8 @@
                                 collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.themes :as t]
             [reagent.core :as r]
-            [debux.cs.core :refer-macros [clog dbg break]]))
+            [debux.cs.core :refer-macros [clog dbg break]]
+            [pickaseat.ver01.data.floor-data :as fd]))
 
 (defonce tables-state
          (r/atom
@@ -105,6 +106,7 @@
    :selection-offset (comp-paths :selection :offset)
    :selection-end    (comp-paths :selection :end)
    :selection-start  (comp-paths :selection :start)
+   :polygon          (comp-paths :figures ALL LAST :polygon ALL ALL)
    :zoom             (comp-paths :scale :zoom)
    :all              (comp-paths ALL ALL)
    :all-last         (comp-paths ALL LAST)})
@@ -143,23 +145,24 @@
                                    (compiled-transform (:stool-dims specter-paths-data) #(Math/round (* size %)))))))
 
 (defn settings-pos [zoom-new]
- "Preracunava x i y pozicije svih stolova i pamti tekucu vrijednost zum-a.
-  Poziva je (resize) na startu i kod resajzinga.
-  Poziva funkcije (settings zoom) i (table-props)"
+  "Preracunava x i y pozicije svih stolova i pamti tekucu vrijednost zum-a.
+	 Poziva je (resize) na startu i kod resajzinga.
+	 Poziva funkcije (settings zoom) i (table-props)"
 
   (let [zoom-old (:zoom (:scale @tables-state))
         zoom (/ zoom-new zoom-old)]
     (if (not= zoom 1)
       (do
         (swap! tables-state
-                 (fn [x] (->> x
-                              (compiled-transform (:scale-x specter-paths-data) #(Math/round (* zoom %)))
-                              (compiled-transform (:scale-y specter-paths-data) #(Math/round (* zoom %)))
-                              (compiled-setval (:zoom specter-paths-data) zoom-new))))
+               (fn [x] (->> x
+                            (compiled-transform (:scale-x specter-paths-data) #(Math/round (* zoom %)))
+                            (compiled-transform (:scale-y specter-paths-data) #(Math/round (* zoom %)))
+                            (compiled-setval (:zoom specter-paths-data) zoom-new))))
+        (swap! fd/data (fn [x] (compiled-transform (:polygon specter-paths-data) #(Math/round (* zoom %)) x)))
         (when (not (empty? (:selected (:selection @tables-state))))
-            (swap! tables-state
-                   (fn [x] (->> x (compiled-transform (:sel-start specter-paths-data) #(Math/round (* zoom %)))
-                                (compiled-transform (:sel-end specter-paths-data) #(Math/round (* zoom %)))))))
+          (swap! tables-state
+                 (fn [x] (->> x (compiled-transform (:sel-start specter-paths-data) #(Math/round (* zoom %)))
+                              (compiled-transform (:sel-end specter-paths-data) #(Math/round (* zoom %)))))))
         (settings zoom)
         (table-props)))))
 

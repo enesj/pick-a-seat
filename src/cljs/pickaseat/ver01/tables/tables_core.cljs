@@ -65,7 +65,7 @@
                               (.preventDefault e)
                               (.stopPropagation e)
                               (redo)))
-             :x           180 :y 20} (str "Redo " (count recalled))]
+             :x           160 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
                               (swap! td/history update-in [:layout] not))
              :x             240 :y 20} (if layout "hide(layout)" "show(layout)")]]))

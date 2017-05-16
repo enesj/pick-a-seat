@@ -45,7 +45,7 @@
                {:component-did-mount
                 (fn [this]
                   (let [bcr (.getBoundingClientRect (r/dom-node this))
-                        x (.-left bcr) y (+ (.-top bcr) 28)]  ;; 28 pxela visina naslova !!!
+                        x (.-left bcr) y (+ (.-top bcr) 90)]  ;; 28 pxela visina naslova !!!
                     (swap! cd/common-data assoc-in [:svg] [x y])
                     (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
                     (reset! td/history {:performed [@td/tables-state] :recalled []})

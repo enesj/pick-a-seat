@@ -67,10 +67,10 @@
       (comps/color-line "orange" [snap-point (last line)] {:stroke-dasharray "5, 5"})])])
 
 (defn draw-menu [app-state ui-channel]
-  (let [{:keys [mode tables]}  @app-state
-        history @fd/history
-        undo? (not-empty (rest (:performed history)))
-        redo? (not-empty (:recalled history))]
+  (let [{:keys [mode ]}  @app-state
+        {:keys [tables performed recalled]} @fd/history
+        undo? (not-empty (rest performed))
+        redo? (not-empty recalled)]
     [:svg {:width "400px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
      [:text {:opacity       0.8
 
@@ -85,17 +85,17 @@
                               (.preventDefault e)
                               (.stopPropagation e)
                               (de/run-program ui-channel (de/undo))))
-             :x           90 :y 20} "Undo"]
+             :x           90 :y 20} (str "Undo " (count performed))]
      [:text {:opacity     (if redo? 0.8 0.1)
              :on-mouse-up (fn [e]
                             (when redo?
                               (.preventDefault e)
                               (.stopPropagation e)
                               (de/run-program ui-channel (de/redo))))
-             :x           140 :y 20} "Redo"]
+             :x           160 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
                               (swap! app-state update-in [:tables] not))
-             :x             200 :y 20} (if tables "hide(tables)" "show(tables)")]]))
+             :x             240 :y 20} (if tables "hide(tables)" "show(tables)")]]))
 
 (defn draw-floor []
   (let [data fd/data

@@ -10,7 +10,7 @@
     (.preventDefault e)
     (let [history @td/history
           {:keys [performed recalled]} history
-           shift-performed (if (= (count performed) (:history-length td/base-settings))
+           shift-performed (if (= (count performed) (:history-length @td/base-settings))
                              (vec (rest performed)) performed)]
 
       (swap! td/tables-state assoc-in [:selection :active] false)
@@ -18,7 +18,7 @@
         (swap! td/tables-state assoc-in [:selection :show] true)
         (swap! td/tables-state assoc-in [:selection :show] false))
       (when (not= (:tables @td/tables-state) (:tables (last shift-performed)))
-        (js/console.log (:tables @td/tables-state) (:tables (last shift-performed)))
+        ;(js/console.log (:tables @td/tables-state) (:tables (last shift-performed)))
         (reset! td/history {:performed (conj shift-performed (compiled-setval  (:hide-stools td/specter-paths-data) false @td/tables-state))
                             :recalled [] :layout (:layout @td/history)})))))
 

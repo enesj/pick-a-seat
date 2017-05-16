@@ -46,4 +46,4 @@
 
 (def data (r/atom init-floor-state))
 
-(def history (atom {:performed [init-floor-state] :recalled []} :tables    false))
+(def history (atom {:performed [init-floor-state] :recalled []} :tables  false))
