@@ -121,8 +121,8 @@
                                                        (assoc-in [id [:tables id :x]] x-new)
                                                        (assoc-in [id [:tables id :y]] y-new)
                                                        (assoc-in [id [:tables id :rect-right]] (+ x-new width))
-                                                       (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
-                   (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))))
+                                                       (assoc-in [id [:tables id :rect-bottom]] (+ y-new height))))))))))))
+                   ;(swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])))) !!!!! _?????
         (when (not (and test-block selected))
           (swap! update-data #(let [x-sel (- (+ x-org (.-pageXOffset js/window) x) (:x offset))
                                     y-sel (- (+ y-org (.-pageYOffset js/window) y) (:y offset))

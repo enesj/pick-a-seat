@@ -115,7 +115,7 @@
 
      (if del (svg/delete-tables x y width height))
      [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
-     (if (and block on-drag)
+     (when (and (seq block) on-drag)
        [:rect (merge td/sel-defaults {:x      (first block)
                                       :y      (second block)
                                       :rx     (* x 0.01)
