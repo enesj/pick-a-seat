@@ -23,8 +23,8 @@
     (.preventDefault evt)
     (events/unlisten js/window EventType.MOUSEMOVE drag-move)
     (swap! td/tables-state #(-> %
-                                (update-in [:tables] (fn [x] (transform [ALL LAST] (fn [y] (dissoc y :block)) x)))
-                                (update-in [:tables] (fn [x] (transform [ALL LAST] (fn [y] (dissoc y :hide-stools)) x)))))
+                                (update-in [:tables] (fn [x] (transform [ALL LAST] (fn [y] (assoc-in y [:block] nil)) x)))
+                                (update-in [:tables] (fn [x] (transform [ALL LAST] (fn [y] (assoc-in y [:hide-stools] false)) x)))))
     (aset js/document "body" "style" "cursor" "default")))
 
 

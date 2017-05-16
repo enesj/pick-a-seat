@@ -58,17 +58,17 @@
                               (.preventDefault e)
                               (.stopPropagation e)
                               (undo)))
-             :x           90 :y 20} "Undo"]
+             :x           90 :y 20} (str "Undo " (count performed))]
      [:text {:opacity     (if redo? 0.8 0.1)
              :on-mouse-up (fn [e]
                             (when redo?
                               (.preventDefault e)
                               (.stopPropagation e)
                               (redo)))
-             :x           140 :y 20} "Redo"]
+             :x           180 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
                               (swap! td/history update-in [:layout] not))
-             :x             200 :y 20} (if layout "hide(layout)" "show(layout)")]]))
+             :x             240 :y 20} (if layout "hide(layout)" "show(layout)")]]))
 
 (defn draw-figures []
   (for [figure (sort-by key (:figures @fd/data))]

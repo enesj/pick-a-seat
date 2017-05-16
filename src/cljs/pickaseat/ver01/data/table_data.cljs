@@ -16,14 +16,14 @@
                         :selected []
                         :offset   {}}
             :tables    {
-                        3  {:id 3 :x 120 :y 120 :hide-stools false :selected false :stools [1 1 1 1]}
-                        23 {:id 23 :x 350 :y 180 :hide-stools false :selected false :stools [1 1 2 2]}
-                        12 {:id 12 :x 250 :y 220 :hide-stools false :selected false :stools [2 2 1 1]}
-                        11 {:id 11 :x 180 :y 60 :hide-stools false :selected false :stools [1 1 1 1]}
-                        21 {:id 21 :x 180 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}
-                        22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :stools [1 1 1 1]}
-                        24 {:id 24 :x 300 :y 300 :hide-stools false :selected false :stools [1 1 1 1]}
-                        25 {:id 25 :x 300 :y 120 :hide-stools false :selected false :stools [1 1 1 1]}}
+                        3  {:id 3 :x 120 :y 120 :hide-stools false :selected false :block nil :stools [1 1 1 1]}
+                        23 {:id 23 :x 350 :y 180 :hide-stools false :selected false :block nil :stools [1 1 2 2]}
+                        12 {:id 12 :x 250 :y 220 :hide-stools false :selected false :block nil :stools [2 2 1 1]}
+                        11 {:id 11 :x 180 :y 60 :hide-stools false :selected false :block nil :stools [1 1 1 1]}
+                        21 {:id 21 :x 180 :y 180 :hide-stools false :selected false :block nil :stools [1 1 1 1]}
+                        22 {:id 22 :x 240 :y 180 :hide-stools false :selected false :block nil :stools [1 1 1 1]}
+                        24 {:id 24 :x 300 :y 300 :hide-stools false :selected false :block nil :stools [1 1 1 1]}
+                        25 {:id 25 :x 300 :y 120 :hide-stools false :selected false :block nil :stools [1 1 1 1]}}
             :layout    false
             :scale     {:zoom 1 :size 1}
             :pos       {:x 400 :y 300}}))
@@ -122,7 +122,6 @@
   Uzima u obzir trenutni polozaj stola i zum, kao i raspored stolica.
   Poziva funkciju:
   (table-dims [stools]) "
-
   (doall (for [table (:tables @tables-state)
                :let [id (key table)
                      table-v (val table)

@@ -18,6 +18,7 @@
         (swap! td/tables-state assoc-in [:selection :show] true)
         (swap! td/tables-state assoc-in [:selection :show] false))
       (when (not= (:tables @td/tables-state) (:tables (last shift-performed)))
+        (js/console.log (:tables @td/tables-state) (:tables (last shift-performed)))
         (reset! td/history {:performed (conj shift-performed (compiled-setval  (:hide-stools td/specter-paths-data) false @td/tables-state))
                             :recalled [] :layout (:layout @td/history)})))))
 
