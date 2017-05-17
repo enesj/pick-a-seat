@@ -55,7 +55,7 @@
   {
    ;:width        30
    ;:height       15
-   :fill         "rgba(255,255,255, 0.8)"
+   :fill         "rgba(255,255,255, 0.4)"
    :stroke       "orange"
    :stroke-width 0.5})
 
@@ -144,7 +144,7 @@
                                    (compiled-transform (:menu-dims specter-paths-data) #(mapv (fn [x] (Math/round (* size x )))  %))
                                    (compiled-transform (:stool-dims specter-paths-data) #(Math/round (* size %)))))))
 
-(defn settings-pos [zoom-new]
+(defn settings-pos [zoom-new settings?]
   "Preracunava x i y pozicije svih stolova i pamti tekucu vrijednost zum-a.
 	 Poziva je (resize) na startu i kod resajzinga.
 	 Poziva funkcije (settings zoom) i (table-props)"
@@ -158,11 +158,12 @@
                             (compiled-transform (:scale-x specter-paths-data) #(Math/round (* zoom %)))
                             (compiled-transform (:scale-y specter-paths-data) #(Math/round (* zoom %)))
                             (compiled-setval (:zoom specter-paths-data) zoom-new))))
-        (swap! fd/data (fn [x] (compiled-transform (:polygon specter-paths-data) #(Math/round (* zoom %)) x)))
         (when (not (empty? (:selected (:selection @tables-state))))
           (swap! tables-state
                  (fn [x] (->> x (compiled-transform (:sel-start specter-paths-data) #(Math/round (* zoom %)))
                               (compiled-transform (:sel-end specter-paths-data) #(Math/round (* zoom %)))))))
-        (settings zoom)
+        (when settings?
+          (swap! fd/data (fn [x] (compiled-transform (:polygon specter-paths-data) #(Math/round (* zoom %)) x)))
+          (settings zoom))
         (table-props)))))
 

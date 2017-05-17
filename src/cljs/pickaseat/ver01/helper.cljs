@@ -5,10 +5,17 @@
             [goog.fx.dom :as fx-dom]
             [goog.dom :as gdom]
             [goog.dom.forms :as gforms]
-            [goog.net.XhrIo :as xhr])
+            [goog.net.XhrIo :as xhr]
+            [pickaseat.ver01.data.table_data :as td])
             ;[ajax.core :as ajax]
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
+(defn resize []
+  (fn [evt]
+    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)))
+
 
 (defn timeout [ms]
       (let [c (chan)]

@@ -68,8 +68,8 @@
         arr1 (/ w 4)
         arr2 (/ w 12)
         menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func full-state))})]
-    ^{:key type} [:g [:path (merge menu-defaults (svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]
-                  (:icon (type (svg/all-tabs x1 y1 w2 h2 arr1 arr2)))]))
+    ^{:key type} [:g (:icon (type (svg/all-tabs x1 y1 w2 h2 arr1 arr2)))
+                  [:path (merge menu-defaults (svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]]))
 
 
 (defn sel-menu [x y w h full-state]

@@ -88,7 +88,7 @@
         (recur (next rs) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs))) all-seats)))
         all-seats))))
 
-(defn table [{:keys [on-drag]} table-data-atom & args]
+(defn table [{:keys [on-drag]} table-data-atom]
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
@@ -99,7 +99,8 @@
                     :let [stool-data (val stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))
-     [:rect (merge td/table-defaults {:class            (if class class (td/table-defaults :class))
+     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
+     [:rect (merge td/table-defaults {:class            (or class (td/table-defaults :class))
                                       :id               id
                                       :x                x
                                       :y                y
@@ -107,15 +108,14 @@
                                       :height           height
                                       :rx               (* width 0.2)
                                       :ry               (* height 0.2)
-                                      :fill-opacity     (if fill-opacity fill-opacity)
-                                      :stroke           (if stroke stroke (td/table-defaults :stroke))
-                                      :stroke-dasharray (if selected "5,5")
-                                      :d                (if selected "M5 20 l215 0")
-                                      :on-mouse-down    (if (= on-drag nil) nil (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
-
+                                      :fill-opacity     (or fill-opacity 0.3)
+                                      :stroke           (or stroke (td/table-defaults :stroke))
+                                      :stroke-dasharray (when selected "5,5")
+                                      :d                (when selected "M5 20 l215 0")
+                                      :on-mouse-down    (if (= on-drag nil) nil
+                                                                            (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
      (if del (svg/delete-tables x y width height))
-     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
-     (when (and (seq block) on-drag)
+     (when (and  block on-drag)
        [:rect (merge td/sel-defaults {:x      (first block)
                                       :y      (second block)
                                       :rx     (* x 0.01)

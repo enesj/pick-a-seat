@@ -10,13 +10,13 @@
 (defn sel-modifications [data]
   (-> data
       (assoc-in [:hide-stools] true)
-      (assoc-in [:fill-opacity] 0.9)
+      (assoc-in [:fill-opacity] 0.3)
       (assoc-in [:stroke] "orange")))
 
 (defn clear-modifications [data]
   (-> data
       (assoc-in [:hide-stools] false)
-      (assoc-in [:fill-opacity] 0.8)
+      (assoc-in [:fill-opacity] 0.3)
       (assoc-in [:stroke] "black")))
 
 

@@ -5,7 +5,7 @@
     [pickaseat.ver01.helper :as h]
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.tables-core :as tc]
-    [pickaseat.ver01.floor-map.floor-draw :as floor]
+    [pickaseat.ver01.floor-map.floor-core :as fc]
     [pickaseat.ver01.data.tables-templates :as tt]
     [pickaseat.ver01.tables.table-events :as tev]
     [pickaseat.ver01.data.common-data :as cd]
@@ -19,7 +19,7 @@
 
 (def current-mode (r/atom 0))
 
-(defn take-mode [n] (nth (cycle {:Layout floor/draw-floor :Tables tc/draw-tables}) n))
+(defn take-mode [n] (nth (cycle {:Layout fc/draw-floor :Tables tc/draw-tables}) n))
 
 
 (defn menu-stage []
@@ -36,9 +36,9 @@
    [(second (take-mode  @current-mode))]])
 
 
-(defn resize []
-  (fn [evt]
-    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))))
+;(defn resize []
+;  (fn [evt]
+;    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))))
 
 (def mount-stage
     (with-meta menu-stage
@@ -47,9 +47,9 @@
                   (let [bcr (.getBoundingClientRect (r/dom-node this))
                         x (.-left bcr) y (+ (.-top bcr) 90)]  ;; 28 pxela visina naslova !!!
                     (swap! cd/common-data assoc-in [:svg] [x y])
-                    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))
+                    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)
                     (reset! td/history {:performed [@td/tables-state] :recalled []})
-                    (events/listen js/window EventType.RESIZE (resize))
+                    (events/listen js/window EventType.RESIZE (h/resize))
                     (events/listen js/window EventType.MOUSEUP (tev/mouse-up))))}))
 
 (defn ^:export main []

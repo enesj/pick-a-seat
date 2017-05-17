@@ -25,7 +25,7 @@
     (let [{:keys [turtle]} app
           history @fd/history
           {:keys [pen polyline position cut-poly]} turtle
-          {:keys [performed recalled]} history
+          {:keys [performed recalled tables]} history
           near (n/distance (n/c position) (n/c (last polyline)))
           end (n/distance (n/c position) (n/c (first polyline)))
           end-test (:r (:end-point-style fd/base-settings))
@@ -54,7 +54,7 @@
                     (-> $
                         (assoc-in [:turtle :line] [])
                         (assoc-in [:turtle :polyline] [])))))
-              (do (reset! fd/history {:performed (conj shift-performed $) :recalled []}) $))
+              (do (reset! fd/history {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
         app)))
   Pendown
   (process-command [_ app]
@@ -87,22 +87,22 @@
   Undo
   (process-command [_ app]
     (let [history @fd/history
-          {:keys [performed recalled]} history
+          {:keys [performed recalled tables]} history
           butlast-performed (vec (butlast performed))]
       (if (> (count performed) 0)
         (do
-          (reset! fd/history {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
+          (reset! fd/history {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
           (-> (last butlast-performed)
               (assoc-in [:turtle :pen] :up)))
         app)))
   Redo
   (process-command [_ app]
     (let [history @fd/history
-          {:keys [performed recalled]} history
+          {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
       (if (> (count recalled) 0)
         (do
-          (reset! fd/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
+          (reset! fd/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))

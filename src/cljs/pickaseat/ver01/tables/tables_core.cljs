@@ -10,7 +10,8 @@
     [pickaseat.ver01.data.themes :as t]
     ;[pickaseat.ver01.floor-map.floor-draw :as floor]
     [pickaseat.ver01.floor-map.floor-components :as comps]
-    [pickaseat.ver01.data.floor-data :as fd]))
+    [pickaseat.ver01.data.floor-data :as fd]
+    [pickaseat.ver01.helper :as h]))
 
 (defn move-tables []
   (fn [sel-top-lefts] (ta/move-table sel-top-lefts)))
@@ -34,7 +35,9 @@
     (if (> (count performed) 0)
       (do
         (reset! td/history {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :layout (:layout @td/history)})
-        (reset! td/tables-state (last butlast-performed))))))
+        (reset! td/tables-state (last butlast-performed))
+        (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
+
 
 (defn redo []
   (let [history @td/history
@@ -43,14 +46,14 @@
     (if (> (count recalled) 0)
       (do
         (reset! td/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :layout (:layout @td/history)})
-        (reset! td/tables-state (last recalled))))))
+        (reset! td/tables-state (last recalled))
+        (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
 
 
 (defn draw-menu []
   (let [{:keys [layout performed recalled]} @td/history
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
-    ;(println "Menu")
     [:svg {:width "400px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
      [:text {:opacity     (if undo? 0.8 0.1)
              :on-mouse-up (fn [e]
@@ -78,7 +81,7 @@
                    {:key     (key figure)
                     :stroke  "black"
                     :fill    "white"
-                    :opacity 0.5
+                    :opacity 0.4
                     :filter  "url(#s1)"}
                    ;{:key       (rand 1000)
                    ; :stroke    "black"
