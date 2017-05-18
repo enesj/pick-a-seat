@@ -7,7 +7,8 @@
     [cljs.core.async :as async :refer [chan]]
     [pickaseat.ver01.data.common-data :as cd]
     [pickaseat.ver01.data.table_data :as td]
-    [pickaseat.ver01.tables.tables-components :as c]))
+    [pickaseat.ver01.tables.tables-components :as c]
+    [pickaseat.ver01.floor-map.floor-common :as f-common]))
 
 
 (enable-console-print!)
@@ -34,24 +35,6 @@
         tables (:tables full-state)]
      [root-preview (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
 
-(defn draw-figures [figures polyline opacity]
-  (for [figure (sort-by key figures)]
-    (let [fig (first (val figure))
-          opacity (if (> (count polyline) 1) (:low opacity) (:high polyline))]
-      (case (key fig)
-        :polygon (comps/polygon
-                   {:key     (key figure)
-                    :stroke  "black"
-                    :fill    "white"
-                    :opacity opacity
-                    :filter  "url(#s1)"}
-                   ;{:key       (rand 1000)
-                   ; :stroke    "black"
-                   ; :fill      "white"
-                   ; :opacity   opacity
-                   ; :transform "translate(0 0)"}
-                   (val fig))))))
-
 
 (defn draw-snap-points [snap-points line connection-point-style]
   [:g
@@ -60,7 +43,6 @@
      [:g {:key (rand 1000)}
       (comps/circle snap-point 1 connection-point-style)
       (comps/color-line "orange" [snap-point (last line)] {:stroke-dasharray "5, 5"})])])
-
 
 
 
@@ -92,7 +74,7 @@
    cd/filters
    [:g
     (when-not (empty? figures)
-      (draw-figures figures polyline opacity))
+      (f-common/draw-figures figures opacity nil))
     (when-not (empty? polyline)
       (apply comps/polyline "lines" {:style {:fill "none" :stroke "black"}} polyline))
     (when-not (empty? cut-poly)

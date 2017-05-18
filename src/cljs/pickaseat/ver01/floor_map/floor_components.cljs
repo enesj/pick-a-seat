@@ -3,26 +3,6 @@
     [goog.events :as events])
   (:import [goog.events EventType]))
 
-(defn drag-move-fn [on-drag]
-  (fn [evt]
-    (on-drag (.-clientX evt) (.-clientY evt))))
-
-(defn drag-end-fn [drag-move drag-end on-end]
-  (fn [evt]
-    (events/unlisten js/window EventType.MOUSEMOVE drag-move)
-    (events/unlisten js/window EventType.MOUSEUP @drag-end)
-    (on-end)))
-
-(defn dragging
-  ([on-drag] (dragging on-drag (fn []) (fn [])))
-  ([on-drag on-start on-end]
-   (let [drag-move (drag-move-fn on-drag)
-         drag-end-atom (atom nil)
-         drag-end (drag-end-fn drag-move drag-end-atom on-end)]
-     (on-start)
-     (reset! drag-end-atom drag-end)
-     (events/listen js/window EventType.MOUSEMOVE drag-move)
-     (events/listen js/window EventType.MOUSEUP drag-end))))
 
 (defn path [path-string]
   [:path {:d path-string}])
@@ -55,43 +35,40 @@
     [:circle (merge {:cx cx :cy cy :r radius}
                     attributes)]))
 
-
-;(defn polygon
-;  [ class-name color attributes points]
-;  (if (nil? color)
-;    [:polygon (merge {:points (apply points-str points)
-;                      :class class-name}
-;                     attributes)]
-;    [:polygon (merge {
-;                      ;:on-mouse-down #(dragging on-drag)
-;                      :filter "url(#s1)"
-;                      :points (apply points-str points)
-;                      :class class-name
-;                      :fill color
-;                      :stroke "black"}
-;                     attributes)]))
-
-(defn polygon
-  ([attributes points]
-   [:polygon (merge {
-                     :points points
-                     :stroke "black"}
-                    attributes)])
-  ([attributes attributes-2 points]
-   [:g {:key (:key attributes-2)}
-    [:polygon (merge {
-                      :points points
-                      :stroke "black"}
-                     attributes)]
-    [:polygon (merge {
-                      :points points
-                      :stroke "black"}
-                     attributes-2)]]))
-
 (defn polyline
   [class-name attributes & points]
   [:polyline (merge {:points (apply points-str points)
                      :class class-name} attributes)])
+
+(defn drag-move-fn [on-drag start]
+  (fn [evt]
+    ;pageY (aget evt "event_" "pageY")  XY poyicija misa na strani
+    ;pageX (aget evt "event_" "pageX")
+    (.preventDefault evt)
+    (on-drag (.-clientX evt) (.-clientY evt) start)))
+
+(defn drag-end-fn [drag-move]
+  (fn [evt]
+    (.preventDefault evt)
+    (events/unlisten js/window EventType.MOUSEMOVE drag-move)
+    (aset js/document "body" "style" "cursor" "default")))
+
+(defn dragging
+  ([on-drag start sel-ids]
+   (let [drag-move (drag-move-fn (on-drag sel-ids) start)
+         drag-end (drag-end-fn drag-move)]
+     (events/listen js/window EventType.MOUSEMOVE drag-move)
+     (events/listen js/window EventType.MOUSEUP drag-end))))
+
+
+(defn polygon [attributes points on-drag]
+   [:polygon (merge {:points points
+                     :stroke "black"
+                     :on-mouse-down (if (= on-drag nil) nil (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])))}
+                    attributes)])
+
+
+
 
 
 

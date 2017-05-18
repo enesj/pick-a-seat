@@ -1,4 +1,5 @@
 (ns pickaseat.ver01.data.floor-data
+  (:use [com.rpl.specter :only [FIRST LAST ALL  filterer  comp-paths]])
   (:require
     [reagent.core :as r]))
 
@@ -33,10 +34,7 @@
    :opacity   {:high 0.9 :low 0.1}
    ;:base       base
    ;:resolution resolution
-   :selection {:active   false
-               :show     false
-               :stop     false
-               :start    {:x 0, :y 0}
+   :selection {:start    {:x 0, :y 0}
                :end      {:x1 0, :y1 0}
                :selected []
                :offset   {}}})
@@ -46,4 +44,17 @@
 
 (def data (r/atom init-floor-state))
 
-(def history (r/atom {:performed [init-floor-state] :recalled [] :tables  false}))
+(def history {:drawing (r/atom {:performed [init-floor-state] :recalled [] :tables  false})
+              :editing (r/atom {:performed [init-floor-state] :recalled [] :tables  false})})
+
+(def specter-paths
+  {:sel-end          (comp-paths :selection :end ALL LAST)
+   :sel-start        (comp-paths :selection :start ALL LAST)
+   :selected         (comp-paths :selection :selected)
+   :selection-offset (comp-paths :selection :offset)
+   :selection-end    (comp-paths :selection :end)
+   :selection-start  (comp-paths :selection :start)
+   :polygon          (comp-paths :figures ALL LAST :polygon ALL ALL)
+   :zoom             (comp-paths :scale :zoom)
+   :all              (comp-paths ALL ALL)
+   :all-last         (comp-paths ALL LAST)})

@@ -88,7 +88,8 @@
         (recur (next rs) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs))) all-seats)))
         all-seats))))
 
-(defn table [{:keys [on-drag]} table-data-atom]
+
+(defn table [move-tables table-data-atom]
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
@@ -112,10 +113,10 @@
                                       :stroke           (or stroke (td/table-defaults :stroke))
                                       :stroke-dasharray (when selected "5,5")
                                       :d                (when selected "M5 20 l215 0")
-                                      :on-mouse-down    (if (= on-drag nil) nil
-                                                                            (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
+                                      :on-mouse-down    (if (= move-tables nil) nil
+                                                                            (fn [e] (dragging move-tables [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
      (if del (svg/delete-tables x y width height))
-     (when (and  block on-drag)
+     (when (and  block move-tables)
        [:rect (merge td/sel-defaults {:x      (first block)
                                       :y      (second block)
                                       :rx     (* x 0.01)

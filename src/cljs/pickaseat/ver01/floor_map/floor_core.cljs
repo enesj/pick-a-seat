@@ -24,9 +24,10 @@
     [root-preview (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
 
 (defn draw-menu [app-state ui-channel mode]
-  (let [{:keys [tables performed recalled]} @fd/history
+  (let [{:keys [tables performed recalled]} @(mode fd/history)
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
+    ;(js/console.log mode  @(mode fd/history))
     [:svg {:width "400px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
      [:text {:opacity       0.8
 
@@ -50,7 +51,7 @@
                               (de/run-program ui-channel (de/redo))))
              :x           160 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
-                              (swap! fd/history update-in [:tables] not))
+                              (swap! (mode fd/history) update-in [:tables] not))
              :x             240 :y 20} (if tables "hide(tables)" "show(tables)")]]))
 
 (defn draw-floor []
@@ -58,6 +59,7 @@
         {:keys [start-point-style end-point-style connection-point-style opacity]} fd/base-settings
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line polyline pen cut-poly cut-line]} turtle
+        opacity (if (> (count polyline) 1) (:low opacity) (:high opacity))
         common-data @cd/common-data
         ui-channel (chan)
         _ (de/process-channel ui-channel data)
@@ -66,8 +68,7 @@
         svg (if (= mode :drawing)
               (draw/draw-svg start-point-style end-point-style connection-point-style opacity turtle figures snap-points line polyline
                              pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data)
-              (edit/edit-svg start-point-style end-point-style connection-point-style opacity turtle figures snap-points line polyline
-                             pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data))]
+              (edit/edit-svg figures common-data ui-channel (:high opacity) x-bcr y-bcr data))]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      (draw-menu data ui-channel mode)
-     (if (:tables @fd/history) (conj svg (tables-back)) svg)]))
+     (if (:tables @(mode fd/history)) (conj svg (tables-back)) svg)]))

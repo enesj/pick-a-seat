@@ -11,22 +11,19 @@
     ;[pickaseat.ver01.floor-map.floor-draw :as floor]
     [pickaseat.ver01.floor-map.floor-components :as comps]
     [pickaseat.ver01.data.floor-data :as fd]
-    [pickaseat.ver01.helper :as h]))
+    [pickaseat.ver01.helper :as h]
+    [pickaseat.ver01.floor-map.floor-common :as f-common]))
 
-(defn move-tables []
-  (fn [sel-top-lefts] (ta/move-table sel-top-lefts)))
+
 
 (defn root [state tables ids]
-  [:g
-   (doall (for [id ids]
-            ^{:key id} [c/table {:on-drag (move-tables)} (r/cursor tables [id])]))
-   (if (:show (:selection state))
-     [(c/selection-rect (move-tables) state)])])
+  (let [move-tables (fn [sel-top-lefts] (ta/move-table sel-top-lefts))]
+    [:g
+     (doall (for [id ids]
+              ^{:key id} [c/table move-tables (r/cursor tables [id])]))
+     (if (:show (:selection state))
+       [(c/selection-rect move-tables state)])]))
 
-;(defn root-preview [ tables ids]
-;  [:g {:opacity "0.4"}
-;   (doall (for [id ids]
-;            ^{:key id} [c/table {:on-drag nil} (r/cursor tables [id])]))])
 
 (defn undo []
   (let [history @td/history
@@ -83,12 +80,8 @@
                     :fill    "white"
                     :opacity 0.4
                     :filter  "url(#s1)"}
-                   ;{:key       (rand 1000)
-                   ; :stroke    "black"
-                   ; :fill      "white"
-                   ; :opacity   opacity
-                   ; :transform "translate(0 0)"}
-                   (val fig))))))
+                   (val fig)
+                   nil)))))
 
 
 (defn draw-tables []
@@ -110,5 +103,5 @@
        :on-mouse-down mouse-down
        :on-mouse-move mouse-move}
       cd/filters
-      (if (:layout @td/history) (draw-figures))
+      (if (:layout @td/history) (f-common/draw-figures (:figures @fd/data) (:low (:opacity @fd/data)) nil))
       root]]))

@@ -19,11 +19,11 @@
         (swap! td/tables-state assoc-in [:selection :show] false))
       (when (not= (:tables @td/tables-state) (:tables (last shift-performed)))
         ;(js/console.log (:tables @td/tables-state) (:tables (last shift-performed)))
-        (reset! td/history {:performed (conj shift-performed (compiled-setval  (:hide-stools td/specter-paths-data) false @td/tables-state))
+        (reset! td/history {:performed (conj shift-performed (compiled-setval (:hide-stools td/specter-paths) false @td/tables-state))
                             :recalled [] :layout (:layout @td/history)})))))
 
 (defn table-events [ selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e]
-  (let [{:keys [tabale-selected selectected-path selection-active selection-offset selection-end selection-start selection-show hide-stools]} td/specter-paths-data]
+  (let [{:keys [tabale-selected selected selection-active selection-offset selection-end selection-start selection-show hide-stools]} td/specter-paths]
     {:mouse-down (fn [e]
                    (.preventDefault e)
                    (let [x-current (+ (.-clientX e) (.-pageXOffset js/window) x)
@@ -45,7 +45,7 @@
                                                       (compiled-setval selection-start start)
                                                       (compiled-setval selection-end end)
                                                       (compiled-setval selection-active true)
-                                                      (compiled-setval selectected-path nil)
+                                                      (compiled-setval selected nil)
                                                       (compiled-setval tabale-selected false))))
 
                        (if (some #(= :1 %) direction)
@@ -60,7 +60,7 @@
                                     #(compiled-setval tabale-selected false
                                                       (->> %
                                                            (compiled-setval selection-show false)
-                                                           (compiled-setval selectected-path nil)
+                                                           (compiled-setval selected nil)
                                                            (compiled-setval selection-end nil)
                                                            (compiled-setval selection-start nil)))))))))
      :mouse-move (fn [e]
@@ -81,7 +81,7 @@
                                                       (compiled-setval tabale-selected false)
                                                       (compiled-setval select-true true)
                                                       (compiled-setval selection-end end)
-                                                      (compiled-setval selectected-path sel)))))
+                                                      (compiled-setval selected sel)))))
 
                      (when (and (not (:show selection)) (seq (:selected selection)))
                        (if (not= @an/selected-current {:current-state 0 :ids [] :tables {}})

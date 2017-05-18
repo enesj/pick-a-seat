@@ -28,17 +28,17 @@
 
 
 (defn move-table [sel-top-lefts]
-  (fn [x-org y-org start tables ctrl]
-    (let [tables-collection (into (vals tables) (:borders @td/base-settings))
+  (fn [x-current y-current start-xy tables-data ctrl]
+    (let [tables-collection (into (vals tables-data) (:borders @td/base-settings))
           {:keys [selected show active offset]} (:selection @td/tables-state)
           [x y] (mapv - (:svg @cd/common-data))
-          [x-start y-start] start
+          [x-start y-start] start-xy
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
                           (let [id (first ids)
                                 [xp yp] (second ids)
-                                x-new-corr (- x-org (- x-start xp))
-                                y-new-corr (- y-org (- y-start yp))
+                                x-new-corr (- x-current (- x-start xp))
+                                y-new-corr (- y-current (- y-start yp))
                                 table-my (first (filterv #(= (:id %) id) tables-collection))
                                 tables-other (filterv #(not= (:id %) id) tables-collection)
                                 {:keys [x y width height rs hide-stools block]} table-my
@@ -96,7 +96,7 @@
                                                    (assoc-in [id [:tables id :rect-right]] (+ x-close width))))
                            (remove-seats close id))
                        (do
-                         (if (and rs dirxy) (reset-seats id tables))
+                         (if (and rs dirxy) (reset-seats id tables-data))
                          (if (or show hide-stools)
                            (do
                              (swap! update-data #(-> %
@@ -122,12 +122,12 @@
                                                        (assoc-in [id [:tables id :y]] y-new)
                                                        (assoc-in [id [:tables id :rect-right]] (+ x-new width))
                                                        (assoc-in [id [:tables id :rect-bottom]] (+ y-new height))))))))))))
-                   ;(swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])))) !!!!! _?????
+        ;(swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])))) !!!!! _?????
         (when (not (and test-block selected))
-          (swap! update-data #(let [x-sel (- (+ x-org (.-pageXOffset js/window) x) (:x offset))
-                                    y-sel (- (+ y-org (.-pageYOffset js/window) y) (:y offset))
-                                    x1-sel (- (+ x-org (.-pageXOffset js/window) x) (:x1 offset))
-                                    y1-sel (- (+ y-org (.-pageYOffset js/window) y) (:y1 offset))
+          (swap! update-data #(let [x-sel (- (+ x-current (.-pageXOffset js/window) x) (:x offset))
+                                    y-sel (- (+ y-current (.-pageYOffset js/window) y) (:y offset))
+                                    x1-sel (- (+ x-current (.-pageXOffset js/window) x) (:x1 offset))
+                                    y1-sel (- (+ y-current (.-pageYOffset js/window) y) (:y1 offset))
                                     x-sel (if (pos? x-sel) x-sel 0)
                                     y-sel (if (pos? y-sel) y-sel 0)
                                     x1-sel (if (pos? x1-sel) x1-sel 0)
@@ -138,7 +138,7 @@
                                     (assoc-in [1 [:selection :end]] {:x1 x1-sel
                                                                      :y1 y1-sel})))))
         (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
-                                                      (compiled-select (:all td/specter-paths-data)
-                                                                       (mapv vec (compiled-select (:all-last td/specter-paths-data) @update-data)))))))))))
+                                                      (compiled-select (:all td/specter-paths)
+                                                                       (mapv vec (compiled-select (:all-last td/specter-paths) @update-data)))))))))))
 
 
