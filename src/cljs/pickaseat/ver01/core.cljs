@@ -21,11 +21,10 @@
 
 (defn take-mode [n] (nth (cycle {:Layout fc/draw-floor :Tables tc/draw-tables}) n))
 
-
 (defn menu-stage []
   [:div
-   [:h4 {:style {:padding-left "10px"}} [:span {:style {:color "lightgray"}} (str (:restaurant @cd/common-data) ": ")]
-                                        [:span (str  (:hall @cd/common-data))]]
+   [:h4 {:style {:padding-left "10px"}} [:span {:style {:color "lightgray"}} (str (:restaurant @cd/data) ": ")]
+                                        [:span (str (:hall @cd/data))]]
    [:svg {:width "400px" :height "40px" :font-family "Courier New" :fill "blue" :font-size "15"}
     [:text {:opacity       0.8
             :font-weight "bold"
@@ -46,7 +45,7 @@
                 (fn [this]
                   (let [bcr (.getBoundingClientRect (r/dom-node this))
                         x (.-left bcr) y (+ (.-top bcr) 90)]  ;; 28 pxela visina naslova !!!
-                    (swap! cd/common-data assoc-in [:svg] [x y])
+                    (swap! cd/data assoc-in [:svg] [x y])
                     (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)
                     (reset! td/history {:performed [@td/tables-state] :recalled []})
                     (events/listen js/window EventType.RESIZE (h/resize))

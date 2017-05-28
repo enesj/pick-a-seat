@@ -45,8 +45,7 @@
                  [clojure-miniprofiler "0.5.0"]
 
                  [org.danielsz/system "0.1.8"]
-
-                 [datascript "0.15.4"]
+                 [cljsjs/svg-intersections "0.3.0-0"]
                  [cljs-ajax "0.5.8"]
                  [ring-transit "0.1.6"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]

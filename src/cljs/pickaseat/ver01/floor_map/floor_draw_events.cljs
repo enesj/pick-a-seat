@@ -9,9 +9,9 @@
     [cljs.core.async.macros :refer [go]]))
 
 (defrecord Penup [])
-(defrecord Pendown [])
+(defrecord Pendown [d])
 (defrecord Pause [delay])
-(defrecord Drawline [])
+(defrecord Draw [])
 (defrecord Undo [])
 (defrecord Redo [])
 
@@ -23,90 +23,108 @@
   Penup
   (process-command [_ app]
     (let [{:keys [turtle]} app
-          history @(:drawing fd/history)
-          {:keys [pen polyline position cut-poly]} turtle
+          history @(:drawing fd/floor-state)
+          {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle?]} turtle
           {:keys [performed recalled tables]} history
-          near (n/distance (n/c position) (n/c (last polyline)))
+          start (n/distance (n/c position) (n/c (last polyline)))
           end (n/distance (n/c position) (n/c (first polyline)))
-          end-test (:r (:end-point-style fd/base-settings))
+          test-r (:r (:end-point-style fd/base-settings))
           shift-performed (if (= (count performed) (:history-length fd/base-settings))
                             (vec (rest performed)) performed)]
+      ;(js/console.log circle)
       (if (= pen :down)
         (as-> app $
               (assoc-in $ [:turtle :pen] :up)
-              (if cut-poly
+              (if draw-circle?
                 (-> $
-                    (assoc-in [:turtle :line] [position position])
-                    (assoc-in [:figures (inc (count (:figures app)))] {:polygon cut-poly})
-                    (assoc-in [:turtle :polyline] []))
-                (if (and (< end end-test) (> (count polyline) 2))
+                  (assoc-in [:figures (inc (count (:figures app)))] {:circle circle})
+                  (assoc-in [:turtle :circle] []))
+                (if shadow?
                   (-> $
-                      (assoc-in [:turtle :line] [position position])
-                      (assoc-in [:figures (inc (count (:figures app)))] {:polygon polyline})
-                      (assoc-in [:turtle :polyline] []))
-                  (if (> near 10)
+                      (assoc-in [:turtle :shadow?] false)
+                      (assoc-in [:figures (inc (count (:figures app)))]  {:polygon (into polyline (reverse (next shadow-polyline)))})
+                      (assoc-in [:turtle :line] [])
+                      (assoc-in [:turtle :polyline] [])
+                      (assoc-in [:turtle :shadow-polyline] []))
+                  (if (seq cut-poly)
                     (-> $
                         (assoc-in [:turtle :line] [position position])
-                        (update-in [:turtle :polyline] #(conj % position))
-                        (update-in [:turtle :snap-xs] #(conj % (first position)))
-                        (update-in [:turtle :snap-ys] #(conj % (second position))))
-
-                    (-> $
-                        (assoc-in [:turtle :line] [])
-                        (assoc-in [:turtle :polyline] [])))))
-              (do (reset! (:drawing fd/history) {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
+                        (assoc-in [:figures (inc (count (:figures app)))] {:polygon cut-poly})
+                        (assoc-in [:turtle :polyline] []))
+                    (if (and (< end test-r) (> (count polyline) 2))
+                      (-> $
+                          (assoc-in [:turtle :line] [position position])
+                          (assoc-in [:figures (inc (count (:figures app)))] {:polygon polyline})
+                          (assoc-in [:turtle :polyline] []))
+                      (if (> start test-r)
+                        (-> $
+                            (assoc-in [:turtle :line] [position position])
+                            (update-in [:turtle :polyline] #(conj % position)))
+                        $)))))
+              (do (reset! (:drawing fd/floor-state) {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
         app)))
   Pendown
-  (process-command [_ app]
+  (process-command [{d :d} app]
     (let [{:keys [turtle]} app
-          {:keys [pen polyline position line]} turtle
-          near (n/distance (n/c position) (n/c (last polyline)))
-          start-test (:r (:start-point-style fd/base-settings))]
+          {:keys [pen polyline position line circle draw-circle?]} turtle
+          start (n/distance (n/c position) (n/c (last polyline)))
+          end (n/distance (n/c position) (n/c (first polyline)))
+          test-r (:r (:new-point-style fd/base-settings))]
       (if (= pen :up)
         (as-> app $
               (assoc-in $ [:turtle :pen] :down)
-              (if (> near start-test)
-                (-> $
-                    (assoc-in [:turtle :line] [position position])
-                    (assoc-in [:turtle :polyline] [position]))
-                (-> $
-                    (assoc-in [:turtle :line] [(last polyline) (last polyline)]))))
+              (if draw-circle?
+                (-> $ (assoc-in [:turtle :circle] (if draw-circle? [d 0] [])))
+                (if (< start test-r)
+                  (-> $
+                      (assoc-in [:turtle :circle] (if draw-circle? [d 0] []))
+                      (assoc-in [:turtle :shadow?] false)
+                      (assoc-in [:turtle :line] [(last polyline) (last polyline)]))
+                  (if (< end test-r)
+                    (-> $
+                        (assoc-in [:turtle :shadow?] true)
+                        (assoc-in [:turtle :snap-points] []))
+                    (-> $
+                        (assoc-in [:turtle :shadow?] false)
+
+                        (assoc-in [:turtle :line] [position position])
+                        (assoc-in [:turtle :polyline] [position]))))))
         app)))
-  Drawline
+  Draw
   (process-command [_ app]
     (let [{:keys [turtle]} app
-          {:keys [pen polyline position line ]} turtle
+          {:keys [pen polyline position shadow? draw-circle?]} turtle
           end (n/distance (n/c position) (n/c (first polyline)))
-          end-test (:r (:end-point-style fd/base-settings))]
-      (if (= pen :down)
-        (-> (if (< end end-test)
-              (assoc-in app [:turtle :end] true)
-              (assoc-in app [:turtle :end] false))
-            (assoc-in [:turtle :line 1] position))
+          test-r (:r (:end-point-style fd/base-settings))]
+      (if (and (= pen :down) (not draw-circle?))
+        (as-> app $
+              (if (and (< end test-r) (not shadow?))
+               (assoc-in $  [:turtle :end] true)
+               (assoc-in $ [:turtle :end] false))
+              (if-not shadow? (assoc-in $ [:turtle :line 1] position) $))
         app)))
   Undo
   (process-command [_ app]
-    (let [history @(:drawing fd/history)
+    (let [history @(:drawing fd/floor-state)
           {:keys [performed recalled tables]} history
           butlast-performed (vec (butlast performed))]
       (if (> (count performed) 0)
         (do
-          (reset! (:drawing fd/history) {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
+          (reset! (:drawing fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
           (-> (last butlast-performed)
               (assoc-in [:turtle :pen] :up)))
         app)))
   Redo
   (process-command [_ app]
-    (let [history @(:drawing fd/history)
+    (let [history @(:drawing fd/floor-state)
           {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
       (if (> (count recalled) 0)
         (do
-          (reset! (:drawing fd/history) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
+          (reset! (:drawing fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))
-
 
 
 (defn exec [commands]
@@ -121,11 +139,11 @@
 (defn draw-poly []
   (exec [(->Penup)]))
 
-(defn draw-start []
-  (exec [(->Pendown)]))
+(defn draw-start [x y]
+  (exec [(->Pendown [x y])]))
 
 (defn draw-line [x y]
-  (exec [(->Drawline) (da/->Forward [x y])]))
+  (exec [(->Draw) (da/->Poly [x y])]))
 
 
 (defn run-program [chan program]
@@ -142,7 +160,7 @@
 (defn update-state
   "return new state for given command"
   [state command]
-  (let [{:keys [turtle polyline squares pen line]} state]
+  (let [{:keys [turtle]} state]
     (if (command? command)
       (let [new-turtle (da/process-command command turtle)]
         (assoc-in state [:turtle] new-turtle))

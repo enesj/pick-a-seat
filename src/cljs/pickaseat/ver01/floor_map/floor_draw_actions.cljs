@@ -3,9 +3,13 @@
     [complex.vector :as v]
     [complex.number :as n]
     [complex.geometry :as g]
-    [cljs.core.match :refer-macros [match]]))
+    [cljsjs.svg-intersections]
+    [cljs.core.match :refer-macros [match]]
+    [pickaseat.ver01.intersections :as intersections]
+    [pickaseat.ver01.data.common-data :as cd]))
+    ;[cuerdas.core :as str]))
 
-(defrecord Forward [d])
+
 
 (defn segment-collision [new-line polyline]
   (let [test-polylines (butlast polyline)]
@@ -75,49 +79,86 @@
     [mouse-possition nil]))
 
 
-(defn snap-test [polyline possition]
+(defn draw-shadow [position mouse-possition polyline shadow-polyline app]
+  (let [
+        poly (partition 2 1 polyline)
+        angle-first (v/angle (map - (second (first poly)) (ffirst poly)))
+        shadow-width (* (n/distance (n/c mouse-possition) (n/c (ffirst poly)))
+                        (Math/sin (- (v/angle (mapv - mouse-possition (ffirst poly))) angle-first)))
+        polyline (partition 2 (flatten poly))
+        move #(n/polar->rect shadow-width (+ (v/angle (map - (second %) (first %))) (/ n/PI 2)))
+        new-poly (partition 2 (flatten (map #(repeat 2 %) (mapv move poly))))
+        raw-shadow (mapv #(mapv + %1 %2) new-poly polyline)
+        first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
+        intersections (mapv #(g/intersection (first %) (second %)) first-shadow)
+        shadow (mapv #(mapv cd/snap-round %) (concat (vector (first polyline)) (vector (first raw-shadow)) intersections
+                                                      (vector (last raw-shadow)) (vector (last polyline))))
+        border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
+        app (assoc-in app [:position] mouse-possition)]
+    ;(js/console.log "sh" shadow "tr")
+    (if (and (intersections/self-poly-intersections shadow) (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
+      (-> app
+          (assoc-in [:shadow-polyline] shadow))
+          ;(assoc-in  [:shadow-raw] raw-shadow))
+      app)))
+
+(defn snap-test [polyline position]
   (if (> (count polyline) 2)
     (let [polyline-nolast (map #(map Math/round %)  (butlast polyline))
-          x-match (filter #(= (Math/round (first possition)) (first %)) polyline-nolast)
-          y-match (filter #(= (Math/round (second possition)) (second %)) polyline-nolast)]
-      [(into x-match y-match) [(first x-match) (first y-match)]])))
+          x-match (filter #(= (Math/round (first position)) (first %)) polyline-nolast)
+          y-match (filter #(= (Math/round (second position)) (second %)) polyline-nolast)]
+      (into x-match y-match))))
+
+(defn draw-poly [app mouse-possition]
+  (let [{:keys [position polyline shadow-polyline shadow? line pen cut-poly cut-line]} app]
+    (if shadow?
+      (draw-shadow position mouse-possition polyline shadow-polyline app)
+      (let [constrain-line (if (= pen :down) (constrain-line mouse-possition (partition 2 1 polyline) line position) [mouse-possition nil])
+            ;constrain-line (mapv #(mapv Math/round %) constrain-line)
+            [constrain-x constrain-y] (first constrain-line)
+            constrain-params (second constrain-line)
+            constrain-angle (:angle constrain-params)
+            cut-poly-new (:cut-poly constrain-params)
+            cut-line-new (:cut-line constrain-params)
+            snap-xs (mapv first polyline)
+            snap-ys (mapv second polyline)
+            snap-x (some #(if (<= (- % 10) constrain-x (+ % 10)) %) snap-xs)
+            snap-y (some #(if (<= (- % 10) constrain-y (+ % 10)) %) snap-ys)
+            snap-points (when (or snap-x snap-y) (snap-test polyline position))
+            constrain-snap [(if snap-x snap-x constrain-x)
+                            (if snap-y snap-y constrain-y)]
+            no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
+        ;(js/console.log   "cl" app)
+        (as-> app $
+              (if (or (not cut-poly) (not cut-poly-new)) (assoc-in $ [:cut-poly] cut-poly-new) $)
+              (if (or (not cut-line) (not cut-line-new)) (assoc-in $ [:cut-line] cut-line-new) $)
+              (if (and constrain-angle (= pen :down))
+               (assoc-in $ [:line-angle] constrain-angle)
+               $)
+              (assoc-in $ [:snap-points] snap-points)
+              (if no-borders-intersection (assoc-in $ [:position] (mapv cd/snap-round constrain-snap)) $))))))
+
+(defn draw-circle [app mouse-possition]
+  (let [{:keys [circle pen position ]} app
+        center (first circle)]
+    (if (and (= pen :down) center) (assoc-in app [:circle] [center (n/distance (n/c center) (n/c mouse-possition))]) app)))
 
 
-(defn move [app mouse-possition]
-  (let [{:keys [position heading scale polyline line pen snap-xs snap-ys cut-poly cut-line]} app
-        constrain (if (= pen :down) (constrain-line mouse-possition (partition 2 1 polyline) line position ) [mouse-possition nil])
-        [constrain-x constrain-y] (first constrain)
-        constrain-params (second constrain)
-        constrain-angle (:angle constrain-params)
-        cut-poly-new (:cut-poly constrain-params)
-        cut-line-new (:cut-line constrain-params)
-        snap-test (snap-test polyline position)
-        snap-points (first snap-test)
-        snap-x  (some #(if (<= (- % 5)  constrain-x (+ % 5)) %) snap-xs)
-        snap-y  (some #(if (<= (- % 5)  constrain-y  (+ % 5)) %) snap-ys)
-        constrain-position  [(if snap-x snap-x constrain-x)
-                             (if snap-y snap-y constrain-y)]]
-    (match heading
-           :east (update-in app [:position] #(v/sum % [(* scale mouse-possition) 0]))
-           :west (update-in app [:position] #(v/sum % [(* scale mouse-possition -1) 0]))
-           :north (update-in app [:position] #(v/sum % [0 (* scale mouse-possition -1)]))
-           :south (update-in app [:position] #(v/sum % [0 (* scale mouse-possition)]))
-           :drawing (as-> app $
-                          (if (or (not cut-poly) (not cut-poly-new)) (assoc-in $ [:cut-poly] cut-poly-new) $)
-                          (if (or (not cut-line) (not cut-line-new)) (assoc-in $ [:cut-line] cut-line-new) $)
-                          (if (and constrain-angle (= pen :down))
-                            (assoc-in $ [:line-angle] constrain-angle)
-                            $)
-                          (assoc-in $ [:snap-points]  snap-points)
-                          (assoc-in $ [:position] constrain-position)))))
+
+(defrecord Poly [d])
 
 (defprotocol Command
   (process-command [command app-state]))
 
+(defn draw [app mouse-possition]
+  (let [{:keys [draw-circle? ]} app]
+    (if draw-circle? (draw-circle app mouse-possition) (draw-poly app mouse-possition))))
+
 (extend-protocol Command
-  Forward
+  Poly
   (process-command [{d :d} app]
-    (move app d)))
+    (draw app d)))
+    ;(draw-circle app d)))
 
 
 

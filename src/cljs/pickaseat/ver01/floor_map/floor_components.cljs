@@ -30,10 +30,7 @@
     [:line (merge {:x1 x1 :y1 y1 :x2 x2 :y2 y2 :stroke stroke}
                   attributes)]))
 
-(defn circle [center radius attributes]
-  (let [[cx cy] center]
-    [:circle (merge {:cx cx :cy cy :r radius}
-                    attributes)]))
+
 
 (defn polyline
   [class-name attributes & points]
@@ -55,16 +52,25 @@
 
 (defn dragging
   ([on-drag start sel-ids]
+   ;(js/console.log "sdfds" on-drag)
    (let [drag-move (drag-move-fn (on-drag sel-ids) start)
          drag-end (drag-end-fn drag-move)]
+
      (events/listen js/window EventType.MOUSEMOVE drag-move)
      (events/listen js/window EventType.MOUSEUP drag-end))))
 
+(defn circle [center radius attributes show-center? on-drag]
+  (let [[cx cy] center]
+    [:g {:key (rand 1000)}
+     [:circle (merge {:cx cx :cy cy :r radius
+                      :on-mouse-down (if on-drag (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
+                     attributes)]
+     (if show-center? (circle center 0 {:r 2 :fill "rgba(0,0,0,0.8)"} false nil))]))
 
 (defn polygon [attributes points on-drag]
    [:polygon (merge {:points points
                      :stroke "black"
-                     :on-mouse-down (if (= on-drag nil) nil (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])))}
+                     :on-mouse-down (if on-drag (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])) nil)}
                     attributes)])
 
 

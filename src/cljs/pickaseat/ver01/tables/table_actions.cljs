@@ -31,7 +31,7 @@
   (fn [x-current y-current start-xy tables-data ctrl]
     (let [tables-collection (into (vals tables-data) (:borders @td/base-settings))
           {:keys [selected show active offset]} (:selection @td/tables-state)
-          [x y] (mapv - (:svg @cd/common-data))
+          [x y] (mapv - (:svg @cd/data))
           [x-start y-start] start-xy
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]

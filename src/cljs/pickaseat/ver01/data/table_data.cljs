@@ -5,7 +5,8 @@
   (:require [pickaseat.ver01.data.themes :as t]
             [reagent.core :as r]
             [debux.cs.core :refer-macros [clog dbg break]]
-            [pickaseat.ver01.data.floor-data :as fd]))
+            [pickaseat.ver01.data.floor-data :as fd]
+            [pickaseat.ver01.data.common-data :as cd]))
 
 (defonce tables-state
          (r/atom
@@ -39,8 +40,9 @@
    {:stools [1 1 2 2]}
    {:stools [1 1 3 3]}])
 
+
 (def base-settings
-         (let [[w h] [2000 2000]]
+         (let [{:keys [w h]} @cd/data]
            (r/atom
              {:window    {:w w :h w}
               :table-stool [30 8]

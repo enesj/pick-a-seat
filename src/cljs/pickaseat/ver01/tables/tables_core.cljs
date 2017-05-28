@@ -87,8 +87,9 @@
 (defn draw-tables []
   (let [tables-state @td/tables-state
         {:keys [tables selection ]} tables-state
-        common-data @cd/common-data
+        common-data @cd/data
         [x y] (mapv - (:svg common-data))
+        {:keys [w h]} common-data
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
         {:keys [key-down key-up mouse-down mouse-move]} (tev/table-events selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
         root [root tables-state (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]]
@@ -96,12 +97,14 @@
      [draw-menu]
      [:svg
       {:fill          (:text t/palete)
-       :width         (:w common-data)
-       :height        (:h common-data)
+       :width         w
+       :height        h
        :on-key-down   key-down
        :on-key-up     key-up
        :on-mouse-down mouse-down
-       :on-mouse-move mouse-move}
+       :on-mouse-move mouse-move
+       :style {:background-color "rgb(235,242,230)"}}
       cd/filters
       (if (:layout @td/history) (f-common/draw-figures (:figures @fd/data) (:low (:opacity @fd/data)) nil))
+      ;[:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}]
       root]]))

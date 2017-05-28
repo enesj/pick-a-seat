@@ -105,6 +105,7 @@
                                       :id               id
                                       :x                x
                                       :y                y
+                                      :pointer-events   (if move-tables "visible" "none")
                                       :width            width
                                       :height           height
                                       :rx               (* width 0.2)
@@ -113,8 +114,9 @@
                                       :stroke           (or stroke (td/table-defaults :stroke))
                                       :stroke-dasharray (when selected "5,5")
                                       :d                (when selected "M5 20 l215 0")
-                                      :on-mouse-down    (if (= move-tables nil) nil
-                                                                            (fn [e] (dragging move-tables [(.-clientX e) (.-clientY e)] [[(:id table-data) ((juxt :x :y) table-data)]])))})]
+                                      :on-mouse-down    (if move-tables   (fn [e] (dragging move-tables [(.-clientX e) (.-clientY e)]
+                                                                                              [[(:id table-data) ((juxt :x :y) table-data)]]))
+                                                                          (fn [e] nil))})]
      (if del (svg/delete-tables x y width height))
      (when (and  block move-tables)
        [:rect (merge td/sel-defaults {:x      (first block)
