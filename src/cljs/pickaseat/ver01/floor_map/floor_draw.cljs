@@ -49,7 +49,7 @@
   (let [[center r] circle]
     [:svg
      {
-      :style {:background-color "rgb(225,222,210)"}
+      :style {:background-color (:grid-back-color @cd/data)}
       :width         (:w common-data)
       :height        (:h common-data)
       :ref           #(when %

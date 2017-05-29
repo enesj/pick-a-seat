@@ -12,7 +12,8 @@
     [pickaseat.ver01.data.table_data :as td]
     [pickaseat.ver01.tables.tables-components :as c]
     [pickaseat.ver01.floor-map.floor-draw :as draw]
-    [pickaseat.ver01.intersections :as intersections]))
+    [pickaseat.ver01.intersections :as intersections]
+    [complex.number :as n]))
 
 
 (defn move-poly [fig-selected]
@@ -44,28 +45,51 @@
       (when no-borders-intersection
         (swap! fd/data (fn [x] (assoc-in x [:figures id :circle] circle-new)))))))
 
+(defn average
+  [numbers]
+  (/ (apply + numbers) (count numbers)))
+
+(defn resize-poly-by-midpoint [figure-id point-id points]
+  (fn [x-current y-current start-xy]
+    (let [data @fd/data
+          ;points (:polygon ((:figures data) figure-id))
+          mid-point [(average (mapv first points)) (average (mapv second points))]
+          central-coords (mapv #(mapv - % mid-point) points)
+          [x-start y-start] start-xy
+          x-offset (- x-current 20)
+          y-offset (- y-current 180)
+          zoom-start (n/distance (n/c start-xy) (n/c mid-point))
+          zoom-new (n/distance (n/c [x-offset y-offset]) (n/c mid-point))
+          zoom (/ zoom-new zoom-start)
+          new-central-coords (mapv #(mapv * [zoom zoom] %)  central-coords)
+          coords (mapv #(mapv + % mid-point) new-central-coords)]
+      (js/console.log mid-point points x-offset y-offset)
+      (swap! fd/data assoc-in [:figures figure-id :polygon] coords))))
+
+
+(defn resize-points []
+  (let [data @fd/data
+        poly-id (first (:selected (:selection data)))
+        points (:polygon ((:figures data) poly-id))
+        indexed-points (map-indexed (fn [idx itm] [idx itm]) points)]
+    ;(println poly-id points)
+    (into [:g](mapv #(comps/circle  (second %) 0 (:resize-point-style fd/base-settings) false
+                                    (fn [fig-selected](resize-poly-by-midpoint poly-id (first %) points)))
+                    indexed-points))))
 
 (defn edit-svg [figures common-data opacity  x-bcr y-bcr data]
-  (let [{:keys [selected selection-offset selection-end selection-start]} fd/specter-paths
-        move-poly(fn [fig-selected] (move-poly fig-selected))
+  (let [move-poly (fn [fig-selected] (move-poly fig-selected))
         move-circle (fn [fig-selected] (move-circle fig-selected))]
     [:svg
-     {:style {:background-color "rgb(235,242,230)"}
+     {:style {:background-color (:grid-back-color @cd/data)}
       :width         (:w common-data)
       :height        (:h common-data)
       :ref           #(when %
                         (reset! x-bcr (.-left (.getBoundingClientRect %)))
                         (reset! y-bcr (.-top (.getBoundingClientRect %))))
       :on-mouse-down (fn [e]
-                       (.preventDefault e)
-                       (let [x-current (+ (.-clientX e) (.-pageXOffset js/window) x-bcr)
-                             y-current (+ (.-clientY e) (.-pageYOffset js/window) y-bcr)
-                             start {:x x-current :y y-current}
-                             end {:x1 x-current :y1 y-current}]
-                         (swap! data #(->> %
-                                           (compiled-setval selection-start start)
-                                           (compiled-setval selection-end end)
-                                           (compiled-setval selected [])))))
+                       (.preventDefault e))
+
       :on-mouse-up   (fn [e]
                        (.preventDefault e))
 
@@ -77,5 +101,6 @@
      (cd/snap-lines-vertical)
      [:g
       (when-not (empty? figures)
-        (f-common/draw-figures figures opacity {:polygon move-poly :circle move-circle}))]]))
+        (f-common/draw-figures figures opacity {:polygon move-poly :circle move-circle}))]
+     [resize-points]]))
 

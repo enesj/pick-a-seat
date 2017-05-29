@@ -74,7 +74,7 @@
         ui-channel (chan)
         _ (de/process-channel ui-channel data)
         x-bcr (atom 0)
-              y-bcr (atom 0)
+        y-bcr (atom 0)
         svg (if (= mode :drawing)
                 (draw/draw-svg new-point-style start-point-style end-point-style connection-point-style circle-point-style circle opacity turtle figures snap-points line
                                shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data)
