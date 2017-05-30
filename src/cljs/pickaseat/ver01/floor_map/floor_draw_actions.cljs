@@ -93,10 +93,12 @@
         intersections (mapv #(g/intersection (first %) (second %)) first-shadow)
         shadow (mapv #(mapv cd/snap-round %) (concat (vector (first polyline)) (vector (first raw-shadow)) intersections
                                                       (vector (last raw-shadow)) (vector (last polyline))))
+        all-self-intersections (intersections/self-poly-intersections shadow)
+        no-self-intersection (> 3 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
     ;(js/console.log "sh" shadow "tr")
-    (if (and (intersections/self-poly-intersections shadow) (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
+    (if (and no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
       (-> app
           (assoc-in [:shadow-polyline] shadow))
           ;(assoc-in  [:shadow-raw] raw-shadow))

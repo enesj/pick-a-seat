@@ -49,44 +49,79 @@
   [numbers]
   (/ (apply + numbers) (count numbers)))
 
-(defn resize-poly-by-midpoint [figure-id point-id points]
+(defn resize-poly-by-midpoint [figure-id points mid-point  control-points bcr]
   (fn [x-current y-current start-xy]
-    (let [data @fd/data
-          ;points (:polygon ((:figures data) figure-id))
-          mid-point [(average (mapv first points)) (average (mapv second points))]
+    (let [
+          x-bcr (.-left (.getBoundingClientRect @bcr))
+          y-bcr (.-top (.getBoundingClientRect @bcr))
           central-coords (mapv #(mapv - % mid-point) points)
-          [x-start y-start] start-xy
-          x-offset (- x-current 20)
-          y-offset (- y-current 180)
+          start-xy (map - start-xy [ x-bcr y-bcr])
+          xy-offset (map - [x-current y-current] [ x-bcr y-bcr])
           zoom-start (n/distance (n/c start-xy) (n/c mid-point))
-          zoom-new (n/distance (n/c [x-offset y-offset]) (n/c mid-point))
+          zoom-new (n/distance (n/c xy-offset) (n/c mid-point))
           zoom (/ zoom-new zoom-start)
           new-central-coords (mapv #(mapv * [zoom zoom] %)  central-coords)
-          coords (mapv #(mapv + % mid-point) new-central-coords)]
-      (js/console.log mid-point points x-offset y-offset)
-      (swap! fd/data assoc-in [:figures figure-id :polygon] coords))))
+          coords (mapv #(mapv + % mid-point) new-central-coords)
+          ;current-point (coords point-id)
+          no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
+      ;(js/console.log coords no-borders-intersection)
+      (when no-borders-intersection
+        (swap! fd/data assoc-in [:figures figure-id :polygon] coords)))))
 
+(defn move-poly-point [figure-id point-id points  bcr]
+  (fn [x-current y-current start-xy]
+    (let [x-bcr (.-left (.getBoundingClientRect @bcr))
+          y-bcr (.-top (.getBoundingClientRect @bcr))
+          [x-start y-start] start-xy
+          x-offset (- x-current x-bcr)
+          y-offset (- y-current y-bcr)
+          new-poly (assoc-in (vec points) [point-id] [x-offset y-offset])
+          no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten new-poly) [5 5 1990 1990]))
+          all-self-intersections (intersections/self-poly-intersections new-poly)
+          no-self-intersection (> 2 (count (remove false? all-self-intersections)))]
+      ;(js/console.log  (remove false? all-self-intersections))
+      (when (and no-borders-intersection no-self-intersection)
+        (swap! fd/data assoc-in [:figures figure-id :polygon ] new-poly)))))
 
-(defn resize-points []
+(defn resize-points [bcr]
   (let [data @fd/data
         poly-id (first (:selected (:selection data)))
         points (:polygon ((:figures data) poly-id))
-        indexed-points (map-indexed (fn [idx itm] [idx itm]) points)]
-    ;(println poly-id points)
-    (into [:g](mapv #(comps/circle  (second %) 0 (:resize-point-style fd/base-settings) false
-                                    (fn [fig-selected](resize-poly-by-midpoint poly-id (first %) points)))
-                    indexed-points))))
+        offset 50
+        x-points (mapv first points)
+        y-points (mapv second points)
+        x-min ( - (apply min x-points) offset)
+        x-max (+ (apply max x-points) offset)
+        y-min (- (apply min y-points) offset)
+        y-max (+ (apply max y-points))
+        x-bcr (when @bcr (.-left (.getBoundingClientRect @bcr)))
+        y-bcr (when @bcr (.-top (.getBoundingClientRect @bcr)))
+        control-points-x (map - [x-min x-max ] [(or x-bcr 0) (or x-bcr 0)])
+        control-points-y (map - [y-min y-max]  [(or y-bcr 0) (or y-bcr 0)])
+        control-points [[x-min y-min] [x-max y-min] [x-min y-max] [x-max y-max]]
+        indexed-points (map-indexed (fn [idx itm] [idx itm]) points)
+        mid-point [(average (mapv first points)) (average (mapv second points))]]
+    ;(println control-points)
+    (if poly-id
+      (vec (concat [:g
+                    (comps/circle mid-point 0 (:connection-point-style fd/base-settings) false nil)]
+                   (mapv #(comps/circle  % 0 (:resize-point-style fd/base-settings) false
+                                (fn [] (resize-poly-by-midpoint poly-id  (vec points) mid-point control-points  bcr)))
+                         control-points)
+                   (mapv #(comps/circle  (second %) 0 (:resize-point-style fd/base-settings) false
+                                         (fn [] (move-poly-point poly-id (first %) points bcr)))
+                         indexed-points))))))
 
 (defn edit-svg [figures common-data opacity  x-bcr y-bcr data]
   (let [move-poly (fn [fig-selected] (move-poly fig-selected))
-        move-circle (fn [fig-selected] (move-circle fig-selected))]
+        move-circle (fn [fig-selected] (move-circle fig-selected))
+        bcr (atom nil)]
     [:svg
      {:style {:background-color (:grid-back-color @cd/data)}
       :width         (:w common-data)
       :height        (:h common-data)
       :ref           #(when %
-                        (reset! x-bcr (.-left (.getBoundingClientRect %)))
-                        (reset! y-bcr (.-top (.getBoundingClientRect %))))
+                        (reset! bcr %))
       :on-mouse-down (fn [e]
                        (.preventDefault e))
 
@@ -102,5 +137,5 @@
      [:g
       (when-not (empty? figures)
         (f-common/draw-figures figures opacity {:polygon move-poly :circle move-circle}))]
-     [resize-points]]))
+     [resize-points bcr]]))
 

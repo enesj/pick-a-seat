@@ -9,6 +9,7 @@
    :start-point-style      {:r 15 :fill "rgba(255,255,255,0.1)" :stroke "violet" :stroke-dasharray "5, 5"}
    :circle-point-style     {:fill "rgba(255,255,255,0.1)" :stroke "black"}
    :resize-point-style     {:r 5 :fill "rgba(255,255,255,0.1)" :stroke "blue"}
+   :poly-points-style      {:r 5 :fill "rgba(255,255,255,0.1)" :stroke "green"}
    :connection-point-style {:r 2 :fill "rgba(0,0,0,0.8)"}
    :opacity                {:high 0.5 :low 0.1}
    :history-length         15})
