@@ -63,8 +63,12 @@
 (defn circle [center radius attributes show-center? on-drag]
   (let [[cx cy] center]
     [:g {:key (rand 1000)}
-     [:circle (merge {:cx            cx :cy cy :r radius
-                      :on-mouse-down (if on-drag (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
+     [:circle (merge {:cx cx :cy cy :r radius
+                      :on-mouse-up   (fn [e]
+                                       (when (:id attributes)
+                                         (swap! fd/data assoc-in [:selection :selected] [(:id attributes)])))
+                      :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
+                                                   (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
                      attributes)]
      (if show-center? (circle center 0 {:r 2 :fill "rgba(0,0,0,0.8)"} false nil))]))
 
@@ -74,7 +78,8 @@
                      :points points
                      :stroke "black"
                      :on-mouse-up   (fn [e]  (swap! fd/data assoc-in [:selection :selected] [(:id attributes)]))
-                     :on-mouse-down (if on-drag (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])) nil)}
+                     :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
+                                                  (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])) nil)}
                     attributes)])
 
 

@@ -143,7 +143,9 @@
 (defn draw-circle [app mouse-possition]
   (let [{:keys [circle pen position ]} app
         center (first circle)]
-    (if (and (= pen :down) center) (assoc-in app [:circle] [center (n/distance (n/c center) (n/c mouse-possition))]) app)))
+    (if (and (= pen :down) center) (assoc-in app [:circle]
+                                             [(mapv cd/snap-round center) (cd/snap-round (n/distance (n/c center) (n/c mouse-possition)))])
+                                   app)))
 
 
 

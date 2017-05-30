@@ -6,7 +6,7 @@
   (r/atom {:svg []
            :w   2000
            :h   2000
-           :snap 6.25
+           :snap 5
            :wide-snap-faktor 10
            :grid-back-color "rgba(255,255,255,1)"
            :grid-color "rgba(200,200,200,1)"
