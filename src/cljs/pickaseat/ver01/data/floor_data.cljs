@@ -53,8 +53,8 @@
 
 (def data (r/atom init-floor-state))
 
-(def floor-state {:drawing (r/atom {:performed [init-floor-state] :recalled [] :tables false :draw-circle?    false})
-                  :editing     (r/atom {:performed [init-floor-state] :recalled [] :tables false})})
+(def floor-state {:drawing (r/atom {:performed [init-floor-state] :recalled [] :tables false :draw-circle? false})
+                  :editing (r/atom {:performed [] :recalled [] :tables false})})
 
 (def specter-paths
   {:sel-end          (comp-paths :selection :end ALL LAST)

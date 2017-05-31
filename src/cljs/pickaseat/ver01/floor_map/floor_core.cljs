@@ -32,7 +32,8 @@
      [:text {:opacity       0.8
              :on-mouse-down (fn [e] (.preventDefault e)
                               (swap! app-state assoc-in [:mode]
-                                     (if (= mode :drawing) :editing :drawing)))
+                                     (if (= mode :drawing) :editing :drawing))
+                              (reset! ((if (= mode :drawing) :editing :drawing) fd/floor-state) {:performed [@app-state] :recalled [] :tables tables}))
              :x             10 :y 20}
       (name mode)]
      [:text {:opacity     (if undo? 0.8 0.1)
@@ -68,7 +69,7 @@
         {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} fd/base-settings
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle
-        opacity (if (> (count polyline) 1) (:low opacity) (:high opacity))
+        opacity (if (and (> (count polyline) 1) (= mode :drawing) ) (:low opacity) (:high opacity))
         common-data @cd/data
         {:keys [w h]} common-data
         ui-channel (chan)
@@ -78,7 +79,7 @@
         svg (if (= mode :drawing)
                 (draw/draw-svg new-point-style start-point-style end-point-style connection-point-style circle-point-style circle opacity turtle figures snap-points line
                                shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data)
-                (edit/edit-svg figures common-data opacity ))]
+                (edit/edit-svg figures common-data opacity))]
     ;(js/console.log opacity)
         ;svg (conj svg-1 [:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}])]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}

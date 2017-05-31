@@ -63,6 +63,25 @@
       (when (and no-borders-intersection no-self-intersection)
         (swap! fd/data assoc-in [:figures figure-id :polygon ] new-poly)))))
 
+(defn max-resize [figure-id]
+  (let [points (mapv vec  (:polygon ((:figures @fd/data) figure-id)))
+        x-points (mapv first points)
+        y-points (mapv second points)
+        mid-point [(average x-points) (average y-points)]
+        x-min-index (first (apply min-key second (map-indexed vector x-points)))
+        y-min-index (first (apply min-key second (map-indexed vector y-points)))
+        central-coords (mapv #(mapv - % mid-point) points)
+        central-coords-x (central-coords x-min-index)
+        central-coords-y (central-coords y-min-index)
+        zoom-new-x (Math/abs (/ (first mid-point) (- (first central-coords-x) 5)))
+        zoom-new-y (Math/abs (/ (second mid-point) (- (second central-coords-y) 5)))
+        zoom (min zoom-new-x zoom-new-y)
+        new-central-coords (mapv #(mapv * [zoom zoom] %) central-coords)
+        coords (mapv #(mapv + % mid-point) new-central-coords)]
+        ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
+    ;(println x-min-index coords)
+    (swap! fd/data assoc-in [:figures figure-id :polygon] coords)))
+
 (defn resize-poly-by-midpoint [figure-id points mid-point  control-points bcr]
   (fn [x-current y-current start-xy]
     (let [
@@ -79,8 +98,10 @@
           ;rounded-coords (mapv #(mapv cd/snap-round %) coords)
           no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
       ;(js/console.log coords )
-      (when no-borders-intersection
-        (swap! fd/data assoc-in [:figures figure-id :polygon] coords)))))
+      (if no-borders-intersection
+        (swap! fd/data assoc-in [:figures figure-id :polygon] coords)
+        (do (max-resize figure-id) (max-resize figure-id))))))
+
 
 (defn resize-circle [figure-id center r bcr]
   (fn [x-current y-current start-xy]
@@ -89,12 +110,12 @@
           x-offset (- x-current x-bcr)
           y-offset (- y-current y-bcr)
           [center-x center-y] center
-          new-r (- x-offset center-x)]
+          new-r (Math/abs (- x-offset center-x))]
       (swap! fd/data assoc-in [:figures figure-id :circle] [center new-r]))))
 
 
-(defn resize-points [bcr]
-  (let [data @fd/data
+(defn resize-points [data bcr]
+  (let [
         poly-id (first (:selected (:selection data)))]
     (if (= (ffirst ((:figures data) poly-id)) :polygon)
       (let [points (:polygon ((:figures data) poly-id))
@@ -104,10 +125,10 @@
             x-min (- (apply min x-points) resize-ponts-offset)
             x-max (+ (apply max x-points) resize-ponts-offset)
             y-min (- (apply min y-points) resize-ponts-offset)
-            y-max (+ (apply max y-points))
+            y-max (+ (apply max y-points) resize-ponts-offset)
             control-points [[x-min y-min] [x-max y-min] [x-min y-max] [x-max y-max]]
             indexed-points (map-indexed (fn [idx itm] [idx itm]) points)
-            mid-point [(average (mapv first points)) (average (mapv second points))]]
+            mid-point [(average x-points) (average y-points)]]
         ;(println control-points)
         (if (= (ffirst ((:figures data) poly-id)) :polygon)
           (vec (concat [:g
@@ -125,7 +146,8 @@
 
 
 (defn edit-svg [figures common-data opacity]
-  (let [move-poly (fn [fig-selected] (move-poly fig-selected))
+  (let [data @fd/data
+        move-poly (fn [fig-selected] (move-poly fig-selected))
         move-circle (fn [fig-selected] (move-circle fig-selected))
         bcr (atom nil)]
     [:svg
@@ -138,7 +160,13 @@
                        (.preventDefault e)
                        (swap! fd/data assoc-in [:selection :selected] []))
       :on-mouse-up   (fn [e]
-                       (.preventDefault e))
+                       (.preventDefault e)
+                       (let [history @(:editing fd/floor-state)
+                             {:keys [performed recalled tables]} history
+                             shift-performed (if (= (count performed) (:history-length fd/base-settings))
+                                                 (vec (rest performed)) performed)]
+                         (reset! (:editing fd/floor-state) {:performed (conj shift-performed data) :recalled [] :tables tables})))
+
       :on-mouse-move (fn [e]
                        (.preventDefault e))}
      cd/filters
@@ -147,5 +175,5 @@
      [:g
       (when-not (empty? figures)
         (f-common/draw-figures figures opacity {:polygon move-poly :circle move-circle}))]
-     [resize-points bcr]]))
+     [resize-points data bcr]]))
 

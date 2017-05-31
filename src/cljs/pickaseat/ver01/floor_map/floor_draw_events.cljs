@@ -22,8 +22,8 @@
 (extend-protocol DrawCommand
   Penup
   (process-command [_ app]
-    (let [{:keys [turtle]} app
-          history @(:drawing fd/floor-state)
+    (let [{:keys [turtle mode]} app
+          history @(mode fd/floor-state)
           {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle?]} turtle
           {:keys [performed recalled tables]} history
           start (n/distance (n/c position) (n/c (last polyline)))
@@ -61,7 +61,7 @@
                             (assoc-in [:turtle :line] [position position])
                             (update-in [:turtle :polyline] #(conj % position)))
                         $)))))
-              (do (reset! (:drawing fd/floor-state) {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
+              (do (reset! (mode fd/floor-state) {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
         app)))
   Pendown
   (process-command [{d :d} app]
@@ -105,23 +105,25 @@
         app)))
   Undo
   (process-command [_ app]
-    (let [history @(:drawing fd/floor-state)
+    (let [{:keys [mode]} app
+          history @(mode fd/floor-state)
           {:keys [performed recalled tables]} history
           butlast-performed (vec (butlast performed))]
       (if (> (count performed) 0)
         (do
-          (reset! (:drawing fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
+          (reset! (mode fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
           (-> (last butlast-performed)
               (assoc-in [:turtle :pen] :up)))
         app)))
   Redo
   (process-command [_ app]
-    (let [history @(:drawing fd/floor-state)
+    (let [{:keys [mode]} app
+          history @(mode fd/floor-state)
           {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
       (if (> (count recalled) 0)
         (do
-          (reset! (:drawing fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
+          (reset! (mode fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))
