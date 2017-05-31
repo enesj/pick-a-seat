@@ -97,7 +97,7 @@
         no-self-intersection (> 3 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
-    ;(js/console.log "sh" shadow "tr")
+    ;(js/console.log "sh" shadow)
     (if (and no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
       (-> app
           (assoc-in [:shadow-polyline] shadow))
@@ -128,8 +128,8 @@
             snap-y (some #(if (<= (- % 10) constrain-y (+ % 10)) %) snap-ys)
             snap-points (when (or snap-x snap-y) (snap-test polyline position))
             constrain-snap [(if snap-x snap-x constrain-x)
-                            (if snap-y snap-y constrain-y)]
-            no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
+                            (if snap-y snap-y constrain-y)]]
+            ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
         ;(js/console.log   "cl" app)
         (as-> app $
               (if (or (not cut-poly) (not cut-poly-new)) (assoc-in $ [:cut-poly] cut-poly-new) $)
@@ -138,7 +138,7 @@
                (assoc-in $ [:line-angle] constrain-angle)
                $)
               (assoc-in $ [:snap-points] snap-points)
-              (if no-borders-intersection (assoc-in $ [:position] (mapv cd/snap-round constrain-snap)) $))))))
+              (assoc-in $ [:position] (mapv cd/snap-round constrain-snap)) $)))))
 
 (defn draw-circle [app mouse-possition]
   (let [{:keys [circle pen position ]} app

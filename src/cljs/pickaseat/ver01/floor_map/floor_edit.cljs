@@ -115,8 +115,7 @@
 
 
 (defn resize-points [data bcr]
-  (let [
-        poly-id (first (:selected (:selection data)))]
+  (let [poly-id (first (:selected (:selection data)))]
     (if (= (ffirst ((:figures data) poly-id)) :polygon)
       (let [points (:polygon ((:figures data) poly-id))
             resize-ponts-offset 50
@@ -126,16 +125,25 @@
             x-max (+ (apply max x-points) resize-ponts-offset)
             y-min (- (apply min y-points) resize-ponts-offset)
             y-max (+ (apply max y-points) resize-ponts-offset)
-            control-points [[x-min y-min] [x-max y-min] [x-min y-max] [x-max y-max]]
+            control-points [[x-min y-min] [x-max y-min] [x-max y-max] [x-min y-max]]
             indexed-points (map-indexed (fn [idx itm] [idx itm]) points)
             mid-point [(average x-points) (average y-points)]]
         ;(println control-points)
         (if (= (ffirst ((:figures data) poly-id)) :polygon)
           (vec (concat [:g
                         (comps/circle mid-point 0 (:connection-point-style fd/base-settings) false nil)]
+                        ;(comps/polygon
+                        ;  {:stroke  "black"
+                        ;   :stroke-width 2
+                        ;   :fill    "none"
+                        ;   :opacity 0.2}
+                        ;  ;:filter  "url(#s1)"}
+                        ;  control-points
+                        ;  nil)]
                        (mapv #(comps/circle % 0 (:resize-point-style fd/base-settings) false
                                             (fn [] (resize-poly-by-midpoint poly-id (vec points) mid-point control-points bcr)))
                              control-points)
+
                        (mapv #(comps/circle (second %) 0 (:poly-points-style fd/base-settings) false
                                             (fn [] (move-poly-point poly-id (first %) points bcr)))
                              indexed-points)))))
@@ -161,11 +169,11 @@
                        (swap! fd/data assoc-in [:selection :selected] []))
       :on-mouse-up   (fn [e]
                        (.preventDefault e)
-                       (let [history @(:editing fd/floor-state)
-                             {:keys [performed recalled tables]} history
+                       (let [history @(:history fd/floor-state)
+                             {:keys [performed]} history
                              shift-performed (if (= (count performed) (:history-length fd/base-settings))
                                                  (vec (rest performed)) performed)]
-                         (reset! (:editing fd/floor-state) {:performed (conj shift-performed data) :recalled [] :tables tables})))
+                         (reset! (:history fd/floor-state) {:performed (conj shift-performed data) :recalled []})))
 
       :on-mouse-move (fn [e]
                        (.preventDefault e))}

@@ -23,9 +23,9 @@
   Penup
   (process-command [_ app]
     (let [{:keys [turtle mode]} app
-          history @(mode fd/floor-state)
+          history @(:history fd/floor-state)
           {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle?]} turtle
-          {:keys [performed recalled tables]} history
+          {:keys [performed]} history
           start (n/distance (n/c position) (n/c (last polyline)))
           end (n/distance (n/c position) (n/c (first polyline)))
           test-r (:r (:end-point-style fd/base-settings))
@@ -42,7 +42,7 @@
                 (if shadow?
                   (-> $
                       (assoc-in [:turtle :shadow?] false)
-                      (assoc-in [:figures (inc (count (:figures app)))]  {:polygon (into polyline (reverse (next shadow-polyline)))})
+                      (assoc-in [:figures (inc (count (:figures app)))]  {:polygon (into polyline (next (reverse (next shadow-polyline))))})
                       (assoc-in [:turtle :line] [])
                       (assoc-in [:turtle :polyline] [])
                       (assoc-in [:turtle :shadow-polyline] []))
@@ -61,7 +61,9 @@
                             (assoc-in [:turtle :line] [position position])
                             (update-in [:turtle :polyline] #(conj % position)))
                         $)))))
-              (do (reset! (mode fd/floor-state) {:performed (conj shift-performed $) :recalled [] :tables tables}) $))
+              (do
+                ;(println "up" shift-performed)
+                (reset! (:history fd/floor-state) {:performed (conj shift-performed $) :recalled [] }) $))
         app)))
   Pendown
   (process-command [{d :d} app]
@@ -106,24 +108,24 @@
   Undo
   (process-command [_ app]
     (let [{:keys [mode]} app
-          history @(mode fd/floor-state)
-          {:keys [performed recalled tables]} history
+          history @(:history fd/floor-state)
+          {:keys [performed recalled ]} history
           butlast-performed (vec (butlast performed))]
       (if (> (count performed) 0)
         (do
-          (reset! (mode fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :tables tables})
+          (reset! (:history fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
           (-> (last butlast-performed)
               (assoc-in [:turtle :pen] :up)))
         app)))
   Redo
   (process-command [_ app]
     (let [{:keys [mode]} app
-          history @(mode fd/floor-state)
+          history @(:history fd/floor-state)
           {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
       (if (> (count recalled) 0)
         (do
-          (reset! (mode fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :tables tables})
+          (reset! (:history fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))

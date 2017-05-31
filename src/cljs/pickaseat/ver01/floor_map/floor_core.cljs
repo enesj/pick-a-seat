@@ -24,7 +24,8 @@
     [root-preview (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
 
 (defn draw-menu [app-state ui-channel mode draw-circle?]
-  (let [{:keys [tables performed recalled]} @(mode fd/floor-state)
+  (let [tables (mode @(:history fd/floor-state))
+        {:keys [ performed recalled]} @(:history fd/floor-state)
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
     ;(js/console.log mode  @(mode fd/floor-state))
@@ -32,8 +33,8 @@
      [:text {:opacity       0.8
              :on-mouse-down (fn [e] (.preventDefault e)
                               (swap! app-state assoc-in [:mode]
-                                     (if (= mode :drawing) :editing :drawing))
-                              (reset! ((if (= mode :drawing) :editing :drawing) fd/floor-state) {:performed [@app-state] :recalled [] :tables tables}))
+                                     (if (= mode :drawing) :editing :drawing)))
+                              ;(reset! (:history fd/floor-state) {:performed [@app-state] :recalled []}))
              :x             10 :y 20}
       (name mode)]
      [:text {:opacity     (if undo? 0.8 0.1)

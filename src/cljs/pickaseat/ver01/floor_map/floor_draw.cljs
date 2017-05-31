@@ -20,21 +20,10 @@
     ;15 "green"
     "lightgray"))
 
-(defn get-bcr [svg-root]
-  (-> svg-root
-      r/dom-node
-      .getBoundingClientRect))
-
 (defn root-preview [ tables ids]
   [:g {:opacity "0.4"}
    (doall (for [id ids]
             ^{:key id} [c/table {:on-drag nil} (r/cursor tables [id])]))])
-
-(defn tables-back []
-  (let [full-state @td/tables-state
-        tables (:tables full-state)]
-     [root-preview (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]))
-
 
 (defn draw-snap-points [snap-points line connection-point-style]
   [:g
@@ -78,7 +67,6 @@
      (cd/snap-lines-vertical)
      [:g
       (when-not (empty? figures)
-        ;(js/console.log figures)
         (f-common/draw-figures figures opacity nil))
       (when-not (empty? polyline)
         (apply comps/polyline "lines" {:style {:fill "none" :stroke "black"}} polyline))
@@ -96,19 +84,13 @@
         [:g
          (comps/color-line (line-color (:line-angle turtle)) line {})
          (when (not-empty snap-points)
-           ;(js/console.log snap-points)
            (draw-snap-points snap-points line connection-point-style))
          (when (:end turtle)
            [:g
             (comps/circle (first polyline) 0 end-point-style true nil)])]
-            ;(comps/circle (first polyline) 0 connection-point-style)
-            ;(comps/circle (last line) 0 connection-point-style)])]
         [:g
          (comps/circle (first polyline) 0 start-point-style true nil)
-
-         ;(comps/circle (first polyline) 0 connection-point-style)
          (comps/circle (last polyline) 0 new-point-style true nil)])]]))
-         ;(comps/circle (last polyline) 0 connection-point-style)])]]))
 
 
 ;(defcard-rg floor-plan
