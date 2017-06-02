@@ -4,15 +4,25 @@
 2. undo
 3. redo
 4. show-hide (tables)
-
-modes:
-5. move,
-6. copy
-
-7. delete
-
-8. Zoom
+5. **zoom**
 
 
-Bugs:
+**modes:**
+1. move,
+2. copy
+3. delete
+4. merge /spajanje dva objektakoji imaju zajedničku liniju/
+5. **move and resize all**
+
+
+**Varijante za promjenu moda:**
+
+- meni
+- klik na selektovani objekt
+- kontekst meni
+
+
+
+
+**Bugs:**
 
