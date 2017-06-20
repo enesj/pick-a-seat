@@ -1,41 +1,41 @@
 (ns pickaseat.ver01.tables.selection-utils
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
-  (:require [pickaseat.ver01.data.table_data :as td]
-            [pickaseat.ver01.tables.table-svg :as svg]
-            [pickaseat.ver01.tables.tables-analize :as  an]
+  (:require [pickaseat.ver01.data.table-data :as table-data]
+            [pickaseat.ver01.tables.table-svg :as table-svg]
+            [pickaseat.ver01.tables.tables-analize :as  tables-analize]
             [debux.cs.core :refer-macros [clog dbg break]]))
 
 
 (def tab-events
-  {:ok     (fn [] (let [selected-current @an/selected-current
+  {:ok     (fn [] (let [selected-current @tables-analize/selected-current
                         del (= (:del selected-current) (:current-state selected-current))]
-                    (swap! td/tables-state  (fn [x]
-                                                (if del
-                                                  (-> x
-                                                    (assoc-in  [:selection :selected] [])
-                                                    (update-in  [:tables] #(apply dissoc % (:ids selected-current))))
-                                                  (update-in x [:tables] (fn [y] (merge y (transform [ALL LAST] #(an/clear-modifications %) (:tables selected-current))))))))
-                    (swap! an/selected-current (fn [x]
-                                                 (-> x
-                                                  (assoc-in [:ids] (if del [] (:ids selected-current)))
-                                                  (assoc-in [:tables] {})
-                                                  (assoc-in [:current-state] 0)
-                                                  (assoc-in [:del] false))))))
-   :cancel (fn [] (reset! an/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false}))})
+                    (swap! table-data/tables-state (fn [x]
+                                                    (if del
+                                                      (-> x
+                                                        (assoc-in  [:selection :selected] [])
+                                                        (update-in  [:tables] #(apply dissoc % (:ids selected-current))))
+                                                      (update-in x [:tables] (fn [y] (merge y (transform [ALL LAST] #(tables-analize/clear-modifications %) (:tables selected-current))))))))
+                    (swap! tables-analize/selected-current (fn [x]
+                                                            (-> x
+                                                             (assoc-in [:ids] (if del [] (:ids selected-current)))
+                                                             (assoc-in [:tables] {})
+                                                             (assoc-in [:current-state] 0)
+                                                             (assoc-in [:del] false))))))
+   :cancel (fn [] (reset! tables-analize/selected-current {:current-state 0 :ids [] :tables {} :start {} :end {} :del false}))})
 
 (defn preview-state [current-state full-state all-states]
   (let [selected (:selected (:selection full-state))
         tables-state (:tables full-state)
-        {:keys [next-id x-min  y-min x1-max  y1-max sel-type]} (an/data-preparation tables-state selected)]
+        {:keys [next-id x-min  y-min x1-max  y1-max sel-type]} (tables-analize/data-preparation tables-state selected)]
     ;(js/console.log "active" (:active (:selection full-state)))
     (when (= sel-type :many)
-       (swap! td/tables-state #(-> %
-                                (assoc-in [:selection :start] {:x x-min :y y-min})
-                                (assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))))
-    (swap! an/selected-current #(-> %
-                                    (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
-                                    (assoc-in [:del] (if (= sel-type :many) (- (count all-states ) 1) nil))
-                                    (assoc-in [:tables] (all-states current-state))))))
+       (swap! table-data/tables-state #(-> %
+                                           (assoc-in [:selection :start] {:x x-min :y y-min})
+                                           (assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))))
+    (swap! tables-analize/selected-current #(-> %
+                                                (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
+                                                (assoc-in [:del] (if (= sel-type :many) (- (count all-states ) 1) nil))
+                                                (assoc-in [:tables] (all-states current-state))))))
 
 
 
@@ -67,15 +67,15 @@
         h2 (- h (* 2 r))
         arr1 (/ w 4)
         arr2 (/ w 12)
-        menu-defaults (merge td/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func full-state))})]
-    ^{:key type} [:g (:icon (type (svg/all-tabs x1 y1 w2 h2 arr1 arr2)))
-                  [:path (merge menu-defaults (svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]]))
+        menu-defaults (merge table-data/menu-defaults {:on-mouse-down (fn [e] (.stopPropagation e) (.preventDefault e) (func full-state))})]
+    ^{:key type} [:g (:icon (type (table-svg/all-tabs x1 y1 w2 h2 arr1 arr2)))
+                  [:path (merge menu-defaults (table-svg/RoundedRect x, y, w, h, r, dir) {:id type :stroke "black"})]]))
 
 
 (defn sel-menu [x y w h full-state]
   (let [tabs (sel-menu-tabs full-state)
         tabs-count (count tabs)
-        [w1 h1 r] (:menu-dims @td/base-settings)
+        [w1 h1 r] (:menu-dims @table-data/base-settings)
         per-tab (if (> w h) (/ w tabs-count) (/ h tabs-count))
         hs (* per-tab (/ h1 w1))
         rs (* r (/ h1 w1))

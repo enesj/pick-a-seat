@@ -1,12 +1,12 @@
 (ns pickaseat.ver01.helper
   (:require [cljs.core.async :refer [chan close! put!]]
-            [goog.events :as events]
-            [goog.fx :as fx]
-            [goog.fx.dom :as fx-dom]
-            [goog.dom :as gdom]
-            [goog.dom.forms :as gforms]
-            [goog.net.XhrIo :as xhr]
-            [pickaseat.ver01.data.table_data :as td])
+						[goog.events :as events]
+						[goog.fx :as fx]
+						[goog.fx.dom :as fx-dom]
+						[goog.dom :as gdom]
+						[goog.dom.forms :as gforms]
+						[goog.net.XhrIo :as xhr]
+						[pickaseat.ver01.data.table-data :as td])
             ;[ajax.core :as ajax]
 
   (:require-macros [cljs.core.async.macros :refer [go]]))

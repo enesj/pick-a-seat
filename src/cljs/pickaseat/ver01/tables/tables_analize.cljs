@@ -1,7 +1,7 @@
 (ns pickaseat.ver01.tables.tables-analize
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
-  (:require [pickaseat.ver01.data.table_data :as td]
-            [pickaseat.ver01.tables.table-utils :as u]
+  (:require [pickaseat.ver01.data.table-data :as table-data]
+            [pickaseat.ver01.tables.table-utils :as table-utils]
             [reagent.core :as r]
             [debux.cs.core :refer-macros [clog dbg break]]))
 
@@ -22,7 +22,7 @@
 
 (defn test-collision [test-table tables]
   (doall (for [table tables
-               :let [dir (u/collides-sel table test-table 16)]
+               :let [dir (table-utils/collides-sel table test-table 16)]
                :when (not= false dir)]
              dir)))
 
@@ -38,7 +38,7 @@
   (into {} (mapv #(vector (:id %) %) table-data)))
 
 (defn data-preparation [tables-state selected]
-  (let [selection (:selection @td/tables-state)
+  (let [selection (:selection @table-data/tables-state)
         [start end] [(:start selection) (:end selection)]
         next-id (inc (apply max (map :id (map second tables-state))))]
     (case (count selected)
@@ -53,8 +53,8 @@
               all-tables (map second tables-state)
               extern-collision (test-collision selection-table all-tables)
               extern-tables (filter #((set extern-collision) (:id %)) all-tables)
-              table-types td/table-types
-              table-types (map #(let [t-dims (td/table-dims (:stools %))]
+              table-types table-data/table-types
+              table-types (map #(let [t-dims (table-data/table-dims (:stools %))]
                                   (merge {:id next-id :x x-sel :y y-sel
                                           :width (first t-dims)
                                           :height (second t-dims)
@@ -150,8 +150,8 @@
 
 
 (defn test-all []
-  (let [tables-state (:tables @td/tables-state)
-        selected (:selected (:selection @td/tables-state))
+  (let [tables-state (:tables @table-data/tables-state)
+        selected (:selected (:selection @table-data/tables-state))
         {:keys [all-tables sel-tables other-tables
                 other-ids sel-tables-left sel-tables-top
                 sel-tables-right sel-tables-down extern-tables

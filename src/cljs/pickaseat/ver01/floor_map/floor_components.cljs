@@ -1,7 +1,7 @@
 (ns pickaseat.ver01.floor-map.floor-components
   (:require
     [goog.events :as events]
-    [pickaseat.ver01.data.floor-data :as fd])
+    [pickaseat.ver01.data.floor-data :as floor-data])
   (:import [goog.events EventType]))
 
 
@@ -66,7 +66,7 @@
      [:circle (merge {:cx cx :cy cy :r radius
                       :on-mouse-up   (fn [e]
                                        (when (:id attributes)
-                                         (swap! fd/data assoc-in [:selection :selected] [(:id attributes)])))
+                                         (swap! floor-data/data assoc-in [:selection :selected] [(:id attributes)])))
                       :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
                                                    (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
                      attributes)]
@@ -77,7 +77,7 @@
    [:polygon (merge {:transform "scale(1)"
                      :points points
                      :stroke "black"
-                     :on-mouse-up   (fn [e]  (swap! fd/data assoc-in [:selection :selected] [(:id attributes)]))
+                     :on-mouse-up   (fn [e]  (swap! floor-data/data assoc-in [:selection :selected] [(:id attributes)]))
                      :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
                                                   (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])) nil)}
                     attributes)])

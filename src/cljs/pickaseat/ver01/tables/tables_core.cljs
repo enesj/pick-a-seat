@@ -1,54 +1,52 @@
 (ns pickaseat.ver01.tables.tables-core
   (:require
     [reagent.core :as r]
-    [pickaseat.ver01.tables.tables-components :as c]
-    [pickaseat.ver01.data.table_data :as td]
-    [pickaseat.ver01.tables.table-utils :as u]
-    [pickaseat.ver01.tables.table-events :as tev]
-    [pickaseat.ver01.tables.table-actions :as ta]
-    [pickaseat.ver01.data.common-data :as cd]
-    [pickaseat.ver01.data.themes :as t]
-    ;[pickaseat.ver01.floor-map.floor-draw :as floor]
-    [pickaseat.ver01.floor-map.floor-components :as comps]
-    [pickaseat.ver01.data.floor-data :as fd]
-    [pickaseat.ver01.helper :as h]
-    [pickaseat.ver01.floor-map.floor-common :as f-common]))
+    [pickaseat.ver01.tables.tables-components :as tables-components]
+    [pickaseat.ver01.data.table-data :as table-data]
+    [pickaseat.ver01.tables.table-utils :as table-utils]
+    [pickaseat.ver01.tables.table-events :as table-events]
+    [pickaseat.ver01.tables.table-actions :as table-actions]
+    [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.data.themes :as themes]
+    [pickaseat.ver01.floor-map.floor-components :as floor-components]
+    [pickaseat.ver01.data.floor-data :as floor-data]
+    [pickaseat.ver01.floor-map.floor-common :as floor-common]))
 
 
 
 (defn root [state tables ids]
-  (let [move-tables (fn [sel-top-lefts] (ta/move-table sel-top-lefts))]
+  (let [move-tables (fn [sel-top-lefts] (table-actions/move-table sel-top-lefts))]
     [:g
      (doall (for [id ids]
-              ^{:key id} [c/table move-tables (r/cursor tables [id])]))
+              ^{:key id} [tables-components/table move-tables (r/cursor tables [id])]))
      (if (:show (:selection state))
-       [(c/selection-rect move-tables state)])]))
+       [(tables-components/selection-rect move-tables state)])]))
 
 
 (defn undo []
-  (let [history @td/history
+  (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-performed (vec (butlast performed))]
     (if (> (count performed) 0)
       (do
-        (reset! td/history {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :layout (:layout @td/history)})
-        (reset! td/tables-state (last butlast-performed))
-        (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
+        (reset! table-data/history {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :layout (:layout @table-data/history)})
+        (reset! table-data/tables-state (last butlast-performed))
+        (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
 
 
 (defn redo []
-  (let [history @td/history
+  (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-recalled (vec (butlast recalled))]
     (if (> (count recalled) 0)
       (do
-        (reset! td/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :layout (:layout @td/history)})
-        (reset! td/tables-state (last recalled))
-        (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
+        (reset! table-data/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :layout (:layout @table-data/history)})
+        (reset! table-data/tables-state (last recalled))
+        (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
 
 
 (defn draw-menu []
-  (let [{:keys [layout performed recalled]} @td/history
+  (let [{:keys [layout performed recalled]} @table-data/history
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
     [:svg {:width "400px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
@@ -67,14 +65,14 @@
                               (redo)))
              :x           160 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
-                              (swap! td/history update-in [:layout] not))
+                              (swap! table-data/history update-in [:layout] not))
              :x             240 :y 20} (if layout "hide(layout)" "show(layout)")]]))
 
 (defn draw-figures []
-  (for [figure (sort-by key (:figures @fd/data))]
+  (for [figure (sort-by key (:figures @floor-data/data))]
     (let [fig (first (val figure))]
       (case (key fig)
-        :polygon (comps/polygon
+        :polygon (floor-components/polygon
                    {:key     (key figure)
                     :stroke  "black"
                     :fill    "white"
@@ -85,18 +83,18 @@
 
 
 (defn draw-tables []
-  (let [tables-state @td/tables-state
+  (let [tables-state @table-data/tables-state
         {:keys [tables selection ]} tables-state
-        common-data @cd/data
+        common-data @common-data/data
         [x y] (mapv - (:svg common-data))
         {:keys [w h]} common-data
-        [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (u/start-end (:start selection) (:end selection))
-        {:keys [key-down key-up mouse-down mouse-move]} (tev/table-events selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
-        root [root tables-state (r/cursor td/tables-state [:tables]) (for [table tables] (first table))]]
+        [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (table-utils/start-end (:start selection) (:end selection))
+        {:keys [key-down key-up mouse-down mouse-move]} (table-events/table-events selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
+        root [root tables-state (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table))]]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [draw-menu]
      [:svg
-      {:fill          (:text t/palete)
+      {:fill          (:text themes/palete)
        :width         w
        :height        h
        :on-key-down   key-down
@@ -104,7 +102,7 @@
        :on-mouse-down mouse-down
        :on-mouse-move mouse-move
        :style {:background-color "rgb(235,242,230)"}}
-      cd/filters
-      (if (:layout @td/history) (f-common/draw-figures (:figures @fd/data) (:low (:opacity @fd/data)) nil))
+      common-data/filters
+      (if (:layout @table-data/history) (floor-common/draw-figures (:figures @floor-data/data) (:low (:opacity @floor-data/data)) nil))
       ;[:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}]
       root]]))
