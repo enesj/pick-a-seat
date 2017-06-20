@@ -81,29 +81,27 @@
 (defn draw-shadow [position mouse-possition polyline shadow-polyline app]
   (let [
         poly (partition 2 1 polyline)
-        angle-first (v/angle (map - (second (first poly)) (ffirst poly)))
-        shadow-width (* (n/distance (n/c mouse-possition) (n/c (ffirst poly)))
-                        (Math/sin (- (v/angle (mapv - mouse-possition (ffirst poly))) angle-first)))
-        polyline (partition 2 (flatten poly))
-        move #(n/polar->rect shadow-width (+ (v/angle (map - (second %) (first %))) (/ n/PI 2)))
+        angle-first (complex-vector/angle (map - (second (first poly)) (ffirst poly)))
+        shadow-width (* (complex-number/distance (complex-number/c mouse-possition) (complex-number/c (ffirst poly)))
+                        (Math/sin (- (complex-vector/angle (mapv - mouse-possition (ffirst poly))) angle-first)))
+        new-polyline (partition 2 (flatten poly))
+        move #(complex-number/polar->rect shadow-width (+ (complex-vector/angle (map - (second %) (first %))) (/ complex-number/PI 2)))
         new-poly (partition 2 (flatten (map #(repeat 2 %) (mapv move poly))))
-        raw-shadow (mapv #(mapv + %1 %2) new-poly polyline)
+        raw-shadow (mapv #(mapv + %1 %2) new-poly new-polyline)
         first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
-        intersections (mapv #(g/intersection (first %) (second %)) first-shadow)
-        intersections (if (some #(not= % %) (flatten intersections))  [] intersections)
-        shadow (mapv #(mapv cd/snap-round %) (concat (vector (first polyline)) (vector (first raw-shadow)) intersections
-                                                     (vector (last raw-shadow)) (vector (last polyline))))
+        intersections-first (mapv #(complex-geometry/intersection (first %) (second %)) first-shadow)
+        intersections-second (vec (remove (fn [x](some #(not= % %) x ))  intersections-first))
+        shadow (mapv #(mapv common-data/snap-round %) (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
+                                                              (vector (last raw-shadow)) (vector (last new-polyline))))
         all-self-intersections (intersections/self-poly-intersections shadow)
         no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
-    ;(println  "rsh" nil ", "  shadow ", ddd"
-    ;    (== (ffirst intersections) (ffirst intersections))
-    ;    ", is"   intersections)
+    (js/console.log no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
     (if (and no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
       (-> app
           (assoc-in [:shadow-polyline] shadow))
-      ;(assoc-in  [:shadow-raw] raw-shadow))
+          ;(assoc-in  [:shadow-raw] raw-shadow))
       app)))
 
 (defn snap-test [polyline position]
