@@ -2,10 +2,10 @@
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath
                                 filterer srange comp-paths compiled-select compiled-transform
                                 collect-one compiled-setval]])
-  (:require [pickaseat.ver01.data.themes :as t]
+  (:require [pickaseat.ver01.data.themes :as themes]
             [reagent.core :as r]
-            [pickaseat.ver01.data.floor-data :as fd]
-            [pickaseat.ver01.data.common-data :as cd]))
+            [pickaseat.ver01.data.floor-data :as floor-data]
+            [pickaseat.ver01.data.common-data :as common-data]))
 
 (defonce tables-state
          (r/atom
@@ -41,7 +41,7 @@
 
 
 (def base-settings
-         (let [{:keys [w h]} @cd/data]
+         (let [{:keys [w h]} @common-data/data]
            (r/atom
              {:window    {:w w :h w}
               :table-stool [30 8]
@@ -61,25 +61,25 @@
    :stroke-width 0.5})
 
 (def table-defaults
-  {:fill         (:table-fill t/palete)
+  {:fill         (:table-fill themes/palete)
    :fill-opacity 0.8
-   :stroke       (:table-stroke t/palete)
+   :stroke       (:table-stroke themes/palete)
    :stroke-width 0.7})
 
 (def stool-defaults-normal
   {:rx           3
    :ry           3
-   :fill         (:stool-fill t/palete)
+   :fill         (:stool-fill themes/palete)
    :fill-opacity 1
-   :stroke       (:stool-stroke t/palete)
+   :stroke       (:stool-stroke themes/palete)
    :stroke-width 0.3})
 
 (def stool-defaults-small
   {:rx           1
    :ry           1
-   :fill         (:stool-small-fill t/palete)
+   :fill         (:stool-small-fill themes/palete)
    :fill-opacity 1
-   :stroke       (:stool-small-stroke t/palete)
+   :stroke       (:stool-small-stroke themes/palete)
    :stroke-width 0})
 
 
@@ -163,7 +163,7 @@
                  (fn [x] (->> x (compiled-transform (:sel-start specter-paths) #(Math/round (* zoom %)))
                               (compiled-transform (:sel-end specter-paths) #(Math/round (* zoom %)))))))
         (when settings?
-          (swap! fd/data (fn [x] (compiled-transform (:polygon fd/specter-paths) #(Math/round (* zoom %)) x)))
+          (swap! floor-data/data (fn [x] (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)))
           (settings zoom))
         (table-props)))))
 
