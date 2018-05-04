@@ -2,8 +2,7 @@
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.table_data :as td]
             [pickaseat.ver01.tables.table-utils :as u]
-            [reagent.core :as r]
-            [debux.cs.core :refer-macros [clog dbg break]]))
+            [reagent.core :as r]))
 
 (def selected-current (r/atom {:current-state 0 :ids [] :tables {} :start {} :end {} :del false}))
 
@@ -152,15 +151,17 @@
 (defn test-all []
   (let [tables-state (:tables @td/tables-state)
         selected (:selected (:selection @td/tables-state))
-        {:keys [all-tables sel-tables other-tables
-                other-ids sel-tables-left sel-tables-top
+        {:keys [
+                all-tables sel-tables other-tables other-ids
+                sel-tables-left sel-tables-top
                 sel-tables-right sel-tables-down extern-tables
                 del-sel-tables
                 lefts tops rights downs
                 x-min x-max x1-max y-min y-max y1-max
-                sel-type start end next-id
-                table-types x-sel y-sel
-                selection-table]}
+                sel-type
+                start end next-id
+                table-types
+                x-sel y-sel selection-table]}
         (data-preparation tables-state selected)]
     (if (= sel-type :many)
       (let [

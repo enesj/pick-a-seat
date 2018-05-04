@@ -20,10 +20,11 @@
     ;15 "green"
     "lightgray"))
 
-(defn root-preview [ tables ids]
+(defn root-preview [tables ids]
   [:g {:opacity "0.4"}
-   (doall (for [id ids]
-            ^{:key id} [c/table {:on-drag nil} (r/cursor tables [id])]))])
+   (doall
+     (for [id ids]
+       ^{:key id} [c/table {:on-drag nil} (r/cursor tables [id])]))])
 
 (defn draw-snap-points [snap-points line connection-point-style]
   [:g

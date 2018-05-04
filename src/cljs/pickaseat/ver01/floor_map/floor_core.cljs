@@ -14,6 +14,7 @@
 (enable-console-print!)
 
 (defn root-preview [ tables ids]
+  (js/console.log "root-preview")
   [:g {:opacity "0.4"}
    (doall (for [id ids]
             ^{:key id} [c/table nil (r/cursor tables [id])]))])

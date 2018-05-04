@@ -55,8 +55,6 @@
   (r/render [mount-stage] (h/get-elem "app")))
 
 
-
-
 (comment
   (defn init [template]
     (swap! td/tables-state assoc-in [:tables] (tt/table-templates template))

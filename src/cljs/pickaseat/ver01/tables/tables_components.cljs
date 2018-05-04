@@ -6,8 +6,7 @@
             [pickaseat.ver01.tables.table-utils :as u]
             [pickaseat.ver01.tables.tables-analize :as  an]
             [pickaseat.ver01.tables.selection-utils :as su]
-            [pickaseat.ver01.tables.table-svg :as svg]
-            [debux.cs.core :refer-macros [clog dbg break]])
+            [pickaseat.ver01.tables.table-svg :as svg])
   (:import [goog.events EventType]))
 
 (defn drag-move-fn [on-drag start]
@@ -82,11 +81,13 @@
                             (partition 2)
                             (mapv vec)
                             (into []))]
-    (loop [rs rs
+    (loop [rs- rs
            all-seats all-seats-new]
-      (if (> (count rs) 0)
-        (recur (next rs) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs))) all-seats)))
+      (if (> (count rs-) 0)
+        (recur (next rs-) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs-))) all-seats)))
         all-seats))))
+    ;all-seats-new))
+
 
 
 (defn table [move-tables table-data-atom]
@@ -97,7 +98,7 @@
     [:g
      (if-not hide-stools
        (doall (for [stool (stool-maps x y width height rs-dir stools)
-                    :let [stool-data (val stool)
+                    :let [stool-data (second stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))
      [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]

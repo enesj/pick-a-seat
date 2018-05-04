@@ -4,7 +4,6 @@
                                 collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.themes :as t]
             [reagent.core :as r]
-            [debux.cs.core :refer-macros [clog dbg break]]
             [pickaseat.ver01.data.floor-data :as fd]
             [pickaseat.ver01.data.common-data :as cd]))
 
