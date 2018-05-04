@@ -33,7 +33,7 @@
                                            (assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))))
     (swap! tables-analize/selected-current #(-> %
                                                 (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
-                                                (assoc-in [:del] (if (= sel-type :many) (- (count all-states ) 1) nil))
+                                                (assoc-in [:del] (when (= sel-type :many) (dec (count all-states))))
                                                 (assoc-in [:tables] (all-states current-state))))))
 
 
@@ -42,8 +42,8 @@
 (defn sel-menu-tabs [full-state]
   (let [tabs-data [:ok :cancel]
         ft 0
-        lt (- (count tabs-data) 1)
-        active-tabs (map-indexed #(vector %1 %2) tabs-data)]
+        lt (dec (count tabs-data))
+        active-tabs (map-indexed vector tabs-data)]
     (mapv #(hash-map :pos (first %)
                      :type (second %)
                      :func ((second %) tab-events)

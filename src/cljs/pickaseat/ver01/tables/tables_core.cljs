@@ -27,22 +27,14 @@
   (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-performed (vec (butlast performed))]
-    (if (> (count performed) 0)
-      (do
-        (reset! table-data/history {:performed butlast-performed :recalled (vec (conj recalled (last performed))) :layout (:layout @table-data/history)})
-        (reset! table-data/tables-state (last butlast-performed))
-        (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
+    (when (pos? (count performed)) (reset! table-data/history {:recalled (vec (conj recalled (last performed))), :layout (:layout (deref table-data/history)), :performed butlast-performed}) (reset! table-data/tables-state (last butlast-performed)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
 
 
 (defn redo []
   (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-recalled (vec (butlast recalled))]
-    (if (> (count recalled) 0)
-      (do
-        (reset! table-data/history {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled :layout (:layout @table-data/history)})
-        (reset! table-data/tables-state (last recalled))
-        (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false)))))
+    (when (pos? (count recalled)) (reset! table-data/history {:recalled butlast-recalled, :layout (:layout (deref table-data/history)), :performed (vec (conj performed (last recalled)))}) (reset! table-data/tables-state (last recalled)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
 
 
 (defn draw-menu []

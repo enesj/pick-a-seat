@@ -151,19 +151,5 @@
 
   (let [zoom-old (:zoom (:scale @tables-state))
         zoom (/ zoom-new zoom-old)]
-    (if (not= zoom 1)
-      (do
-        (swap! tables-state
-               (fn [x] (->> x
-                            (compiled-transform (:scale-x specter-paths) #(Math/round (* zoom %)))
-                            (compiled-transform (:scale-y specter-paths) #(Math/round (* zoom %)))
-                            (compiled-setval (:zoom specter-paths) zoom-new))))
-        (when (not (empty? (:selected (:selection @tables-state))))
-          (swap! tables-state
-                 (fn [x] (->> x (compiled-transform (:sel-start specter-paths) #(Math/round (* zoom %)))
-                              (compiled-transform (:sel-end specter-paths) #(Math/round (* zoom %)))))))
-        (when settings?
-          (swap! floor-data/data (fn [x] (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)))
-          (settings zoom))
-        (table-props)))))
+    (when (not= zoom 1) (swap! tables-state (fn [x] (->> x (compiled-transform (:scale-x specter-paths) (fn* [p1__469612#] (Math/round (* zoom p1__469612#)))) (compiled-transform (:scale-y specter-paths) (fn* [p1__469614#] (Math/round (* zoom p1__469614#)))) (compiled-setval (:zoom specter-paths) zoom-new)))) (when (seq (:selected (:selection (deref tables-state)))) (swap! tables-state (fn [x] (->> x (compiled-transform (:sel-start specter-paths) (fn* [p1__469616#] (Math/round (* zoom p1__469616#)))) (compiled-transform (:sel-end specter-paths) (fn* [p1__469618#] (Math/round (* zoom p1__469618#)))))))) (when settings? (swap! floor-data/data (fn [x] (compiled-transform (:polygon floor-data/specter-paths) (fn* [p1__469620#] (Math/round (* zoom p1__469620#))) x))) (settings zoom)) (table-props))))
 

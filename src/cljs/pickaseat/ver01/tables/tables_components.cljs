@@ -58,7 +58,7 @@
         all-seats-new (->>  (doall (for [side (range 0 4)
                                          :let [stools-side (inc (stools side))]]
                                      (for [i (range 1 stools-side)
-                                           :let [id1 (keyword (str side "-" (+ (* i 2) 1)))
+                                           :let [id1 (keyword (str side "-" (inc (* i 2))))
                                                  id1s (keyword (str id1 "-s"))
                                                  id2 (keyword (str side "-" (+ (* i 2) 2)))
                                                  id2s (keyword (str id1 "-s"))
@@ -83,8 +83,8 @@
                             (into []))]
     (loop [rs- rs
            all-seats all-seats-new]
-      (if (> (count rs-) 0)
-        (recur (next rs-) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs-))) all-seats)))
+      (if (pos? (count rs-))
+        (recur (next rs-) (vec (remove (fn [x] (some (fn* [p1__3297029#] (= (:dir (second x)) p1__3297029#)) (first rs-))) all-seats)))
         all-seats))))
     ;all-seats-new))
 
@@ -158,15 +158,10 @@
                                                    new-state  (if (and (or
                                                                          (= (:start selection) (:start  selected-current))
                                                                          (= (:start  selected-current) {}))
-                                                                       (< selection-state (- (count all-states) 1)))
+                                                                       (< selection-state (dec (count all-states))))
                                                                   (inc selection-state) 0)]
-                                               (when (not (:active selection))
-                                                 (selection-utils/preview-state new-state full-state all-states)
-                                                 (swap! tables-analize/selected-current #(-> %
-                                                                                             (assoc-in [:current-state] new-state)
-                                                                                             (assoc-in [:start] (:start (:selection @table-data/tables-state))) ;; mora citati najnovije podatke jer ih mijenja
-                                                                                             (assoc-in [:end] (:end (:selection @table-data/tables-state))))))))})] ;; funkcija preview-state
-          (if (and (not (:active selection)) (> (count ids) 0) (not= selection-state 0))
+                                               (when-not (:active selection) (selection-utils/preview-state new-state full-state all-states) (swap! tables-analize/selected-current (fn* [p1__3453005#] (-> p1__3453005# (assoc-in [:current-state] new-state) (assoc-in [:start] (:start (:selection (deref table-data/tables-state)))) (assoc-in [:end] (:end (:selection (deref table-data/tables-state))))))))))})] ;; funkcija preview-state
+          (if (and (not (:active selection)) (pos? (count ids)) (not= selection-state 0))
             (selection-utils/sel-menu x-s y-s width height full-state))])})))
 
 

@@ -65,7 +65,7 @@
            (let [anim (fx-dom/FadeOut. node tm)]
                 (when callback
                       (events/listen anim js/goog.fx.Animation.EventType.END callback))
-                (. anim (play))))))
+                (.play anim)))))
 
 (defn fade-in
       ([] (fade-in 1000 nil))
@@ -75,4 +75,4 @@
            (let [anim (fx-dom/FadeIn. node tm)]
                 (when callback
                       (events/listen anim js/goog.fx.Animation.EventType.END callback))
-                (. anim (play))))))
+                (.play anim)))))

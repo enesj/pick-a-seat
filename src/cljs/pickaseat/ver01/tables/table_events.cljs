@@ -33,9 +33,9 @@
                          direction (filterv boolean (doall (for [table
                                                                  (conj (into (vals tables) (:borders @table-data/base-settings))
                                                                        {:id         :1 :x x-sel-s :y y-sel-s :width (- x-sel-e x-sel-s (- 0)) :height (- y-sel-e y-sel-s (- 0))
-                                                                        :rect-right (+ x-sel-e 0) :rect-bottom (+ y-sel-e 0)})
+                                                                        :rect-right x-sel-e :rect-bottom y-sel-e})
                                                                  :let [dir (table-utils/collides-sel table {:id 1 :x x-current :y y-current :width 1 :height 1
-                                                                                                            :rect-right   (+ x-current 1) :rect-bottom (+ y-current 1)} 0)]
+                                                                                                            :rect-right   (inc x-current) :rect-bottom (inc y-current)} 0)]
                                                                  :when (not= false dir)]
                                                              dir)))]
                      (if (empty? direction)

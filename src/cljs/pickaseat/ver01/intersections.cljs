@@ -55,13 +55,9 @@
              :let [current (first index)
                    ;poly (mapv second flat-poly-segments)
                    start (flat-poly-segments current)
-                   left (apply subvec flat-poly-segments (if (= current 0) [(- (count poly) 1) (count poly)] [(- current 1) current]))
-                   right (apply subvec flat-poly-segments (if (= current (- (count poly) 1)) [0 1] [(+ current 1) (+ current 2)]))
-                   end-1 (subvec flat-poly-segments (if (= current (- (count poly) 1)) 1 0) (if (= current 0) current (- current 1)))
-                   end-2 (subvec flat-poly-segments (if (= current  (- (count poly) 1)) (+ current 1) (+ current 2)) (if (= current 0) (- (count poly) 1) (count poly)))]]
-         (do
-           ;(println "s" start "e" (flatten end) "all"  flat-poly-segments)
-           (if  (and (> 1 (poly-poly-intersection start end-1)) (> 1 (poly-poly-intersection start end-2)))
-             false
-             index)))))
+                   left (apply subvec flat-poly-segments (if (zero? current) [(dec (count poly)) (count poly)] [(dec current) current]))
+                   right (apply subvec flat-poly-segments (if (= current (dec (count poly))) [0 1] [(inc current) (+ current 2)]))
+                   end-1 (subvec flat-poly-segments (if (= current (dec (count poly))) 1 0) (if (zero? current) current (dec current)))
+                   end-2 (subvec flat-poly-segments (if (= current  (dec (count poly))) (inc current) (+ current 2)) (if (zero? current) (dec (count poly)) (count poly)))]]
+         (if (and (> 1 (poly-poly-intersection start end-1)) (> 1 (poly-poly-intersection start end-2))) false index))))
 

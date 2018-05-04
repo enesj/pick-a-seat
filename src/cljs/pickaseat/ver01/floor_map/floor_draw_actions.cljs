@@ -61,7 +61,7 @@
           new-line [mouse-possition (first line)]
           new-line-radius (complex-vector/len (apply map - new-line))
           new-line-angle (line-angle new-line 5)
-          last-poly-angle (when (> (count polyline) 0) (line-angle (vec (last polyline)) 1))
+          last-poly-angle (when (pos? (count polyline)) (line-angle (vec (last polyline)) 1))
           last-poly-test (if (not-empty polyline)
                            (< (two-lines-angle-degree new-line-angle last-poly-angle) 15)
                            false)
@@ -97,10 +97,9 @@
         no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
-    (js/console.log no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
-    (if (and no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
-      (-> app
-          (assoc-in [:shadow-polyline] shadow))
+    (js/console.log no-self-intersection (zero? border-test) (> 3 (intersections/poly-poly-intersection shadow poly)))
+    (if (and no-self-intersection (zero? border-test) (> 3 (intersections/poly-poly-intersection shadow poly)))
+      (assoc-in app [:shadow-polyline] shadow)
           ;(assoc-in  [:shadow-raw] raw-shadow))
       app)))
 
@@ -127,8 +126,8 @@
             snap-x (some #(if (<= (- % 10) constrain-x (+ % 10)) %) snap-xs)
             snap-y (some #(if (<= (- % 10) constrain-y (+ % 10)) %) snap-ys)
             snap-points (when (or snap-x snap-y) (snap-test polyline position))
-            constrain-snap [(if snap-x snap-x constrain-x)
-                            (if snap-y snap-y constrain-y)]]
+            constrain-snap [(or snap-x constrain-x)
+                            (or snap-y constrain-y)]]
         ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
         ;(js/console.log   "cl" app)
         (as-> app $

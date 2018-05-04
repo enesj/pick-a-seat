@@ -20,7 +20,7 @@
           y-offset (- y-current y-start)
           polygon  (map #(map + [x-offset y-offset] %) points)
           polygon-rounded  (map #(map common-data/snap-round %) polygon)
-          no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten polygon-rounded ) [5 5 1990 1990]))]
+          no-borders-intersection (zero? (intersections/line-rect-intersections (flatten polygon-rounded) [5 5 1990 1990]))]
       ;(js/console.log no-borders-intersection [x-current y-current] (flatten polygon))
       (when no-borders-intersection
         (swap! floor-data/data (fn [x] (assoc-in x [:figures id :polygon] polygon-rounded)))))))
@@ -36,7 +36,7 @@
           center-new (mapv + [x-offset y-offset]  center)
           center-rounded  (mapv common-data/snap-round center-new)
           circle-new [center-rounded radius]
-          no-borders-intersection (= 0 (intersections/circle-rect-intersections circle-new [5 5 1990 1990]))]
+          no-borders-intersection (zero? (intersections/circle-rect-intersections circle-new [5 5 1990 1990]))]
       (when no-borders-intersection
         (swap! floor-data/data (fn [x] (assoc-in x [:figures id :circle] circle-new)))))))
 
@@ -51,7 +51,7 @@
           x-offset (- x-current x-bcr)
           y-offset (- y-current y-bcr)
           new-poly (assoc-in (vec points) [point-id] (mapv common-data/snap-round [x-offset y-offset]))
-          no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten new-poly) [5 5 1990 1990]))
+          no-borders-intersection (zero? (intersections/line-rect-intersections (flatten new-poly) [5 5 1990 1990]))
           all-self-intersections (intersections/self-poly-intersections new-poly)
           no-self-intersection (> 2 (count (remove false? all-self-intersections)))]
       ;(js/console.log  (remove false? all-self-intersections))
@@ -91,7 +91,7 @@
           new-central-coords (mapv #(mapv * [zoom zoom] %)  central-coords)
           coords (mapv #(mapv + % mid-point) new-central-coords)
           ;rounded-coords (mapv #(mapv cd/snap-round %) coords)
-          no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
+          no-borders-intersection (zero? (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
       ;(js/console.log coords )
       (if no-borders-intersection
         (swap! floor-data/data assoc-in [:figures figure-id :polygon] coords)
@@ -150,8 +150,8 @@
 
 (defn edit-svg [figures common-data opacity]
   (let [data @floor-data/data
-        move-poly (fn [fig-selected] (move-poly fig-selected))
-        move-circle (fn [fig-selected] (move-circle fig-selected))
+        move-poly move-poly
+        move-circle move-circle
         bcr (atom nil)]
     [:svg
      {:style {:background-color (:grid-back-color @common-data/data)}
@@ -176,7 +176,6 @@
      (common-data/snap-lines-horizontal)
      (common-data/snap-lines-vertical)
      [:g
-      (when-not (empty? figures)
-        (floor-common/draw-figures figures opacity {:polygon move-poly :circle move-circle}))]
+      (when (seq figures) (floor-common/draw-figures figures opacity {:circle move-circle, :polygon move-poly}))]
      [resize-points data bcr]]))
 

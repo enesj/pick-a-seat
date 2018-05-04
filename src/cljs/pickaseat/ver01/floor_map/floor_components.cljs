@@ -78,8 +78,7 @@
                      :points points
                      :stroke "black"
                      :on-mouse-up   (fn [e]  (swap! floor-data/data assoc-in [:selection :selected] [(:id attributes)]))
-                     :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
-                                                  (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])) nil)}
+                     :on-mouse-down (when on-drag (fn [e] (.stopPropagation e) (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) points])))}
                     attributes)])
 
 

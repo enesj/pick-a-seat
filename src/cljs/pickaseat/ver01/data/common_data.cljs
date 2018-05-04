@@ -28,7 +28,7 @@
     (into [:g]
           (for [y (snap-positions snap v-limit)]
             [:line (merge {:x1 0 :y1 y :x2 h-limit :y2 y :key y}
-                          {:style {:stroke grid-color :stroke-width (if (= (mod y (* wide-snap-faktor snap)) 0) (* 2 stroke-width) stroke-width)}})]))))
+                          {:style {:stroke grid-color :stroke-width (if (zero? (mod y (* wide-snap-faktor snap))) (* 2 stroke-width) stroke-width)}})]))))
 
 (defn snap-lines-v [snap h-limit v-limit stroke-width]
   (let [data @data
@@ -36,7 +36,7 @@
     (into [:g]
        (for [x (snap-positions snap h-limit)]
          [:line (merge {:x1 x :y1 0 :x2 x :y2 v-limit :key x}
-                       {:style {:stroke grid-color :stroke-width (if (= (mod x (* wide-snap-faktor snap)) 0) (* 2 stroke-width) stroke-width)}})]))))
+                       {:style {:stroke grid-color :stroke-width (if (zero? (mod x (* wide-snap-faktor snap))) (* 2 stroke-width) stroke-width)}})]))))
 
 (defn snap-lines-horizontal []
   (let [data @data]

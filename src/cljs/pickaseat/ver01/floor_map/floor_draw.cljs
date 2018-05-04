@@ -65,20 +65,15 @@
      (common-data/snap-lines-horizontal)
      (common-data/snap-lines-vertical)
      [:g
-      (when-not (empty? figures)
-        (floor-common/draw-figures figures opacity nil))
-      (when-not (empty? polyline)
-        (apply floor-components/polyline "lines" {:style {:fill "none" :stroke "black"}} polyline))
+      (when (seq figures) (floor-common/draw-figures figures opacity nil))
+      (when (seq polyline) (apply floor-components/polyline "lines" {:style {:stroke "black", :fill "none"}} polyline))
       (when shadow
         [:g
          (apply floor-components/polyline "lines" {:style {:fill "none" :stroke "blue"}} shadow-raw)
          (apply floor-components/polyline "lines" {:style {:fill "none" :stroke "brown"}} shadow-polyline)])
-      (when-not (empty? circle)
-        (floor-components/circle center r circle-point-style true nil))
-      (when-not (empty? cut-poly)
-        (apply floor-components/polyline "lines" {:style {:stroke "red"}} cut-poly))
-      (when-not (empty? cut-line)
-        (apply floor-components/polyline "lines" {:style {:stroke "red"}} cut-line))
+      (when (seq circle) (floor-components/circle center r circle-point-style true nil))
+      (when (seq cut-poly) (apply floor-components/polyline "lines" {:style {:stroke "red"}} cut-poly))
+      (when (seq cut-line) (apply floor-components/polyline "lines" {:style {:stroke "red"}} cut-line))
       (if (= pen :down)
         [:g
          (floor-components/color-line (line-color (:line-angle turtle)) line {})

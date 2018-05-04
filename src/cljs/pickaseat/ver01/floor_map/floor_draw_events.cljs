@@ -75,7 +75,7 @@
         (as-> app $
               (assoc-in $ [:turtle :pen] :down)
               (if draw-circle?
-                (-> $ (assoc-in [:turtle :circle] (if draw-circle? [d 0] [])))
+                (assoc-in $ [:turtle :circle] (if draw-circle? [d 0] []))
                 (if (< start test-r)
                   (-> $
                       (assoc-in [:turtle :circle] (if draw-circle? [d 0] []))
@@ -110,11 +110,10 @@
           history @(:history floor-data/floor-state)
           {:keys [performed recalled ]} history
           butlast-performed (vec (butlast performed))]
-      (if (> (count performed) 0)
+      (if (pos? (count performed))
         (do
           (reset! (:history floor-data/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
-          (-> (last butlast-performed)
-              (assoc-in [:turtle :pen] :up)))
+          (assoc-in (last butlast-performed) [:turtle :pen] :up))
         app)))
   Redo
   (process-command [_ app]
@@ -122,11 +121,10 @@
           history @(:history floor-data/floor-state)
           {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
-      (if (> (count recalled) 0)
+      (if (pos? (count recalled))
         (do
           (reset! (:history floor-data/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
-          (-> (last recalled)
-              (assoc-in [:turtle :pen] :up)))
+          (assoc-in (last recalled) [:turtle :pen] :up))
         app))))
 
 
