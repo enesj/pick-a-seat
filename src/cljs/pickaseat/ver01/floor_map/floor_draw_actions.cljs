@@ -1,13 +1,12 @@
 (ns pickaseat.ver01.floor-map.floor-draw-actions
   (:require
-    [complex.vector :as v]
-    [complex.number :as n]
-    [complex.geometry :as g]
+    [complex.vector :as complex-vector]
+    [complex.number :as complex-number]
+    [complex.geometry :as complex-geometry]
     [cljsjs.svg-intersections]
     [cljs.core.match :refer-macros [match]]
     [pickaseat.ver01.intersections :as intersections]
-    [pickaseat.ver01.data.common-data :as cd]))
-    ;[cuerdas.core :as str]))
+    [pickaseat.ver01.data.common-data :as common-data]))
 
 
 
@@ -15,10 +14,10 @@
   (let [test-polylines (butlast polyline)]
     (if (not-empty polyline)
       (last
-        (sort-by #(n/distance (n/c (last %)) (n/c (last test-polylines)))
+        (sort-by #(complex-number/distance (complex-number/c (last %)) (complex-number/c (last test-polylines)))
                  (filter #(true? (first %))
                          (doall (for [poly test-polylines]
-                                  (let [coll-point (map Math/round (g/intersection new-line (vec poly)))
+                                  (let [coll-point (map Math/round (complex-geometry/intersection new-line (vec poly)))
                                         poly-x (->> poly (map first)  (map Math/round) sort)
                                         new-line-x (->> new-line (map first)  (map Math/round) sort)
                                         poly-y (->> poly (map second)  (map Math/round) sort)
@@ -49,8 +48,8 @@
     angle))
 
 (defn line-angle [line c-angle]
-  (let [angle (v/angle (apply map - line))
-        angle-deg (n/rad->deg angle)]
+  (let [angle (complex-vector/angle (apply map - line))
+        angle-deg (complex-number/rad->deg angle)]
     (angle-snap angle-deg c-angle)))
 
 (defn two-lines-angle-degree [line1-angle line2-angle]
@@ -60,13 +59,13 @@
   (if (and (not= mouse-possition (first line)) (not-empty line))
     (let [
           new-line [mouse-possition (first line)]
-          new-line-radius (v/len (apply map - new-line))
+          new-line-radius (complex-vector/len (apply map - new-line))
           new-line-angle (line-angle new-line 5)
           last-poly-angle (when (> (count polyline) 0) (line-angle (vec (last polyline)) 1))
           last-poly-test (if (not-empty polyline)
                            (< (two-lines-angle-degree new-line-angle last-poly-angle) 15)
                            false)
-          new-position  (->> (n/complex-polar new-line-radius new-line-angle) vec (mapv #(int (second %))) (mapv + (second new-line)))
+          new-position  (->> (complex-number/complex-polar new-line-radius new-line-angle) vec (mapv #(int (second %))) (mapv + (second new-line)))
           segment-collison-test (segment-collision (assoc-in line [1] new-position) polyline)
           [segment-collison? collision-line collison-point] (when-not last-poly-test segment-collison-test)
           cut-polylne (if segment-collison? (as-> (drop-while #(not= collision-line %) polyline) $
@@ -82,22 +81,23 @@
 (defn draw-shadow [position mouse-possition polyline shadow-polyline app]
   (let [
         poly (partition 2 1 polyline)
-        angle-first (v/angle (map - (second (first poly)) (ffirst poly)))
-        shadow-width (* (n/distance (n/c mouse-possition) (n/c (ffirst poly)))
-                        (Math/sin (- (v/angle (mapv - mouse-possition (ffirst poly))) angle-first)))
-        polyline (partition 2 (flatten poly))
-        move #(n/polar->rect shadow-width (+ (v/angle (map - (second %) (first %))) (/ n/PI 2)))
+        angle-first (complex-vector/angle (map - (second (first poly)) (ffirst poly)))
+        shadow-width (* (complex-number/distance (complex-number/c mouse-possition) (complex-number/c (ffirst poly)))
+                        (Math/sin (- (complex-vector/angle (mapv - mouse-possition (ffirst poly))) angle-first)))
+        new-polyline (partition 2 (flatten poly))
+        move #(complex-number/polar->rect shadow-width (+ (complex-vector/angle (map - (second %) (first %))) (/ complex-number/PI 2)))
         new-poly (partition 2 (flatten (map #(repeat 2 %) (mapv move poly))))
-        raw-shadow (mapv #(mapv + %1 %2) new-poly polyline)
+        raw-shadow (mapv #(mapv + %1 %2) new-poly new-polyline)
         first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
-        intersections (mapv #(g/intersection (first %) (second %)) first-shadow)
-        shadow (mapv #(mapv cd/snap-round %) (concat (vector (first polyline)) (vector (first raw-shadow)) intersections
-                                                      (vector (last raw-shadow)) (vector (last polyline))))
+        intersections-first (mapv #(complex-geometry/intersection (first %) (second %)) first-shadow)
+        intersections-second (vec (remove (fn [x](some #(not= % %) x ))  intersections-first))
+        shadow (mapv #(mapv common-data/snap-round %) (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
+                                                              (vector (last raw-shadow)) (vector (last new-polyline))))
         all-self-intersections (intersections/self-poly-intersections shadow)
-        no-self-intersection (> 3 (count (remove false? all-self-intersections)))
+        no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
-    ;(js/console.log "sh" shadow)
+    (js/console.log no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
     (if (and no-self-intersection (= border-test 0) (> 3 (intersections/poly-poly-intersection shadow poly)))
       (-> app
           (assoc-in [:shadow-polyline] shadow))
@@ -129,7 +129,7 @@
             snap-points (when (or snap-x snap-y) (snap-test polyline position))
             constrain-snap [(if snap-x snap-x constrain-x)
                             (if snap-y snap-y constrain-y)]]
-            ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
+        ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten [(last polyline) constrain-snap])  [5 5 1990 1990]))]
         ;(js/console.log   "cl" app)
         (as-> app $
               (if (or (not cut-poly) (not cut-poly-new)) (assoc-in $ [:cut-poly] cut-poly-new) $)
@@ -138,13 +138,13 @@
                (assoc-in $ [:line-angle] constrain-angle)
                $)
               (assoc-in $ [:snap-points] snap-points)
-              (assoc-in $ [:position] (mapv cd/snap-round constrain-snap)) $)))))
+              (assoc-in $ [:position] (mapv common-data/snap-round constrain-snap)) $)))))
 
 (defn draw-circle [app mouse-possition]
   (let [{:keys [circle pen position ]} app
         center (first circle)]
     (if (and (= pen :down) center) (assoc-in app [:circle]
-                                             [(mapv cd/snap-round center) (cd/snap-round (n/distance (n/c center) (n/c mouse-possition)))])
+                                             [(mapv common-data/snap-round center) (common-data/snap-round (complex-number/distance (complex-number/c center) (complex-number/c mouse-possition)))])
                                    app)))
 
 

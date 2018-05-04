@@ -1,5 +1,4 @@
 (ns pickaseat.ver01.tables.table-utils)
-  ;(:require [pickaseat.ver01.data.table_data :as td]))
 
 (defn start-end [start end]
   ((juxt (partial mapv min) (partial mapv max)) (vals start) (vals end)))

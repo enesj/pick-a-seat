@@ -1,19 +1,18 @@
 (ns pickaseat.ver01.tables.table-actions
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
-    [pickaseat.ver01.data.table_data :as td]
-    [pickaseat.ver01.tables.table-utils :as u]
-    [pickaseat.ver01.data.common-data :as cd]
-    [pickaseat.ver01.floor-map.floor-draw-events :as de]))
+    [pickaseat.ver01.data.table-data :as table-data]
+    [pickaseat.ver01.tables.table-utils :as table-utils]
+    [pickaseat.ver01.data.common-data :as common-data]))
 
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
-    (swap! td/tables-state assoc-in [:tables id :rs] nil)
+    (swap! table-data/tables-state assoc-in [:tables id :rs] nil)
     (doseq [idrs (map key rs)]
       (let [ids (filterv #(= % id)
                          (select [(keypath idrs) :rs FIRST FIRST] tables))]
         (doseq [idm ids]
-          (swap! td/tables-state update-in [:tables idrs :rs] #(dissoc % idm)))))))
+          (swap! table-data/tables-state update-in [:tables idrs :rs] #(dissoc % idm)))))))
 
 (defn remove-seats [close id]
   (let [cs (->> (partition 4 close) (map #(zipmap [:w :h :id :dir] %)) (group-by :id) (map #(first (val %))))]
@@ -23,15 +22,15 @@
             d1 (keyword (first d))
             d2 (keyword (second d))]
         (doall
-          (swap! td/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (into #{} (conj x d2)))))
-          (swap! td/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (into #{} (conj x d1))))))))))
+          (swap! table-data/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (into #{} (conj x d2)))))
+          (swap! table-data/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (into #{} (conj x d1))))))))))
 
 
 (defn move-table [sel-top-lefts]
   (fn [x-current y-current start-xy tables-data ctrl]
-    (let [tables-collection (into (vals tables-data) (:borders @td/base-settings))
-          {:keys [selected show active offset]} (:selection @td/tables-state)
-          [x y] (mapv - (:svg @cd/data))
+    (let [tables-collection (into (vals tables-data) (:borders @table-data/base-settings))
+          {:keys [selected show active offset]} (:selection @table-data/tables-state)
+          [x y] (mapv - (:svg @common-data/data))
           [x-start y-start] start-xy
           sel? (> (count sel-top-lefts) 1)
           result (doall (for [ids sel-top-lefts]
@@ -50,13 +49,13 @@
                                 tables-collision (if sel? (into [] (remove #((set selected) (:id %))) tables-other) tables-other)
                                 direction-xy (doall
                                                (for [table tables-collision
-                                                     :let [dir (u/collides-with table table-xy)]
+                                                     :let [dir (table-utils/collides-with table table-xy)]
                                                      :when dir]
                                                  dir))
                                 direction1 (when (and (not sel?) direction-xy)
                                              (doall
                                                (for [table tables-collision
-                                                     :let [dir (u/collides-with table table-x table-y)]
+                                                     :let [dir (table-utils/collides-with table table-x table-y)]
                                                      :when dir]
                                                  dir)))
                                 direction (when direction1 (if (or (and (some #(= :x %) direction1)
@@ -67,10 +66,10 @@
                                 x-move (if (= :x direction) x x-new)
                                 y-move (if (= :y direction) y y-new)
                                 close (if ctrl
-                                        (let [close1 (mapv #(u/close-table % table-my) tables-collision)
+                                        (let [close1 (mapv #(table-utils/close-table % table-my) tables-collision)
                                               close1 (filterv boolean (flatten close1))]
                                           (if (and (not-empty close1) (empty (for [table tables-collision
-                                                                                   :let [dir (u/collides-with table table-xy)]
+                                                                                   :let [dir (table-utils/collides-with table table-xy)]
                                                                                    :when (not= false dir)]
                                                                                dir)))
                                             close1)))]
@@ -137,8 +136,8 @@
                                                                        :y y-sel})
                                     (assoc-in [1 [:selection :end]] {:x1 x1-sel
                                                                      :y1 y1-sel})))))
-        (swap! td/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
-                                                      (compiled-select (:all td/specter-paths)
-                                                                       (mapv vec (compiled-select (:all-last td/specter-paths) @update-data)))))))))))
+        (swap! table-data/tables-state (fn [x] (doall (reduce #(assoc-in %1 (first %2) (second %2)) x
+                                                              (compiled-select (:all table-data/specter-paths)
+                                                                               (mapv vec (compiled-select (:all-last table-data/specter-paths) @update-data)))))))))))
 
 

@@ -44,25 +44,6 @@
              (js/SvgIntersections.shape "polyline" #js {:points (points-str (flatten poly-1))})
              (js/SvgIntersections.shape "polyline" #js {:points (points-str (flatten poly-2))})))))
 
-(defn self-poly-intersections-old [poly]
-  (let [segment 4]
-    (loop [ok true
-           flat-poly (flatten (partition 2 1 poly))
-           flat-poly-shift  (drop 4 flat-poly)]
-      (let [start (take segment flat-poly)
-            end (drop segment flat-poly)
-            start-1 (take segment flat-poly-shift)
-            end-1 (drop segment flat-poly-shift)]
-           ;(js/console.log "fp" flat-poly "fps" flat-poly-shift)
-        (if (and (not-empty flat-poly-shift) (not-empty flat-poly) ok)
-          (recur
-            (if (and  (> 2 (poly-poly-intersection start end)) (> 2 (poly-poly-intersection start-1 end-1)))
-              true
-              false)
-            flat-poly
-            flat-poly-shift)
-          ok)))))
-
 
 (defn self-poly-intersections [poly]
   (let [segment 4

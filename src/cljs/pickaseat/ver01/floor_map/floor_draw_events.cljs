@@ -1,10 +1,9 @@
 (ns pickaseat.ver01.floor-map.floor-draw-events
   (:require
-    [complex.number :as n]
-    [pickaseat.ver01.data.floor-data :as fd]
-    [pickaseat.ver01.floor-map.floor-components :as comps]
+    [complex.number :as complex-number]
+    [pickaseat.ver01.data.floor-data :as floor-data]
     [cljs.core.async :as async :refer [>! <! put! chan alts! timeout]]
-    [pickaseat.ver01.floor-map.floor-draw-actions :as da])
+    [pickaseat.ver01.floor-map.floor-draw-actions :as floor-draw-actions])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
@@ -23,13 +22,13 @@
   Penup
   (process-command [_ app]
     (let [{:keys [turtle mode]} app
-          history @(:history fd/floor-state)
+          history @(:history floor-data/floor-state)
           {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle?]} turtle
           {:keys [performed]} history
-          start (n/distance (n/c position) (n/c (last polyline)))
-          end (n/distance (n/c position) (n/c (first polyline)))
-          test-r (:r (:end-point-style fd/base-settings))
-          shift-performed (if (= (count performed) (:history-length fd/base-settings))
+          start (complex-number/distance (complex-number/c position) (complex-number/c (last polyline)))
+          end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
+          test-r (:r (:end-point-style floor-data/base-settings))
+          shift-performed (if (= (count performed) (:history-length floor-data/base-settings))
                             (vec (rest performed)) performed)]
       ;(js/console.log circle)
       (if (= pen :down)
@@ -63,15 +62,15 @@
                         $)))))
               (do
                 ;(println "up" shift-performed)
-                (reset! (:history fd/floor-state) {:performed (conj shift-performed $) :recalled [] }) $))
+                (reset! (:history floor-data/floor-state) {:performed (conj shift-performed $) :recalled [] }) $))
         app)))
   Pendown
   (process-command [{d :d} app]
     (let [{:keys [turtle]} app
           {:keys [pen polyline position line circle draw-circle?]} turtle
-          start (n/distance (n/c position) (n/c (last polyline)))
-          end (n/distance (n/c position) (n/c (first polyline)))
-          test-r (:r (:new-point-style fd/base-settings))]
+          start (complex-number/distance (complex-number/c position) (complex-number/c (last polyline)))
+          end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
+          test-r (:r (:new-point-style floor-data/base-settings))]
       (if (= pen :up)
         (as-> app $
               (assoc-in $ [:turtle :pen] :down)
@@ -96,8 +95,8 @@
   (process-command [_ app]
     (let [{:keys [turtle]} app
           {:keys [pen polyline position shadow? draw-circle?]} turtle
-          end (n/distance (n/c position) (n/c (first polyline)))
-          test-r (:r (:end-point-style fd/base-settings))]
+          end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
+          test-r (:r (:end-point-style floor-data/base-settings))]
       (if (and (= pen :down) (not draw-circle?))
         (as-> app $
               (if (and (< end test-r) (not shadow?))
@@ -108,24 +107,24 @@
   Undo
   (process-command [_ app]
     (let [{:keys [mode]} app
-          history @(:history fd/floor-state)
+          history @(:history floor-data/floor-state)
           {:keys [performed recalled ]} history
           butlast-performed (vec (butlast performed))]
       (if (> (count performed) 0)
         (do
-          (reset! (:history fd/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
+          (reset! (:history floor-data/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
           (-> (last butlast-performed)
               (assoc-in [:turtle :pen] :up)))
         app)))
   Redo
   (process-command [_ app]
     (let [{:keys [mode]} app
-          history @(:history fd/floor-state)
+          history @(:history floor-data/floor-state)
           {:keys [performed recalled tables]} history
           butlast-recalled (vec (butlast recalled))]
       (if (> (count recalled) 0)
         (do
-          (reset! (:history fd/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
+          (reset! (:history floor-data/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
           (-> (last recalled)
               (assoc-in [:turtle :pen] :up)))
         app))))
@@ -147,7 +146,7 @@
   (exec [(->Pendown [x y])]))
 
 (defn draw-line [x y]
-  (exec [(->Draw) (da/->Poly [x y])]))
+  (exec [(->Draw) (floor-draw-actions/->Poly [x y])]))
 
 
 (defn run-program [chan program]
@@ -159,14 +158,14 @@
 
 
 (defn command? [command]
-  (satisfies? da/Command command))
+  (satisfies? floor-draw-actions/Command command))
 
 (defn update-state
   "return new state for given command"
   [state command]
   (let [{:keys [turtle]} state]
     (if (command? command)
-      (let [new-turtle (da/process-command command turtle)]
+      (let [new-turtle (floor-draw-actions/process-command command turtle)]
         (assoc-in state [:turtle] new-turtle))
       (process-command command state))))
 
