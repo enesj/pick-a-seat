@@ -1,7 +1,10 @@
 (ns pickaseat.ver01.floor-map.floor-common
-  (:require [pickaseat.ver01.floor-map.floor-components :as floor-components]))
+  (:require [pickaseat.ver01.floor-map.floor-components :as floor-components]
+            [pickaseat.ver01.data.common-data :refer [data]]))
 
-
+(defn snap-round [x]
+  (let [snap (:snap @data)]
+    (* (Math/round (/ x snap)) snap)))
 
 (defn draw-figures [figures opacity move-figures]
   (for [figure (sort-by key figures)]

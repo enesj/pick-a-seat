@@ -6,10 +6,10 @@
   (fn [e]
     (.preventDefault e)
     ;(js/console.log "up")
-    (swap! floor-data/data assoc-in [:selection :active] false)
-    (if  (not-empty (:selected (:selection @floor-data/data)))
-      (swap! floor-data/data assoc-in [:selection :show] true)
-      (swap! floor-data/data assoc-in [:selection :show] false))))
+    (swap! floor-data/floor-state assoc-in [:selection :active] false)
+    (if  (not-empty (:selected (:selection @floor-data/floor-states-data)))
+      (swap! floor-data/floor-state assoc-in [:selection :show] true)
+      (swap! floor-data/floor-state assoc-in [:selection :show] false))))
 
 
 

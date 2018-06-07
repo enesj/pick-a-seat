@@ -144,28 +144,29 @@
          [:g
           (if (seq ids)
             (doall (for [id ids
-                           :when (not-empty ((:tables selected-current) id))]
+                         :when (not-empty ((:tables selected-current) id))]
                      ^{:key id} [table {:on-drag nil} (r/cursor tables-analize/selected-current [:tables id])])))
           [:rect (merge table-data/sel-defaults
                         {:x             x-s
-                            :y             y-s
-                            :width         width
-                            :height        height
-                            :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
-                            :on-mouse-up   (fn [e]
-                                             ;(.preventDefault e)
-                                             (let [all-states (tables-analize/test-all)
-                                                   new-state  (if (and (or
-                                                                         (= (:start selection) (:start  selected-current))
-                                                                         (= (:start  selected-current) {}))
-                                                                       (< selection-state (dec (count all-states))))
-                                                                  (inc selection-state) 0)]
-                                               (when (not (:active selection))
-                                                 (selection-utils/preview-state new-state full-state all-states)
-                                                 (swap! tables-analize/selected-current #(-> %
-                                                                                             (assoc-in [:current-state] new-state)
-                                                                                             (assoc-in [:start] (:start (:selection @table-data/tables-state))) ;; mora citati najnovije podatke jer ih mijenja
-                                                                                             (assoc-in [:end] (:end (:selection @table-data/tables-state))))))))})] ;; funkcija preview-state))})] ;; funkcija preview-state
+                         :y             y-s
+                         :width         width
+                         :height        height
+                         :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
+                         :on-mouse-up   (fn [e]
+                                          ;(.preventDefault e)
+                                          (let [all-states (tables-analize/test-all)
+                                                new-state (if (and (or
+                                                                     (= (:start selection) (:start selected-current))
+                                                                     (= (:start selected-current) {}))
+                                                                   (< selection-state (dec (count all-states))))
+                                                              (inc selection-state)
+                                                              0)]
+                                            (when (not (:active selection))
+                                              (selection-utils/preview-state new-state full-state all-states)
+                                              (swap! tables-analize/selected-current #(-> %
+                                                                                          (assoc-in [:current-state] new-state)
+                                                                                          (assoc-in [:start] (:start (:selection @table-data/tables-state))) ;; mora citati najnovije podatke jer ih mijenja
+                                                                                          (assoc-in [:end] (:end (:selection @table-data/tables-state))))))))})] ;; funkcija preview-state))})] ;; funkcija preview-state
           (if (and (not (:active selection)) (pos? (count ids)) (not= selection-state 0))
             (selection-utils/sel-menu x-s y-s width height full-state))])})))
 

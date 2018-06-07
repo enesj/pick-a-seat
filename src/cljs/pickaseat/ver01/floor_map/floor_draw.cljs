@@ -5,6 +5,7 @@
     [pickaseat.ver01.floor-map.floor-draw-events :as floor-draw-events]
     [cljs.core.async :as async :refer [chan]]
     [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.data.background :as background]
     [pickaseat.ver01.tables.tables-components :as tables-components]
     [pickaseat.ver01.floor-map.floor-common :as floor-common]))
 
@@ -31,6 +32,8 @@
      [:g {:key (rand 1000)}
       (floor-components/circle snap-point 1 connection-point-style false nil)
       (floor-components/color-line "orange" [snap-point (last line)] {:stroke-dasharray "5, 5"})])])
+
+
 
 (defn draw-svg [new-point-style start-point-style end-point-style connection-point-style circle-point-style circle opacity turtle figures snap-points line
                 shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data]
@@ -62,8 +65,8 @@
                                                        (- (.-clientY e) @y-bcr))))}
      common-data/filters
 
-     (common-data/snap-lines-horizontal)
-     (common-data/snap-lines-vertical)
+     (background/snap-lines-horizontal)
+     (background/snap-lines-vertical)
      [:g
       (when (seq figures) (floor-common/draw-figures figures opacity nil))
       (when (seq polyline) (apply floor-components/polyline "lines" {:style {:stroke "black", :fill "none"}} polyline))
@@ -76,7 +79,8 @@
       (when (seq cut-line) (apply floor-components/polyline "lines" {:style {:stroke "red"}} cut-line))
       (if (= pen :down)
         [:g
-         (floor-components/color-line (line-color (:line-angle turtle)) line {})
+         (when (every? pos? (second line))
+           (floor-components/color-line (line-color (:line-angle turtle)) line {}))
          (when (not-empty snap-points)
            (draw-snap-points snap-points line connection-point-style))
          (when (:end turtle)

@@ -85,9 +85,8 @@
                     [ws hs rs])
         [x1 y1] (if (= dir :h) [x (+ y h) (+ x w) (+ y h)]
                                [(+ x w) y (+ x w) (+ y h)])]
-    (mapv (fn [tab]
+    (doall (for [tab tabs]
             (let [j (:pos tab)]
               (if (= dir :h)
                 (sel-menu-tab tab [(+ x1 (* j w1)), y1, w1, h1 r (:h-menu tab)])
-                (sel-menu-tab tab [x1, (+ y1 (* j h1)), w1, h1 r (:v-menu tab)]))))
-          tabs)))
+                (sel-menu-tab tab [x1, (+ y1 (* j h1)), w1, h1 r (:v-menu tab)])))))))

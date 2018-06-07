@@ -6,7 +6,8 @@
     [cljsjs.svg-intersections]
     [cljs.core.match :refer-macros [match]]
     [pickaseat.ver01.intersections :as intersections]
-    [pickaseat.ver01.data.common-data :as common-data]))
+    [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.floor-map.floor-common :as floor-common]))
 
 
 
@@ -92,8 +93,8 @@
         first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
         intersections-first (mapv #(complex-geometry/intersection (first %) (second %)) first-shadow)
         intersections-second (vec (remove (fn [x](some #(not= % %) x ))  intersections-first))
-        shadow (mapv #(mapv common-data/snap-round %) (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
-                                                              (vector (last raw-shadow)) (vector (last new-polyline))))
+        shadow (mapv #(mapv floor-common/snap-round %) (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
+                                                               (vector (last raw-shadow)) (vector (last new-polyline))))
         all-self-intersections (intersections/self-poly-intersections shadow)
         no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
@@ -138,13 +139,13 @@
                (assoc-in $ [:line-angle] constrain-angle)
                $)
               (assoc-in $ [:snap-points] snap-points)
-              (assoc-in $ [:position] (mapv common-data/snap-round constrain-snap)) $)))))
+              (assoc-in $ [:position] (mapv floor-common/snap-round constrain-snap)) $)))))
 
 (defn draw-circle [app mouse-possition]
   (let [{:keys [circle pen position ]} app
         center (first circle)]
     (if (and (= pen :down) center) (assoc-in app [:circle]
-                                             [(mapv common-data/snap-round center) (common-data/snap-round (complex-number/distance (complex-number/c center) (complex-number/c mouse-possition)))])
+                                             [(mapv floor-common/snap-round center) (floor-common/snap-round (complex-number/distance (complex-number/c center) (complex-number/c mouse-possition)))])
                                    app)))
 
 

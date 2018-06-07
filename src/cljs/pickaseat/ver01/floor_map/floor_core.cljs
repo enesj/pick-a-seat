@@ -14,7 +14,6 @@
 (enable-console-print!)
 
 (defn root-preview [ tables ids]
-  (js/console.log "root-preview")
   [:g {:opacity "0.4"}
    (doall (for [id ids]
             ^{:key id} [tables-components/table nil (r/cursor tables [id])]))])
@@ -25,8 +24,8 @@
     [root-preview (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table))]))
 
 (defn draw-menu [app-state ui-channel mode draw-circle?]
-  (let [tables (mode @(:history floor-data/floor-state))
-        {:keys [ performed recalled]} @(:history floor-data/floor-state)
+  (let [{:keys [ tables]}  @floor-data/floor-state
+        {:keys [ performed recalled]} @floor-data/floor-states-data
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
     ;(js/console.log mode  @(mode fd/floor-state))
@@ -53,7 +52,7 @@
                               (draw-events/run-program ui-channel (draw-events/redo))))
              :x           160 :y 20} (str "Redo " (count recalled))]
      [:text {:on-mouse-down (fn [e] (.preventDefault e)
-                              (swap! (mode floor-data/floor-state) update-in [:tables] not))
+                              (swap!  floor-data/floor-state update-in [:tables] not))
              :x            240 :y 20} (if tables "hide(tables)" "show(tables)")]
      (when (= mode :drawing)
        [:text {:opacity       0.8
@@ -67,7 +66,7 @@
 
 
 (defn draw-floor []
-  (let [data floor-data/data
+  (let [data floor-data/floor-state
         {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} floor-data/base-settings
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle
@@ -86,4 +85,4 @@
     ;svg (conj svg-1 [:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}])]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      (draw-menu data ui-channel mode draw-circle?)
-     (if (:tables @(mode floor-data/floor-state)) (conj svg (tables-back)) svg)]))
+     (if (:tables  @floor-data/floor-state) (conj svg (tables-back)) svg)]))

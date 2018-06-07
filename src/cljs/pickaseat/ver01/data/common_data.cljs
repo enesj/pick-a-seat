@@ -14,9 +14,6 @@
            :restaurant "Mala pivnica"
            :hall "Velika sala"}))
 
-(defn snap-round [x]
-  (let [snap (:snap @data)]
-    (* (Math/round (/ x snap)) snap)))
 
 (defn snap-positions [snap limit]
   (let [positions (iterate (partial + snap) snap)]

@@ -17,9 +17,10 @@
 (enable-console-print!)
 (devtools/install! [:formatters :hints])
 
-(def current-mode (r/atom 0))
+(def current-mode (r/atom :tables))
 
-(defn take-mode [n] (nth (cycle {:Layout floor-core/draw-floor :Tables tables-core/draw-tables}) n))
+(defn take-mode [mode] (mode {:tables ["Tables" tables-core/draw-tables] :layout ["Layout" floor-core/draw-floor]}))
+
 
 (defn app []
   [:div
@@ -29,9 +30,9 @@
     [:text {:opacity       0.8
             :font-weight "bold"
             :on-mouse-down (fn [e] (.preventDefault e)
-                             (swap! current-mode inc))
+                             (swap! current-mode #(if (= % :tables) :layout :tables)))
             :x             10 :y 20}
-     (name (first (take-mode  @current-mode)))]]
+     (first (take-mode  @current-mode))]]
    [(second (take-mode  @current-mode))]])
 
 

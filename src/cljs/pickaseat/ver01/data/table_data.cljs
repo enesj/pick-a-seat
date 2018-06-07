@@ -7,6 +7,30 @@
             [pickaseat.ver01.data.floor-data :as floor-data]
             [pickaseat.ver01.data.common-data :as common-data]))
 
+
+(def specter-paths
+  {:table-stool      (comp-paths :table-stool)
+   :menu-dims        (comp-paths :menu-dims)
+   :stool-dims       (comp-paths :stool-dims ALL LAST ALL LAST)
+   :scale-x          (comp-paths :tables ALL LAST :x)
+   :scale-y          (comp-paths :tables ALL LAST :y)
+   :tabale-selected  (comp-paths :tables ALL LAST :selected)
+   :hide-stools      (comp-paths :tables ALL LAST :hide-stools)
+   :borders-right-x  (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :x)
+   :borders-right    (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :rect-right)
+   :borders-top      (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)
+   :sel-end          (comp-paths :selection :end ALL LAST)
+   :sel-start        (comp-paths :selection :start ALL LAST)
+   :selection-show   (comp-paths :selection :show)
+   :selected         (comp-paths :selection :selected)
+   :selection-active (comp-paths :selection :active)
+   :selection-offset (comp-paths :selection :offset)
+   :selection-end    (comp-paths :selection :end)
+   :selection-start  (comp-paths :selection :start)
+   :zoom             (comp-paths :scale :zoom)
+   :all              (comp-paths ALL ALL)
+   :all-last         (comp-paths ALL LAST)})
+
 (defonce tables-state
          (r/atom
            {:selection {:active   false
@@ -88,28 +112,7 @@
    :stroke       "black"
    :stroke-width 0.5})
 
-(def specter-paths
-  {:table-stool      (comp-paths :table-stool)
-   :menu-dims        (comp-paths :menu-dims)
-   :stool-dims       (comp-paths :stool-dims ALL LAST ALL LAST)
-   :scale-x          (comp-paths :tables ALL LAST :x)
-   :scale-y          (comp-paths :tables ALL LAST :y)
-   :tabale-selected  (comp-paths :tables ALL LAST :selected)
-   :hide-stools      (comp-paths :tables ALL LAST :hide-stools)
-   :borders-right-x  (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :x)
-   :borders-right    (comp-paths :borders (filterer #(= (:id %) :r)) FIRST :rect-right)
-   :borders-top      (comp-paths :borders (filterer #(= (:id %) :t)) FIRST :rect-right)
-   :sel-end          (comp-paths :selection :end ALL LAST)
-   :sel-start        (comp-paths :selection :start ALL LAST)
-   :selection-show   (comp-paths :selection :show)
-   :selected         (comp-paths :selection :selected)
-   :selection-active (comp-paths :selection :active)
-   :selection-offset (comp-paths :selection :offset)
-   :selection-end    (comp-paths :selection :end)
-   :selection-start  (comp-paths :selection :start)
-   :zoom             (comp-paths :scale :zoom)
-   :all              (comp-paths ALL ALL)
-   :all-last         (comp-paths ALL LAST)})
+
 
 
 (defn table-dims [stools]
@@ -131,7 +134,8 @@
                      [width height] (table-dims stools)
                      rect-right (+ x width)
                      rect-bottom (+ y height)
-                     rect {:width (Math/round width) :height (Math/round height) :rect-right (Math/round rect-right) :rect-bottom (Math/round rect-bottom)}]]
+                     rect {:width (Math/round width) :height (Math/round height) :rect-right (Math/round rect-right)
+                           :rect-bottom (Math/round rect-bottom)}]]
              (swap! tables-state update-in [:tables id ]  #(merge % rect)))))
 
 (defn settings
@@ -163,7 +167,7 @@
                  (fn [x] (->> x (compiled-transform (:sel-start specter-paths) #(Math/round (* zoom %)))
                               (compiled-transform (:sel-end specter-paths) #(Math/round (* zoom %)))))))
         (when settings?
-          (swap! floor-data/data (fn [x] (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)))
+          (swap! floor-data/floor-state (fn [x] (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)))
           (settings zoom))
         (table-props)))))
 

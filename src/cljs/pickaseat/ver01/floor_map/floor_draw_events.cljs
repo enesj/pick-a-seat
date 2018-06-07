@@ -21,10 +21,9 @@
 (extend-protocol DrawCommand
   Penup
   (process-command [_ app]
-    (let [{:keys [turtle mode]} app
-          history @(:history floor-data/floor-state)
-          {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle?]} turtle
-          {:keys [performed]} history
+    (let [{:keys [turtle ]} app
+          {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle? start-time]} turtle
+          {:keys [performed]} floor-data/floor-state
           start (complex-number/distance (complex-number/c position) (complex-number/c (last polyline)))
           end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
           test-r (:r (:end-point-style floor-data/base-settings))
@@ -56,18 +55,18 @@
                           (assoc-in [:figures (inc (count (:figures app)))] {:polygon polyline})
                           (assoc-in [:turtle :polyline] []))
                       (if (> start test-r)
-                        (-> $
-                            (assoc-in [:turtle :line] [position position])
-                            (update-in [:turtle :polyline] #(conj % position)))
-                        $)))))
+                        (update-in $ [:turtle :polyline] #(conj % position))
+                        (if (and (= 1 (count polyline)) (> (- (.getTime (js/Date.)) start-time) 500))
+                          (assoc-in $ [:mode] :editing)
+                          $))))))
               (do
                 ;(println "up" shift-performed)
-                (reset! (:history floor-data/floor-state) {:performed (conj shift-performed $) :recalled [] }) $))
+                (reset!  floor-data/floor-states-data {:performed (conj shift-performed $) :recalled [] }) $))
         app)))
   Pendown
   (process-command [{d :d} app]
     (let [{:keys [turtle]} app
-          {:keys [pen polyline position line circle draw-circle?]} turtle
+          {:keys [pen polyline position draw-circle?]} turtle
           start (complex-number/distance (complex-number/c position) (complex-number/c (last polyline)))
           end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
           test-r (:r (:new-point-style floor-data/base-settings))]
@@ -88,7 +87,7 @@
                     (-> $
                         (assoc-in [:turtle :shadow?] false)
 
-                        (assoc-in [:turtle :line] [position position])
+                        (assoc-in [:turtle :line] [position [0 0]])
                         (assoc-in [:turtle :polyline] [position]))))))
         app)))
   Draw
@@ -106,24 +105,24 @@
         app)))
   Undo
   (process-command [_ app]
-    (let [{:keys [mode]} app
-          history @(:history floor-data/floor-state)
-          {:keys [performed recalled ]} history
+    (let [
+          ;{:keys [mode]} app
+          {:keys [performed recalled ]} @floor-data/floor-states-data
           butlast-performed (vec (butlast performed))]
       (if (pos? (count performed))
         (do
-          (reset! (:history floor-data/floor-state) {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
+          (reset!  floor-data/floor-states-data {:performed butlast-performed :recalled (vec (conj recalled (last performed)))})
           (assoc-in (last butlast-performed) [:turtle :pen] :up))
         app)))
   Redo
   (process-command [_ app]
-    (let [{:keys [mode]} app
-          history @(:history floor-data/floor-state)
-          {:keys [performed recalled tables]} history
+    (let [
+          ;{:keys [mode]} app
+          {:keys [performed recalled ]} @floor-data/floor-states-data
           butlast-recalled (vec (butlast recalled))]
       (if (pos? (count recalled))
         (do
-          (reset! (:history floor-data/floor-state) {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
+          (reset!  floor-data/floor-states-data {:performed (vec (conj performed (last recalled))) :recalled butlast-recalled})
           (assoc-in (last recalled) [:turtle :pen] :up))
         app))))
 

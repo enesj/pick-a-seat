@@ -15,16 +15,16 @@
    :history-length         15})
 
 (def init-turtle
-  {
+  {:start-time      nil
    :draw-circle?    false
-   :position        [0 0]
+   :position        [-10 -10]
    :pen             :up
-   :polyline        []
+   :polyline        [[-10 -10] [-10 -10]]
    :circle          []
    :shadow?         false
    :shadow-polyline []
    :shadow-raw      []
-   :line            [[0 0] [0 0]]
+   :line            [[-10 -10] [-10 -10]]
    :line-angle      0
    :snap-points     []
    :snap-xs         []
@@ -34,28 +34,27 @@
    :end             false
    :scale           1})
 
-(defn initial-app-state []
-  {:mode      :drawing
-   :tables    false
-   :turtle    init-turtle
-   :figures   {}
-   :start     []
+
+(def floor-init-data
+  {:mode  :drawing
+   :tables       false
+   :draw-circle? false
+   :turtle       init-turtle
+   :figures      {}
+   :start        []
    ;:opacity   {:high 0.5 :low 0.1}
    ;:base       base
    ;:resolution resolution
-   :selection {:start    {:x 0, :y 0}
-               :end      {:x1 0, :y1 0}
-               :selected []
-               :offset   {}}})
+   :selection    {:start    {:x 0, :y 0}
+                  :end      {:x1 0, :y1 0}
+                  :selected []
+                  :offset   {}}})
 
-(def init-floor-state
-  (initial-app-state))
+(def floor-state (r/atom floor-init-data))
 
-(def data (r/atom init-floor-state))
 
-(def floor-state {:history (r/atom {:performed [init-floor-state] :recalled []})
-                  :drawing (r/atom {:tables false :draw-circle? false})
-                  :editing (r/atom {:tables false})})
+(def floor-states-data  (r/atom {:performed [floor-init-data] :recalled []}))
+
 
 (def specter-paths
   {:sel-end          (comp-paths :selection :end ALL LAST)

@@ -49,7 +49,6 @@
                :h-menu      [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a5 " z"]
                :h-menu-1    [(+ x w (- r)) (+ y h), lft2, a4, up1, rgh1, a2, dw2, a5 " z"]
                :h-menu-last [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a3]}]
-    (js/console.log "df" dir)
     {:d (apply rec-path (dir paths))}))
 
 
@@ -57,7 +56,7 @@
 (defn all-tabs
   ([] (all-tabs nil nil nil nil nil nil))
   ([x1 y1 w2 h2 arr1 arr2]
-   ()
+
    {:ok     {:icon [:g
                     (merege-path {:d (str "M" (+ x1 (/ w2 8)) "," (+ y1 (/ h2 2.5)) " l" (/ w2 4) " " (/ h2 2)) :stroke-width 3 :stroke "blue" :stroke-opacity 0.6})
                     (merege-path {:d (str "M" (+ x1 (/ w2 3)) "," (+ y1 (/ h2 1.1)) " l" (/ w2 2) " " (/ (- h2) 1.2)) :stroke-width 1.5 :stroke "blue" :stroke-opacity 0.6})]}
