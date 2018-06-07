@@ -106,16 +106,23 @@
 
 (defn test-one [sel-tables-state sel-tables-all sel-tables extern-tables x-min x-max x1-max y-min y-max y1-max type]
   (reset! sel-tables-state (extract-ids sel-tables-all))
-  (doall
-    (for [current-table sel-tables
-          :let [new-table-left (move-table current-table [(- x-min (:x current-table)) 0])
-                new-table-top (move-table current-table [0 (- y-min (:y current-table))])
-                new-table-right (move-table current-table [(- x1-max (:rect-right current-table)) 0])
-                new-table-down (move-table current-table [0 (- y1-max (:rect-bottom current-table))])
-                new-table (case type :l new-table-left :t new-table-top :r new-table-right :d new-table-down)]]
-      (if (and (empty? (test-collision new-table (remove (set [current-table]) (vals @sel-tables-state))))
-               (empty? (test-collision new-table extern-tables)))
-        (swap! sel-tables-state update-in [(:id current-table)] (fn* [p1__3073478#] (-> p1__3073478# sel-modifications (assoc-in [:x] (:x new-table)) (assoc-in [:y] (:y new-table)) (assoc-in [:rect-right] (:rect-right new-table)) (assoc-in [:rect-bottom] (:rect-bottom new-table)))))))))
+  (mapv
+    (fn [current-table]
+      (let [new-table-left (move-table current-table [(- x-min (:x current-table)) 0])
+            new-table-top (move-table current-table [0 (- y-min (:y current-table))])
+            new-table-right (move-table current-table [(- x1-max (:rect-right current-table)) 0])
+            new-table-down (move-table current-table [0 (- y1-max (:rect-bottom current-table))])
+            new-table (case type :l new-table-left :t new-table-top :r new-table-right :d new-table-down)]
+        (if (and (empty? (test-collision new-table (remove (set [current-table]) (vals @sel-tables-state))))
+                 (empty? (test-collision new-table extern-tables)))
+          (swap! sel-tables-state update-in [(:id current-table)]
+                 #(-> %
+                      sel-modifications
+                      (assoc-in [:x] (:x new-table))
+                      (assoc-in [:y] (:y new-table))
+                      (assoc-in [:rect-right] (:rect-right new-table))
+                      (assoc-in [:rect-bottom] (:rect-bottom new-table)))))))
+    sel-tables))
 
 (defn adjust-space [tables sel-min sel-max orientation join]
   (let [sel-extent (- sel-max sel-min)
@@ -128,7 +135,11 @@
            new-tables [(if join (assoc-in (first tables) [:rs] {(:id (second tables)) #{dir-forward}})
                                 (first tables))]]
       (if (empty? old-tables)
-        (when-not (= (map (fn* [p1__3122720#] (select-keys p1__3122720# [:x :y])) new-tables) (map (fn* [p1__3122722#] (select-keys p1__3122722# [:x :y])) tables)) new-tables)
+
+        (if (= (map #(select-keys % [:x :y]) new-tables) (map #(select-keys % [:x :y]) tables))
+         nil
+         new-tables)
+
         (recur (rest old-tables) (+ distance (dim (first old-tables)) space)
                (conj new-tables (-> (first old-tables)
                                     sel-modifications
@@ -184,7 +195,9 @@
             (vec (remove nil? [{} (first tables-new) tables-h-space tables-h-join del-sel-tables]))
             :else [{}])))
       (if (= sel-type :empty)
-        (vec (conj (filter (fn* [p1__3157303#] (empty? (test-collision (first (map val p1__3157303#)) extern-tables))) table-types) {}))
+        (do
+          (vec (conj (filter #(empty? (test-collision (first (map val %)) extern-tables)) table-types) {})))
         (let [table (tables-state (first selected))]
           [{}])))))
+
 

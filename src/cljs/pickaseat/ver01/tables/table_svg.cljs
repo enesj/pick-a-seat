@@ -39,7 +39,7 @@
                :rt0         [(+ x w) y, dw1, a3, lft2, a4, up2, a1]
                :rd1         [(+ x w) y, dw1, a3, lft2, up]
                :rd0         [(+ x w) (+ y h), lft1, a4, up2, a1, rgh2, a2]
-               :ld1         [(+ x w) (+ y h), lft1, a4, up1, rgh]
+               :ld1         [(+ x w) (+ y h ), lft1, a4, up1, rgh]
                :ld0         [x (+ y h), up1, a1, rgh2, a2, dw2, a3]
                :td          [x (+ y h), up1, a1, rgh1, dw1, a3]
                :dt          [(+ x w) (+ y h), lft1, a4, up1, rgh1, a2]
@@ -49,6 +49,7 @@
                :h-menu      [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a5 " z"]
                :h-menu-1    [(+ x w (- r)) (+ y h), lft2, a4, up1, rgh1, a2, dw2, a5 " z"]
                :h-menu-last [(+ x w (- r)) (+ y h), lft2, a4, up2, a6, rgh, a2, dw2, a3]}]
+    (js/console.log "df" dir)
     {:d (apply rec-path (dir paths))}))
 
 

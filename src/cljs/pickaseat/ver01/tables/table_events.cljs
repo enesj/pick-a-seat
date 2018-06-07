@@ -34,8 +34,8 @@
                                                                  (conj (into (vals tables) (:borders @table-data/base-settings))
                                                                        {:id         :1 :x x-sel-s :y y-sel-s :width (- x-sel-e x-sel-s (- 0)) :height (- y-sel-e y-sel-s (- 0))
                                                                         :rect-right x-sel-e :rect-bottom y-sel-e})
-                                                                 :let [dir (table-utils/collides-sel table {:id 1 :x x-current :y y-current :width 1 :height 1
-                                                                                                            :rect-right   (inc x-current) :rect-bottom (inc y-current)} 0)]
+                                                                 :let [dir (table-utils/collides-sel table {:id         1 :x x-current :y y-current :width 1 :height 1
+                                                                                                            :rect-right (inc x-current) :rect-bottom (inc y-current)} 0)]
                                                                  :when (not= false dir)]
                                                              dir)))]
                      (if (empty? direction)
@@ -72,10 +72,11 @@
                          [[x y] [x1 y1]] (table-utils/start-end start end)]
 
                      (when (:active selection)
-                       (let [sel (filterv boolean (doall (for [table (vals tables)]
-                                                           (table-utils/collides-sel-active table {:id 1 :x x :y y
-                                                                                                   :width        (- x1 x) :height (- y1 y)
-                                                                                                   :rect-right   x1 :rect-bottom y1} 0))))
+                       (let [sel (filterv boolean (mapv (fn [table]
+                                                          (table-utils/collides-sel-active table {:id         1 :x x :y y
+                                                                                                  :width      (- x1 x) :height (- y1 y)
+                                                                                                  :rect-right x1 :rect-bottom y1} 0))
+                                                        (vals tables)))
                              select-true (comp-paths :tables ALL LAST #(some (set sel) [(:id %)]) :selected)]
                          (swap! table-data/tables-state #(->> % (compiled-setval selection-show true)
                                                               (compiled-setval tabale-selected false)

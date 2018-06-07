@@ -16,17 +16,18 @@
       (last
         (sort-by #(complex-number/distance (complex-number/c (last %)) (complex-number/c (last test-polylines)))
                  (filter #(true? (first %))
-                         (doall (for [poly test-polylines]
-                                  (let [coll-point (map Math/round (complex-geometry/intersection new-line (vec poly)))
-                                        poly-x (->> poly (map first)  (map Math/round) sort)
-                                        new-line-x (->> new-line (map first)  (map Math/round) sort)
-                                        poly-y (->> poly (map second)  (map Math/round) sort)
-                                        new-line-y (->> new-line (map second)  (map Math/round) sort)
-                                        coll (and (and (apply <= (interpose (first coll-point) poly-x))
-                                                       (apply <= (interpose (first coll-point) new-line-x)))
-                                                  (and (apply <= (interpose (second coll-point ) poly-y))
-                                                       (apply <= (interpose (second coll-point ) new-line-y))))]
-                                    [coll poly coll-point])))))))))
+                         (mapv (fn [poly]
+                                 (let [coll-point (map Math/round (complex-geometry/intersection new-line (vec poly)))
+                                       poly-x (->> poly (map first) (map Math/round) sort)
+                                       new-line-x (->> new-line (map first) (map Math/round) sort)
+                                       poly-y (->> poly (map second) (map Math/round) sort)
+                                       new-line-y (->> new-line (map second) (map Math/round) sort)
+                                       coll (and (and (apply <= (interpose (first coll-point) poly-x))
+                                                      (apply <= (interpose (first coll-point) new-line-x)))
+                                                 (and (apply <= (interpose (second coll-point) poly-y))
+                                                      (apply <= (interpose (second coll-point) new-line-y))))]
+                                   [coll poly coll-point]))
+                               test-polylines)))))))
 
 
 (defn round-x [num den] (let [q (quot num den)
@@ -97,7 +98,7 @@
         no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
         app (assoc-in app [:position] mouse-possition)]
-    (js/console.log no-self-intersection (zero? border-test) (> 3 (intersections/poly-poly-intersection shadow poly)))
+    ;(js/console.log no-self-intersection (zero? border-test) (> 3 (intersections/poly-poly-intersection shadow poly)))
     (if (and no-self-intersection (zero? border-test) (> 3 (intersections/poly-poly-intersection shadow poly)))
       (assoc-in app [:shadow-polyline] shadow)
           ;(assoc-in  [:shadow-raw] raw-shadow))

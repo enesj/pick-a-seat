@@ -3,7 +3,7 @@
     [reagent.core :as r]
     [goog.events :as events]
     [pickaseat.ver01.helper :as helper]
-    [pickaseat.ver01.data.table-data :as table-data]
+    [pickaseat.ver01.data.table_data :as table-data]
     [pickaseat.ver01.tables.tables-core :as tables-core]
     [pickaseat.ver01.floor-map.floor-core :as floor-core]
     [pickaseat.ver01.data.tables-templates :as tables-templates]

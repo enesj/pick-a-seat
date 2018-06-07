@@ -13,13 +13,12 @@
 
 (defn move-poly [fig-selected]
   (fn [x-current y-current start-xy]
-    (let [id (first fig-selected)
-          points (second fig-selected)
+    (let [[id points] fig-selected
           [x-start y-start] start-xy
           x-offset (- x-current x-start)
           y-offset (- y-current y-start)
-          polygon  (map #(map + [x-offset y-offset] %) points)
-          polygon-rounded  (map #(map common-data/snap-round %) polygon)
+          polygon  (mapv #(map + [x-offset y-offset] %) points)
+          polygon-rounded  (mapv #(map common-data/snap-round %) polygon)
           no-borders-intersection (zero? (intersections/line-rect-intersections (flatten polygon-rounded) [5 5 1990 1990]))]
       ;(js/console.log no-borders-intersection [x-current y-current] (flatten polygon))
       (when no-borders-intersection
@@ -27,9 +26,7 @@
 
 (defn move-circle [fig-selected]
   (fn [x-current y-current start-xy]
-    (let [id (first fig-selected)
-          circle (second fig-selected)
-          [center radius]circle
+    (let [[id [center radius]] fig-selected
           [x-start y-start] start-xy
           x-offset (- x-current x-start)
           y-offset (- y-current y-start)

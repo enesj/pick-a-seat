@@ -84,8 +84,8 @@
     (loop [rs- rs
            all-seats all-seats-new]
       (if (pos? (count rs-))
-        (recur (next rs-) (vec (remove (fn [x] (some (fn* [p1__3297029#] (= (:dir (second x)) p1__3297029#)) (first rs-))) all-seats)))
-        all-seats))))
+        (recur (next rs-) (into [] (remove (fn [x] (some #(= (:dir (second x)) %) (first rs-))) all-seats)))
+        all-seats-new))))
     ;all-seats-new))
 
 
@@ -160,7 +160,12 @@
                                                                          (= (:start  selected-current) {}))
                                                                        (< selection-state (dec (count all-states))))
                                                                   (inc selection-state) 0)]
-                                               (when-not (:active selection) (selection-utils/preview-state new-state full-state all-states) (swap! tables-analize/selected-current (fn* [p1__3453005#] (-> p1__3453005# (assoc-in [:current-state] new-state) (assoc-in [:start] (:start (:selection (deref table-data/tables-state)))) (assoc-in [:end] (:end (:selection (deref table-data/tables-state))))))))))})] ;; funkcija preview-state
+                                               (when (not (:active selection))
+                                                 (selection-utils/preview-state new-state full-state all-states)
+                                                 (swap! tables-analize/selected-current #(-> %
+                                                                                             (assoc-in [:current-state] new-state)
+                                                                                             (assoc-in [:start] (:start (:selection @table-data/tables-state))) ;; mora citati najnovije podatke jer ih mijenja
+                                                                                             (assoc-in [:end] (:end (:selection @table-data/tables-state))))))))})] ;; funkcija preview-state))})] ;; funkcija preview-state
           (if (and (not (:active selection)) (pos? (count ids)) (not= selection-state 0))
             (selection-utils/sel-menu x-s y-s width height full-state))])})))
 

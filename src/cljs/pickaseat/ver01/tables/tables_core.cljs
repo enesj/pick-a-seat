@@ -2,13 +2,12 @@
   (:require
     [reagent.core :as r]
     [pickaseat.ver01.tables.tables-components :as tables-components]
-    [pickaseat.ver01.data.table-data :as table-data]
+    [pickaseat.ver01.data.table_data :as table-data]
     [pickaseat.ver01.tables.table-utils :as table-utils]
     [pickaseat.ver01.tables.table-events :as table-events]
     [pickaseat.ver01.tables.table-actions :as table-actions]
     [pickaseat.ver01.data.common-data :as common-data]
     [pickaseat.ver01.data.themes :as themes]
-    [pickaseat.ver01.floor-map.floor-components :as floor-components]
     [pickaseat.ver01.data.floor-data :as floor-data]
     [pickaseat.ver01.floor-map.floor-common :as floor-common]))
 
@@ -60,29 +59,18 @@
                               (swap! table-data/history update-in [:layout] not))
              :x             240 :y 20} (if layout "hide(layout)" "show(layout)")]]))
 
-(defn draw-figures []
-  (for [figure (sort-by key (:figures @floor-data/data))]
-    (let [fig (first (val figure))]
-      (case (key fig)
-        :polygon (floor-components/polygon
-                   {:key     (key figure)
-                    :stroke  "black"
-                    :fill    "white"
-                    :opacity 0.4
-                    :filter  "url(#s1)"}
-                   (val fig)
-                   nil)))))
 
 
 (defn draw-tables []
   (let [tables-state @table-data/tables-state
-        {:keys [tables selection ]} tables-state
+        {:keys [tables selection]} tables-state
         common-data @common-data/data
         [x y] (mapv - (:svg common-data))
         {:keys [w h]} common-data
         [[x-sel-s y-sel-s] [x-sel-e y-sel-e]] (table-utils/start-end (:start selection) (:end selection))
         {:keys [key-down key-up mouse-down mouse-move]} (table-events/table-events selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e)
-        root [root tables-state (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table))]]
+        tables-root [root tables-state (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table))]]
+
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [draw-menu]
      [:svg
@@ -93,8 +81,8 @@
        :on-key-up     key-up
        :on-mouse-down mouse-down
        :on-mouse-move mouse-move
-       :style {:background-color "rgb(235,242,230)"}}
+       :style         {:background-color "rgb(235,242,230)"}}
       common-data/filters
       (if (:layout @table-data/history) (floor-common/draw-figures (:figures @floor-data/data) (:low (:opacity @floor-data/data)) nil))
       ;[:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}]
-      root]]))
+      tables-root]]))

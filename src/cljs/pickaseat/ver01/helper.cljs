@@ -1,12 +1,12 @@
 (ns pickaseat.ver01.helper
   (:require [cljs.core.async :refer [chan close! put!]]
-						[goog.events :as events]
-						[goog.fx :as fx]
-						[goog.fx.dom :as fx-dom]
-						[goog.dom :as gdom]
-						[goog.dom.forms :as gforms]
-						[goog.net.XhrIo :as xhr]
-						[pickaseat.ver01.data.table-data :as td])
+            [goog.events :as events]
+            [goog.fx :as fx]
+            [goog.fx.dom :as fx-dom]
+            [goog.dom :as gdom]
+            [goog.dom.forms :as gforms]
+            [goog.net.XhrIo :as xhr]
+            [pickaseat.ver01.data.table_data :as table-data])
             ;[ajax.core :as ajax]
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -14,7 +14,7 @@
 
 (defn resize []
   (fn [evt]
-    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)))
+    (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)))
 
 
 (defn timeout [ms]
@@ -29,26 +29,6 @@
 
 (defn get-attr [elem attr] (.getAttribute elem attr))
 
-;(defn send [url method content]
-;  (let [ch (chan 1)]
-;    (ajax/ajax-request
-;      {:uri     url
-;       :method  method
-;       :params  content
-;       ;:format (ajax/transit-request-format)
-;       :response-format (ajax/transit-response-format)
-;       :handler (fn [resp]
-;                  (put! ch resp))})
-;    ch))
-;
-;(defn post-async [url content]
-;  (send url :post content))
-;
-;(defn get-async [url]
-;  (send url :get nil))
-;
-;(defn prevent-default [e]
-;  (.preventDefault e))
 
 (defn cut-str-at
       "Cuts string at (- length 3) and adds \"...\" to the end of the returned string"
