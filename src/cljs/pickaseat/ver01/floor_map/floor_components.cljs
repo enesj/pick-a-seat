@@ -82,7 +82,43 @@
                     attributes)])
 
 
-
+(defn draw-figures [figures opacity-mode move-figures selected-id]
+  (for [figure (sort-by key figures)]
+     (let [fig (first (val figure))
+            fig-id (first figure)
+            opacity-options (:opacity floor-data/base-settings)
+            opacity
+            (if selected-id
+             (if (= fig-id selected-id)
+                 (:high opacity-options)
+                 (:low opacity-options))
+             (if opacity-mode
+                 (opacity-mode opacity-options)
+                 (:high opacity-options)))]
+      (case (key fig)
+           :polygon
+           (polygon
+             {:id           (key figure)
+              :key          (key figure)
+              :stroke       "black"
+              :stroke-width 2
+              :fill         "rgba(255,255,255,0.1)"
+              :opacity      opacity}
+             ;:filter  "url(#s1)"}
+             (val fig)
+             (:polygon move-figures))
+           :circle
+           (circle
+            (first (val fig))
+            (second (val fig))
+            {:id (key figure)
+             :key (key figure)
+             :stroke "black"
+             :stroke-width 2
+             :fill "rgba(255,255,255,0.1)"
+             :opacity opacity}
+            true
+            (:circle move-figures))))))
 
 
 

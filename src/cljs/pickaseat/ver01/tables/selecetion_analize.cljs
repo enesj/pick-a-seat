@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.tables.tables-analize
+(ns pickaseat.ver01.tables.selecetion-analize
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.table_data :as table-data]
             [pickaseat.ver01.tables.table-utils :as table-utils]

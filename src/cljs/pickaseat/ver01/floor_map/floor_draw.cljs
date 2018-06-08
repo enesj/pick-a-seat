@@ -66,12 +66,12 @@
                                                       (floor-draw-events/draw-line
                                                        (- (.-clientX e) @x-bcr)
                                                        (- (.-clientY e) @y-bcr))))}
-     common-data/filters
+     ;floor-data/filters
 
      (background/snap-lines-horizontal)
      (background/snap-lines-vertical)
      [:g
-      (when (seq figures) (floor-common/draw-figures figures (opacity-mode opacity) nil nil))
+      (when (seq figures) (floor-components/draw-figures figures opacity-mode nil nil))
       (when (seq polyline) (apply floor-components/polyline "lines" {:style {:stroke "black", :fill "none"}} polyline))
       (when shadow
         [:g

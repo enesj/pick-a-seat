@@ -2,7 +2,7 @@
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require [pickaseat.ver01.data.table_data :as table-data]
             [pickaseat.ver01.tables.table-svg :as table-svg]
-            [pickaseat.ver01.tables.tables-analize :as  tables-analize]))
+            [pickaseat.ver01.tables.selecetion-analize :as  tables-analize]))
 
 
 (def tab-events
@@ -34,10 +34,6 @@
                                                 (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
                                                 (assoc-in [:del] (when (= sel-type :many) (dec (count all-states))))
                                                 (assoc-in [:tables] (all-states current-state))))))
-
-
-
-
 (defn sel-menu-tabs [full-state]
   (let [tabs-data [:ok :cancel]
         ft 0
@@ -83,8 +79,8 @@
         [w1 h1 r] (if full-tabs
                     [w1 h1 r]
                     [ws hs rs])
-        [x1 y1] (if (= dir :h) [x (+ y h) (+ x w) (+ y h)]
-                               [(+ x w) y (+ x w) (+ y h)])]
+        [x1 y1] (if (= dir :h) [x (+ y h)]
+                               [(+ x w) y])]
     (doall (for [tab tabs]
             (let [j (:pos tab)]
               (if (= dir :h)

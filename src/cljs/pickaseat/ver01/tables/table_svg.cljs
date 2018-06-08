@@ -1,5 +1,6 @@
 (ns pickaseat.ver01.tables.table-svg
-  (:require [pickaseat.ver01.data.table-data :as table-data]))
+  (:require
+            [pickaseat.ver01.data.table_data :as table-data]))
 
 
 (defn rec-path [x y & z]

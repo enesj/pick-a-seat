@@ -147,7 +147,7 @@
 
 
 
-(defn edit-svg [figures ]
+(defn edit-svg [figures]
   (let [data @floor-data/floor-state
         comm-data @common-data/data
         move-poly move-poly
@@ -172,11 +172,11 @@
 
       :on-mouse-move (fn [e]
                        (.preventDefault e))}
-     common-data/filters
+     ;floor-data/filters
      (background/snap-lines-horizontal)
      (background/snap-lines-vertical)
      [:g
-      (when (seq figures) (floor-common/draw-figures figures nil
+      (when (seq figures) (floor-components/draw-figures figures nil
                                                      {:circle move-circle, :polygon move-poly}
                                                      (first (:selected (:selection data)))))]
      [resize-points data bcr]]))

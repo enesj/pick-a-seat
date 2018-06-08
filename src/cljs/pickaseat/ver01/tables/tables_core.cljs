@@ -9,7 +9,8 @@
     [pickaseat.ver01.data.common-data :as common-data]
     [pickaseat.ver01.data.themes :as themes]
     [pickaseat.ver01.data.floor-data :as floor-data]
-    [pickaseat.ver01.floor-map.floor-common :as floor-common]))
+    [pickaseat.ver01.floor-map.floor-common :as floor-common]
+    [pickaseat.ver01.floor-map.floor-components :as floor-components]))
 
 
 
@@ -86,8 +87,8 @@
        :on-mouse-down mouse-down
        :on-mouse-move mouse-move
        :style         {:background-color "rgb(235,242,230)"}}
-      common-data/filters
+      ;floor-data/filters
       (if (:layout @table-data/history)
-        (floor-common/draw-figures (:figures @floor-data/floor-state) :low  nil nil))
+        (floor-components/draw-figures (:figures @floor-data/floor-state) :low nil nil))
       ;[:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}]
       tables-root]]))

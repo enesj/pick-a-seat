@@ -4,7 +4,7 @@
             [goog.events :as events]
             [pickaseat.ver01.data.table_data :as table-data]
             [pickaseat.ver01.tables.table-utils :as table-utils]
-            [pickaseat.ver01.tables.tables-analize :as  tables-analize]
+            [pickaseat.ver01.tables.selecetion-analize :as  tables-analize]
             [pickaseat.ver01.tables.selection-utils :as selection-utils]
             [pickaseat.ver01.tables.table-svg :as table-svg])
   (:import [goog.events EventType]))
