@@ -7,7 +7,8 @@
     [pickaseat.ver01.data.common-data :as common-data]
     [pickaseat.ver01.data.background :as background]
     [pickaseat.ver01.tables.tables-components :as tables-components]
-    [pickaseat.ver01.floor-map.floor-common :as floor-common]))
+    [pickaseat.ver01.floor-map.floor-common :as floor-common]
+    [pickaseat.ver01.data.floor-data :as floor-data]))
 
 
 (enable-console-print!)
@@ -35,14 +36,16 @@
 
 
 
-(defn draw-svg [new-point-style start-point-style end-point-style connection-point-style circle-point-style circle opacity turtle figures snap-points line
-                shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data]
-  (let [[center r] circle]
+(defn draw-svg [ turtle figures snap-points line opacity-mode circle
+                shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line  ui-channel x-bcr y-bcr]
+  (let [[center r] circle
+        commn-data  @common-data/data
+        {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} floor-data/base-settings]
     [:svg
      {
-      :style {:background-color (:grid-back-color @common-data/data)}
-      :width         (:w common-data)
-      :height        (:h common-data)
+      :style {:background-color (:grid-back-color commn-data)}
+      :width         (:w commn-data)
+      :height        (:h commn-data)
       :ref           #(when %
                         (reset! x-bcr (.-left (.getBoundingClientRect %)))
                         (reset! y-bcr (.-top (.getBoundingClientRect %))))
@@ -68,7 +71,7 @@
      (background/snap-lines-horizontal)
      (background/snap-lines-vertical)
      [:g
-      (when (seq figures) (floor-common/draw-figures figures opacity nil))
+      (when (seq figures) (floor-common/draw-figures figures (opacity-mode opacity) nil nil))
       (when (seq polyline) (apply floor-components/polyline "lines" {:style {:stroke "black", :fill "none"}} polyline))
       (when shadow
         [:g

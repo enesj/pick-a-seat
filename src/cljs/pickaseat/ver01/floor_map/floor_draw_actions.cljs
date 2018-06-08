@@ -13,9 +13,9 @@
 
 (defn segment-collision [new-line polyline]
   (let [test-polylines (butlast polyline)]
-    (if (not-empty polyline)
-      (last
-        (sort-by #(complex-number/distance (complex-number/c (last %)) (complex-number/c (last test-polylines)))
+    (when (not-empty polyline)
+      ((comp peek vec)
+       (sort-by #(complex-number/distance (complex-number/c (last %)) (complex-number/c (last test-polylines)))
                  (filter #(true? (first %))
                          (mapv (fn [poly]
                                  (let [coll-point (map Math/round (complex-geometry/intersection new-line (vec poly)))
@@ -76,7 +76,7 @@
           cut-line (if cut-polylne (assoc-in line [1] collison-point))]
       (if-not (or segment-collison? last-poly-test)
         [new-position {:angle new-line-angle}]
-        [position {:cut-poly cut-polylne :cut-line cut-line}]))
+        [position {:cut-poly-new cut-polylne :cut-line-new cut-line}]))
     [mouse-possition nil]))
 
 
@@ -93,8 +93,9 @@
         first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
         intersections-first (mapv #(complex-geometry/intersection (first %) (second %)) first-shadow)
         intersections-second (vec (remove (fn [x](some #(not= % %) x ))  intersections-first))
-        shadow (mapv #(mapv floor-common/snap-round %) (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
-                                                               (vector (last raw-shadow)) (vector (last new-polyline))))
+        shadow (mapv #(mapv floor-common/snap-round %)
+                     (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
+                             (vector (last raw-shadow)) (vector (last new-polyline))))
         all-self-intersections (intersections/self-poly-intersections shadow)
         no-self-intersection (> 4 (count (remove false? all-self-intersections)))
         border-test (intersections/line-rect-intersections (flatten shadow) [5 5 1990 1990])
@@ -117,12 +118,7 @@
     (if shadow?
       (draw-shadow position mouse-possition polyline shadow-polyline app)
       (let [constrain-line (if (= pen :down) (constrain-line mouse-possition (partition 2 1 polyline) line position) [mouse-possition nil])
-            ;constrain-line (mapv #(mapv Math/round %) constrain-line)
-            [constrain-x constrain-y] (first constrain-line)
-            constrain-params (second constrain-line)
-            constrain-angle (:angle constrain-params)
-            cut-poly-new (:cut-poly constrain-params)
-            cut-line-new (:cut-line constrain-params)
+            [[constrain-x constrain-y] {:keys [angle cut-poly-new  cut-line-new ]}] constrain-line
             snap-xs (mapv first polyline)
             snap-ys (mapv second polyline)
             snap-x (some #(if (<= (- % 10) constrain-x (+ % 10)) %) snap-xs)
@@ -135,9 +131,9 @@
         (as-> app $
               (if (or (not cut-poly) (not cut-poly-new)) (assoc-in $ [:cut-poly] cut-poly-new) $)
               (if (or (not cut-line) (not cut-line-new)) (assoc-in $ [:cut-line] cut-line-new) $)
-              (if (and constrain-angle (= pen :down))
-               (assoc-in $ [:line-angle] constrain-angle)
-               $)
+              (if (and angle (= pen :down))
+                (assoc-in $ [:line-angle] angle)
+                $)
               (assoc-in $ [:snap-points] snap-points)
               (assoc-in $ [:position] (mapv floor-common/snap-round constrain-snap)) $)))))
 

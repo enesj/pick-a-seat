@@ -26,14 +26,18 @@
   (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-performed (vec (butlast performed))]
-    (when (pos? (count performed)) (reset! table-data/history {:recalled (vec (conj recalled (last performed))), :layout (:layout (deref table-data/history)), :performed butlast-performed}) (reset! table-data/tables-state (last butlast-performed)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
+    (when (pos? (count performed))
+      (reset! table-data/history {:recalled (vec (conj recalled (last performed))), :performed butlast-performed, :layout (:layout (deref table-data/history))})
+      (reset! table-data/tables-state (last butlast-performed)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
 
 
 (defn redo []
   (let [history @table-data/history
         {:keys [performed recalled]} history
         butlast-recalled (vec (butlast recalled))]
-    (when (pos? (count recalled)) (reset! table-data/history {:recalled butlast-recalled, :layout (:layout (deref table-data/history)), :performed (vec (conj performed (last recalled)))}) (reset! table-data/tables-state (last recalled)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
+    (when (pos? (count recalled))
+      (reset! table-data/history {:recalled butlast-recalled, :layout (:layout (deref table-data/history)), :performed (vec (conj performed (last recalled)))})
+      (reset! table-data/tables-state (last recalled)) (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) false))))
 
 
 (defn draw-menu []
@@ -83,6 +87,7 @@
        :on-mouse-move mouse-move
        :style         {:background-color "rgb(235,242,230)"}}
       common-data/filters
-      (if (:layout @table-data/history) (floor-common/draw-figures (:figures @floor-data/floor-state) (:low (:opacity @floor-data/floor-state)) nil))
+      (if (:layout @table-data/history)
+        (floor-common/draw-figures (:figures @floor-data/floor-state) :low  nil nil))
       ;[:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}]
       tables-root]]))

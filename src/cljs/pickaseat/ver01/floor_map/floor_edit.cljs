@@ -147,15 +147,16 @@
 
 
 
-(defn edit-svg [figures common-data opacity]
+(defn edit-svg [figures ]
   (let [data @floor-data/floor-state
+        comm-data @common-data/data
         move-poly move-poly
         move-circle move-circle
         bcr (atom nil)]
     [:svg
-     {:style         {:background-color (:grid-back-color @common-data/data)}
-      :width         (:w common-data)
-      :height        (:h common-data)
+     {:style         {:background-color (:grid-back-color common-data/data)}
+      :width         (:w comm-data)
+      :height        (:h comm-data)
       :ref           #(when %
                         (reset! bcr %))
       :on-mouse-down (fn [e]
@@ -175,6 +176,8 @@
      (background/snap-lines-horizontal)
      (background/snap-lines-vertical)
      [:g
-      (when (seq figures) (floor-common/draw-figures figures opacity {:circle move-circle, :polygon move-poly}))]
+      (when (seq figures) (floor-common/draw-figures figures nil
+                                                     {:circle move-circle, :polygon move-poly}
+                                                     (first (:selected (:selection data)))))]
      [resize-points data bcr]]))
 

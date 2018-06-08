@@ -9,7 +9,7 @@
   (fn [e]
     (.preventDefault e)
     (let [history @table-data/history
-          {:keys [performed recalled]} history
+          {:keys [performed ]} history
            shift-performed (if (= (count performed) (:history-length @table-data/base-settings))
                              (vec (rest performed)) performed)]
 
@@ -18,9 +18,9 @@
         (swap! table-data/tables-state assoc-in [:selection :show] true)
         (swap! table-data/tables-state assoc-in [:selection :show] false))
       (when (not= (:tables @table-data/tables-state) (:tables (last shift-performed)))
-        ;(js/console.log (:tables @td/tables-state) (:tables (last shift-performed)))
         (reset! table-data/history {:performed (conj shift-performed (compiled-setval (:hide-stools table-data/specter-paths) false @table-data/tables-state))
-                                    :recalled          [] :layout (:layout @table-data/history)})))))
+                                    :recalled          []
+                                    :layout (:layout history)})))))
 
 (defn table-events [ selection tables x y x-sel-s y-sel-s x-sel-e y-sel-e]
   (let [{:keys [tabale-selected selected selection-active selection-offset selection-end selection-start selection-show hide-stools]} table-data/specter-paths]

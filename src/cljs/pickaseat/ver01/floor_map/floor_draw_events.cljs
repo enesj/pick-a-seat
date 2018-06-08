@@ -23,13 +23,13 @@
   (process-command [_ app]
     (let [{:keys [turtle ]} app
           {:keys [pen polyline position cut-poly shadow? shadow-polyline circle draw-circle? start-time]} turtle
-          {:keys [performed]} floor-data/floor-state
+          {:keys [performed]} @floor-data/floor-states-data
           start (complex-number/distance (complex-number/c position) (complex-number/c (last polyline)))
           end (complex-number/distance (complex-number/c position) (complex-number/c (first polyline)))
           test-r (:r (:end-point-style floor-data/base-settings))
           shift-performed (if (= (count performed) (:history-length floor-data/base-settings))
-                            (vec (rest performed)) performed)]
-      ;(js/console.log circle)
+                            (vec (rest performed))
+                            performed)]
       (if (= pen :down)
         (as-> app $
               (assoc-in $ [:turtle :pen] :up)
@@ -60,8 +60,8 @@
                           (assoc-in $ [:mode] :editing)
                           $))))))
               (do
-                ;(println "up" shift-performed)
-                (reset!  floor-data/floor-states-data {:performed (conj shift-performed $) :recalled [] }) $))
+                (reset!  floor-data/floor-states-data {:performed (conj shift-performed $) :recalled []})
+                $))
         app)))
   Pendown
   (process-command [{d :d} app]

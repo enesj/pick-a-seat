@@ -2,16 +2,13 @@
   (:require
     [reagent.core :as r]
     [pickaseat.ver01.data.floor-data :as floor-data]
-    [pickaseat.ver01.data.common-data :as common-data]
     [cljs.core.async :as async :refer [chan]]
     [pickaseat.ver01.floor-map.floor-draw-events :as draw-events]
     [pickaseat.ver01.floor-map.floor-draw :as floor-draw]
     [pickaseat.ver01.floor-map.floor-edit :as floor-edit]
-    [pickaseat.ver01.data.table-data :as table-data]
-    [pickaseat.ver01.tables.tables-components :as tables-components]))
+    [pickaseat.ver01.tables.tables-components :as tables-components]
+    [pickaseat.ver01.data.table_data :as table-data]))
 
-
-(enable-console-print!)
 
 (defn root-preview [ tables ids]
   [:g {:opacity "0.4"}
@@ -28,7 +25,6 @@
         {:keys [ performed recalled]} @floor-data/floor-states-data
         undo? (not-empty (rest performed))
         redo? (not-empty recalled)]
-    ;(js/console.log mode  @(mode fd/floor-state))
     [:svg {:width "600px" :height "30px" :font-family "Courier New" :fill "blue" :font-size "15"}
      [:text {:opacity       0.8
              :on-mouse-down (fn [e] (.preventDefault e)
@@ -67,22 +63,18 @@
 
 (defn draw-floor []
   (let [data floor-data/floor-state
-        {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} floor-data/base-settings
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle
-        opacity (if (and (> (count polyline) 1) (= mode :drawing) ) (:low opacity) (:high opacity))
-        common-data @common-data/data
-        {:keys [w h]} common-data
+        opacity-mode (if (> (count polyline) 1) :low  :high)
         ui-channel (chan)
         _ (draw-events/process-channel ui-channel data)
         x-bcr (atom 0)
         y-bcr (atom 0)
         svg (if (= mode :drawing)
-              (floor-draw/draw-svg new-point-style start-point-style end-point-style connection-point-style circle-point-style circle opacity turtle figures snap-points line
-                                   shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line common-data ui-channel x-bcr y-bcr data)
-              (floor-edit/edit-svg figures common-data opacity))]
+              (floor-draw/draw-svg turtle figures snap-points line opacity-mode circle
+                                   shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line ui-channel x-bcr y-bcr)
+              (floor-edit/edit-svg figures))]
     ;(js/console.log opacity)
-    ;svg (conj svg-1 [:rect {:x 5 :y 5 :width (- w 10) :height (- h 10) :filter  "url(#s1)" :style {:stroke "black" :fill "none"}}])]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      (draw-menu data ui-channel mode draw-circle?)
      (if (:tables  @floor-data/floor-state) (conj svg (tables-back)) svg)]))
