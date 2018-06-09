@@ -1,5 +1,5 @@
 (ns pickaseat.ver01.data.background
-  (:require [pickaseat.ver01.data.common-data :refer [data]]))
+  (:require [pickaseat.ver01.data.common :refer [data]]))
 
 (defn snap-positions [snap limit]
   (let [positions (iterate (partial + snap) snap)]
@@ -23,10 +23,10 @@
                                 {:style {:stroke grid-color :stroke-width (if (zero? (mod x (* wide-snap-faktor snap))) (* 2 stroke-width) stroke-width)}})])
                 (snap-positions snap h-limit)))))
 
-(defn snap-lines-horizontal []
+(defn snap-lines-horizontal [mode]
   (let [data @data]
-    (snap-lines-h (Math/round (:snap data)) (:w data) (:h data) (:snap-width data))))
+    (snap-lines-h (Math/round (mode data)) (:w data) (:h data) (:snap-width data))))
 
-(defn snap-lines-vertical []
+(defn snap-lines-vertical [mode]
   (let [data @data]
-    (snap-lines-v (Math/round (:snap data)) (:w data) (:h data) (:snap-width data))))
+    (snap-lines-v (Math/round (mode data)) (:w data) (:h data) (:snap-width data))))

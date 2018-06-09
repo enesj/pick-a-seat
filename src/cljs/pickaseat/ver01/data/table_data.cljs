@@ -5,7 +5,7 @@
   (:require [pickaseat.ver01.data.themes :as themes]
             [reagent.core :as r]
             [pickaseat.ver01.data.floor-data :as floor-data]
-            [pickaseat.ver01.data.common-data :as common-data]))
+            [pickaseat.ver01.data.common :as common]))
 
 
 (def specter-paths
@@ -37,7 +37,7 @@
                         :show     false
                         :stop     false
                         :start    {:x 0, :y 0}
-                        :end      {:x1 0, :y1 0}
+                        :end      {:x 0, :y 0}
                         :selected []
                         :offset   {}}
             :tables    {
@@ -65,7 +65,7 @@
 
 
 (def base-settings
-         (let [{:keys [w h]} @common-data/data]
+         (let [{:keys [w h]} @common/data]
            (r/atom
              {:window    {:w w :h w}
               :table-stool [30 8]

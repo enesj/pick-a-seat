@@ -1,9 +1,9 @@
 (ns pickaseat.ver01.tables.table-actions
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
   (:require
-    [pickaseat.ver01.data.table-data :as table-data]
     [pickaseat.ver01.tables.table-utils :as table-utils]
-    [pickaseat.ver01.data.common-data :as common-data]))
+    [pickaseat.ver01.data.common :as common]
+    [pickaseat.ver01.data.table_data :as table-data]))
 
 (defn reset-seats [id tables]
   (let [rs (:rs (tables id))]
@@ -21,17 +21,17 @@
             d (rest (name (:dir c)))
             d1 (keyword (first d))
             d2 (keyword (second d))]
-          (swap! table-data/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (set (conj x d2)))))
-          (swap! table-data/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (set (conj x d1)))))))))
+        (swap! table-data/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (set (conj x d2)))))
+        (swap! table-data/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (set (conj x d1)))))))))
 
 
-(defn move-table [sel-top-lefts]
+(defn move-table [selected-tables]
   (fn [x-current y-current start-xy tables-data ctrl]
     (let [tables-collection (into (vals tables-data) (:borders @table-data/base-settings))
           {:keys [selected show active offset]} (:selection @table-data/tables-state)
-          [x y] (mapv - (:svg @common-data/data))
+          [x y] (mapv - (:svg @common/data))
           [x-start y-start] start-xy
-          sel? (> (count sel-top-lefts) 1)
+          sel? (> (count selected-tables) 1)
           result (mapv (fn [ids]
                          (let [id (first ids)
                                [xp yp] (second ids)
@@ -73,13 +73,13 @@
                                                                               dir)))
                                            close1)))]
                            {:id       id :dir direction :dirxy direction-xy :rs rs :show show :active active :hide-stools hide-stools
-                            :x        (Math/round x) :y (Math/round y)
-                            :x-new    (Math/round x-new) :x-move (Math/round x-move)
-                            :y-new    (Math/round y-new) :y-move (Math/round y-move)
+                            :x        (common/tables-snap x) :y (common/tables-snap y)
+                            :x-new    (common/tables-snap x-new) :x-move (common/tables-snap x-move)
+                            :y-new    (common/tables-snap y-new) :y-move (common/tables-snap y-move)
                             :block    block :ctrl ctrl :close close :slected-ids selected :sel? sel?
-                            :width    (Math/round (:width table-my)) :height (Math/round (:height table-my))
+                            :width    (common/tables-snap (:width table-my)) :height (common/tables-snap (:height table-my))
                             :table-xy table-xy}))
-                      sel-top-lefts)
+                       selected-tables)
           test-block (seq (flatten (mapv :dirxy result)))
           update-data (atom {})]
       (do
@@ -136,7 +136,7 @@
                                     (assoc-in [1 [:selection :start]] {:x x-sel
                                                                        :y y-sel})
                                     (assoc-in [1 [:selection :end]] {:x1 x1-sel
-                                                                     :y1 y1-sel})))))
+                                                                     :y  y1-sel})))))
         (swap! table-data/tables-state (fn [x] (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                        (compiled-select (:all table-data/specter-paths)
                                                                         (mapv vec (compiled-select (:all-last table-data/specter-paths) @update-data))))))))))

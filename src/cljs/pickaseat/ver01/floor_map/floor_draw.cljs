@@ -4,7 +4,7 @@
     [reagent.core :as r]
     [pickaseat.ver01.floor-map.floor-draw-events :as floor-draw-events]
     [cljs.core.async :as async :refer [chan]]
-    [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.data.common :as common]
     [pickaseat.ver01.data.background :as background]
     [pickaseat.ver01.tables.tables-components :as tables-components]
     [pickaseat.ver01.floor-map.floor-common :as floor-common]
@@ -36,10 +36,10 @@
 
 
 
-(defn draw-svg [ turtle figures snap-points line opacity-mode circle
-                shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line  ui-channel x-bcr y-bcr]
+(defn draw-floor [ turtle figures snap-points line opacity-mode circle
+                  shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line  ui-channel x-bcr y-bcr]
   (let [[center r] circle
-        commn-data  @common-data/data
+        commn-data  @common/data
         {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} floor-data/base-settings]
     [:svg
      {
@@ -68,8 +68,8 @@
                                                        (- (.-clientY e) @y-bcr))))}
      ;floor-data/filters
 
-     (background/snap-lines-horizontal)
-     (background/snap-lines-vertical)
+     (background/snap-lines-horizontal :snap-layout)
+     (background/snap-lines-vertical :snap-layout)
      [:g
       (when (seq figures) (floor-components/draw-figures figures opacity-mode nil nil))
       (when (seq polyline) (apply floor-components/polyline "lines" {:style {:stroke "black", :fill "none"}} polyline))

@@ -6,7 +6,7 @@
     [pickaseat.ver01.data.floor-data :as floor-data]
     [pickaseat.ver01.floor-map.floor-common :as floor-common]
     [cljs.core.async :as async :refer [chan]]
-    [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.data.common :as common]
     [pickaseat.ver01.intersections :as intersections]
     [complex.number :as complex-number]
     [pickaseat.ver01.data.background :as background]))
@@ -19,7 +19,7 @@
           x-offset (- x-current x-start)
           y-offset (- y-current y-start)
           polygon  (mapv #(map + [x-offset y-offset] %) points)
-          polygon-rounded  (mapv #(map floor-common/snap-round %) polygon)
+          polygon-rounded  (mapv #(map common/layout-snap %) polygon)
           no-borders-intersection (zero? (intersections/line-rect-intersections (flatten polygon-rounded) [5 5 1990 1990]))]
       ;(js/console.log no-borders-intersection [x-current y-current] (flatten polygon))
       (when no-borders-intersection
@@ -32,7 +32,7 @@
           x-offset (- x-current x-start)
           y-offset (- y-current y-start)
           center-new (mapv + [x-offset y-offset]  center)
-          center-rounded  (mapv floor-common/snap-round center-new)
+          center-rounded  (mapv common/layout-snap center-new)
           circle-new [center-rounded radius]
           no-borders-intersection (zero? (intersections/circle-rect-intersections circle-new [5 5 1990 1990]))]
       (when no-borders-intersection
@@ -48,7 +48,7 @@
           y-bcr (.-top (.getBoundingClientRect @bcr))
           x-offset (- x-current x-bcr)
           y-offset (- y-current y-bcr)
-          new-poly (assoc-in (vec points) [point-id] (mapv floor-common/snap-round [x-offset y-offset]))
+          new-poly (assoc-in (vec points) [point-id] (mapv common/layout-snap [x-offset y-offset]))
           no-borders-intersection (zero? (intersections/line-rect-intersections (flatten new-poly) [5 5 1990 1990]))
           all-self-intersections (intersections/self-poly-intersections new-poly)
           no-self-intersection (> 2 (count (remove false? all-self-intersections)))]
@@ -147,14 +147,14 @@
 
 
 
-(defn edit-svg [figures]
+(defn edit-floor [figures]
   (let [data @floor-data/floor-state
-        comm-data @common-data/data
+        comm-data @common/data
         move-poly move-poly
         move-circle move-circle
         bcr (atom nil)]
     [:svg
-     {:style         {:background-color (:grid-back-color common-data/data)}
+     {:style         {:background-color (:grid-back-color common/data)}
       :width         (:w comm-data)
       :height        (:h comm-data)
       :ref           #(when %
@@ -173,8 +173,8 @@
       :on-mouse-move (fn [e]
                        (.preventDefault e))}
      ;floor-data/filters
-     (background/snap-lines-horizontal)
-     (background/snap-lines-vertical)
+     (background/snap-lines-horizontal :snap-layout)
+     (background/snap-lines-vertical :snap-layout)
      [:g
       (when (seq figures) (floor-components/draw-figures figures nil
                                                      {:circle move-circle, :polygon move-poly}

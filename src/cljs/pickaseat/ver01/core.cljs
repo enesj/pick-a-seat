@@ -8,7 +8,7 @@
     [pickaseat.ver01.floor-map.floor-core :as floor-core]
     [pickaseat.ver01.data.tables-templates :as tables-templates]
     [pickaseat.ver01.tables.table-events :as table-events]
-    [pickaseat.ver01.data.common-data :as common-data]
+    [pickaseat.ver01.data.common :as common]
     [devtools.core :as devtools])
     ;[devtools.toolbox :as toolbox])
   (:import [goog.events EventType]))
@@ -19,13 +19,13 @@
 
 (def current-mode (r/atom :tables))
 
-(defn take-mode [mode] (mode {:tables ["Tables" tables-core/draw-tables] :layout ["Layout" floor-core/draw-floor]}))
+(defn take-mode [mode] (mode {:tables ["Tables" tables-core/tables] :layout ["Layout" floor-core/floor]}))
 
 
 (defn app []
   [:div
-   [:h4 {:style {:padding-left "10px"}} [:span {:style {:color "lightgray"}} (str (:restaurant @common-data/data) ": ")]
-                                        [:span (str (:hall @common-data/data))]]
+   [:h4 {:style {:padding-left "10px"}} [:span {:style {:color "lightgray"}} (str (:restaurant @common/data) ": ")]
+                                        [:span (str (:hall @common/data))]]
    [:svg {:width "400px" :height "40px" :font-family "Courier New" :fill "blue" :font-size "15"}
     [:text {:opacity       0.8
             :font-weight "bold"
@@ -46,7 +46,7 @@
                 (fn [this]
                   (let [bcr (.getBoundingClientRect (r/dom-node this))
                         x (.-left bcr) y (+ (.-top bcr) 90)]  ;; 28 pxela visina naslova !!!
-                    (swap! common-data/data assoc-in [:svg] [x y])
+                    (swap! common/data assoc-in [:svg] [x y])
                     (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)
                     (reset! table-data/history {:performed [@table-data/tables-state] :recalled []})
                     (events/listen js/window EventType.RESIZE (helper/resize))

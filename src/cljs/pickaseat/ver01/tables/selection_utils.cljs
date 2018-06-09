@@ -27,9 +27,9 @@
         tables-state (:tables full-state)
         {:keys [next-id x-min  y-min x1-max  y1-max sel-type]} (tables-analize/data-preparation tables-state selected)]
     (when (= sel-type :many)
-       (swap! table-data/tables-state #(-> %
-                                           (assoc-in [:selection :start] {:x x-min :y y-min})
-                                           (assoc-in [:selection :end] {:x1 x1-max :y1 y1-max}))))
+      (swap! table-data/tables-state #(-> %
+                                          (assoc-in [:selection :start] {:x x-min :y y-min})
+                                          (assoc-in [:selection :end] {:x x1-max :y y1-max}))))
     (swap! tables-analize/selected-current #(-> %
                                                 (assoc-in [:ids] (if (not-empty selected) selected [next-id]))
                                                 (assoc-in [:del] (when (= sel-type :many) (dec (count all-states))))

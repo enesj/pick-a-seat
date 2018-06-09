@@ -28,8 +28,8 @@
 
 
 (defn dragging
-  ([on-drag start sel-top-lefts]
-   (let [drag-move (drag-move-fn (on-drag sel-top-lefts) start)
+  ([on-drag start selected-tables]
+   (let [drag-move (drag-move-fn (on-drag selected-tables) start)
          drag-end (drag-end-fn drag-move)]
      (events/listen js/window EventType.MOUSEMOVE drag-move)
      (events/listen js/window EventType.MOUSEUP drag-end))))
@@ -131,7 +131,7 @@
 (defn selection-rect [on-drag full-state]
   (let [{:keys [selection tables]} full-state
         selected (:selected selection)
-        sel-top-lefts (mapv #(vector % ((juxt :x :y) (tables %))) selected)
+        selected-tables (mapv #(vector % ((juxt :x :y) (tables %))) selected)
         [[x-s y-s] [x-e y-e]] (table-utils/start-end (:start selection) (:end selection))
         width (- x-e x-s)
         height (- y-e y-s)
@@ -151,7 +151,7 @@
                          :y             y-s
                          :width         width
                          :height        height
-                         :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] sel-top-lefts))
+                         :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] selected-tables))
                          :on-mouse-up   (fn [e]
                                           ;(.preventDefault e)
                                           (let [all-states (tables-analize/test-all)

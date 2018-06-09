@@ -6,8 +6,7 @@
     [cljsjs.svg-intersections]
     [cljs.core.match :refer-macros [match]]
     [pickaseat.ver01.intersections :as intersections]
-    [pickaseat.ver01.data.common-data :as common-data]
-    [pickaseat.ver01.floor-map.floor-common :as floor-common]))
+    [pickaseat.ver01.data.common :as common]))
 
 
 
@@ -93,7 +92,7 @@
         first-shadow (mapv vec (partition 2 1 (mapv vec (partition 2 raw-shadow))))
         intersections-first (mapv #(complex-geometry/intersection (first %) (second %)) first-shadow)
         intersections-second (vec (remove (fn [x](some #(not= % %) x ))  intersections-first))
-        shadow (mapv #(mapv floor-common/snap-round %)
+        shadow (mapv #(mapv common/layout-snap %)
                      (concat (vector (first new-polyline)) (vector (first raw-shadow)) intersections-second
                              (vector (last raw-shadow)) (vector (last new-polyline))))
         all-self-intersections (intersections/self-poly-intersections shadow)
@@ -135,13 +134,13 @@
                 (assoc-in $ [:line-angle] angle)
                 $)
               (assoc-in $ [:snap-points] snap-points)
-              (assoc-in $ [:position] (mapv floor-common/snap-round constrain-snap)) $)))))
+              (assoc-in $ [:position] (mapv common/layout-snap constrain-snap)) $)))))
 
 (defn draw-circle [app mouse-possition]
   (let [{:keys [circle pen position ]} app
         center (first circle)]
     (if (and (= pen :down) center) (assoc-in app [:circle]
-                                             [(mapv floor-common/snap-round center) (floor-common/snap-round (complex-number/distance (complex-number/c center) (complex-number/c mouse-possition)))])
+                                             [(mapv common/layout-snap center) (common/layout-snap (complex-number/distance (complex-number/c center) (complex-number/c mouse-possition)))])
                                    app)))
 
 

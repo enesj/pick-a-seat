@@ -36,7 +36,7 @@
 
 
 (def floor-init-data
-  {:mode  :drawing
+  {:mode         :drawing
    :tables       false
    :draw-circle? false
    :turtle       init-turtle
@@ -46,7 +46,7 @@
    ;:base       base
    ;:resolution resolution
    :selection    {:start    {:x 0, :y 0}
-                  :end      {:x1 0, :y1 0}
+                  :end      {:x 0, :y 0}
                   :selected []
                   :offset   {}}})
 
