@@ -89,15 +89,9 @@
             sel-tables-right (sort-by :rect-right > sel-tables)
             sel-tables-down (sort-by :rect-bottom > sel-tables)
             x-min (:x (first sel-tables-left))
-            ;x-max (:x (last sel-tables-left))
-
-
             x1-max (:rect-right (last sel-tables-left))
             y-min (:y (first sel-tables-top))
-            ;y-max (:y (last sel-tables-top))
             y1-max (:rect-bottom (last sel-tables-top))
-
-
             lefts (drop-while #(< (- (:x %) x-min) 1) sel-tables-left)
             tops (drop-while #(< (- (:y %) y-min) 1) sel-tables-top)
             rights (drop-while #(< (- x1-max (:rect-right %)) 1) sel-tables-right)
@@ -118,10 +112,8 @@
          :del-sel-tables   del-sel-tables
          :lefts            lefts :tops tops :rights rights :downs downs
          :x-min            x-min
-         ;:x-max x-max
          :x1-max x1-max
          :y-min            y-min
-         ;:y-max y-max
          :y1-max y1-max
          :sel-type         sel-type}))))
 
