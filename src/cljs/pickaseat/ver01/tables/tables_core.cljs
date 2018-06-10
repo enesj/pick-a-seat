@@ -36,23 +36,21 @@
                               (swap! table-data/history update-in [:layout] not))
              :x             240 :y 20} (if layout "hide(layout)" "show(layout)")]]))
 
-
-(defn draw-tables [state tables ids]
-  (let [move-tables (fn [selected-tables] (table-actions/move-table selected-tables))]
+(defn draw-tables [state tables ids svg-root]
+  (let [move-tables (fn [selected-tables] (table-actions/move-table selected-tables svg-root))]
     [:g
      (doall (for [id ids]
-              ^{:key id} [tables-components/table move-tables (r/cursor tables [id])]))
+              ^{:key id} [tables-components/table (r/cursor tables [id]) move-tables]))
      (if (:show (:selection state))
        [(tables-components/selection-rect move-tables state)])]))
 
-
-(defn tables []
+(defn tables [svg-root]
   (let [tables-state @table-data/tables-state
         {:keys [tables selection]} tables-state
         common-data @common/data
         {:keys [w h]} common-data
-        {:keys [key-down key-up mouse-down mouse-move]} (table-events/table-events selection tables common-data)
-        tables-root [draw-tables tables-state (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table))]]
+        {:keys [key-down key-up mouse-down mouse-move]} (table-events/table-events selection tables common-data svg-root)
+        tables-root [draw-tables tables-state (r/cursor table-data/tables-state [:tables]) (for [table tables] (first table)) svg-root]]
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      [tables-menu]
      [:svg

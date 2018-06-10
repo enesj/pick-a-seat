@@ -24,7 +24,7 @@
   [:g {:opacity "0.4"}
    (doall
      (for [id ids]
-       ^{:key id} [tables-components/table {:on-drag nil} (r/cursor tables [id])]))])
+       ^{:key id} [tables-components/table (r/cursor tables [id]) nil]))])
 
 (defn draw-snap-points [snap-points line connection-point-style]
   [:g

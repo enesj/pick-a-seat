@@ -13,7 +13,7 @@
 (defn root-preview [ tables ids]
   [:g {:opacity "0.4"}
    (doall (for [id ids]
-            ^{:key id} [tables-components/table nil (r/cursor tables [id])]))])
+            ^{:key id} [tables-components/table (r/cursor tables [id]) nil]))])
 
 (defn tables-back []
   (let [full-state @table-data/tables-state
@@ -61,7 +61,7 @@
         (if draw-circle? "circle" "poly")])]))
 
 
-(defn floor []
+(defn floor [svg-root]
   (let [data floor-data/floor-state
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle

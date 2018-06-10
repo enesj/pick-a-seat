@@ -79,7 +79,7 @@
     [mouse-possition nil]))
 
 
-(defn draw-shadow [position mouse-possition polyline shadow-polyline app]
+(defn draw-shadow [mouse-possition polyline app]
   (let [
         poly (partition 2 1 polyline)
         angle-first (complex-vector/angle (map - (second (first poly)) (ffirst poly)))
@@ -115,7 +115,7 @@
 (defn draw-poly [app mouse-possition]
   (let [{:keys [position polyline shadow-polyline shadow? line pen cut-poly cut-line]} app]
     (if shadow?
-      (draw-shadow position mouse-possition polyline shadow-polyline app)
+      (draw-shadow mouse-possition polyline  app)
       (let [constrain-line (if (= pen :down) (constrain-line mouse-possition (partition 2 1 polyline) line position) [mouse-possition nil])
             [[constrain-x constrain-y] {:keys [angle cut-poly-new  cut-line-new ]}] constrain-line
             snap-xs (mapv first polyline)

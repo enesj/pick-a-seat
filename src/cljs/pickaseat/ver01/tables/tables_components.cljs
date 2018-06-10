@@ -90,7 +90,7 @@
 
 
 
-(defn table [move-tables table-data-atom]
+(defn table [table-data-atom move-tables]
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
@@ -101,7 +101,7 @@
                     :let [stool-data (second stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))
-     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 }  id]
+     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 } (str id " b:" block)]
      [:rect (merge table-data/table-defaults {:class    (or class (table-data/table-defaults :class))
                                               :id               id
                                               :x                x
@@ -120,12 +120,12 @@
                                                                                   (fn [e] nil))})]
      (if del (table-svg/delete-tables x y width height))
      (when (and  block move-tables)
-       [:rect (merge table-data/sel-defaults {:x (first block)
-                                              :y         (second block)
-                                              :rx        (* x 0.01)
-                                              :ry        (* y 0.01)
-                                              :width     width
-                                              :height    height})])]))
+       [:rect (merge table-data/sel-defaults {:x      (first block)
+                                              :y      (second block)
+                                              :rx     (* x 0.01)
+                                              :ry     (* y 0.01)
+                                              :width  width
+                                              :height height})])]))
 
 
 (defn selection-rect [on-drag full-state]
@@ -145,7 +145,7 @@
           (if (seq ids)
             (doall (for [id ids
                          :when (not-empty ((:tables selected-current) id))]
-                     ^{:key id} [table {:on-drag nil} (r/cursor tables-analize/selected-current [:tables id])])))
+                     ^{:key id} [table (r/cursor tables-analize/selected-current [:tables id]) nil])))
           [:rect (merge table-data/sel-defaults
                         {:x             x-s
                          :y             y-s

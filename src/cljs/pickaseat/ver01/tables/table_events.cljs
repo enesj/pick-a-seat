@@ -59,64 +59,74 @@
                                     :recalled  []
                                     :layout    (:layout history)})))))
 
-(defn table-events [selection tables common-data]
+(defn table-events [selection tables common-data svg-root]
   (let [{:keys [tabale-selected selected selection-active selection-offset selection-end selection-start selection-show ]} table-data/specter-paths
-        [[x-sel-start y-sel-start] [x-sel-end y-sel-end]] (table-utils/start-end (:start selection) (:end selection))
-				[x y] (mapv - (:svg common-data))]
+        [[x-sel-start y-sel-start] [x-sel-end y-sel-end]] (table-utils/start-end (:start selection) (:end selection))]
+				;bcr (common/get-bcr svg-root)
+				;[x-bcr y-bcr] [(.-left bcr) (.-top bcr)]
+				;[x-bcr y-bcr] (mapv - (:left-top-bounding-rect common-data))]
 		{:mouse-down (fn [e]
-									 (.preventDefault e)
-									 (let [x-current (+ (.-clientX e) (.-pageXOffset js/window) x)
-												 y-current (+ (.-clientY e) (.-pageYOffset js/window) y)
-												 start {:x x-current :y y-current}
-												 direction (filterv boolean (doall (for [table
-																																 (conj (into (vals tables) (:borders @table-data/base-settings))
-																																			 {:id         :1
-																																				:x          x-sel-start :y y-sel-start
-																																				:width      (- x-sel-end x-sel-start (- 0))
-																																				:height     (- y-sel-end y-sel-start (- 0))
-																																				:rect-right x-sel-end :rect-bottom y-sel-end})
-																																 :let [dir (table-utils/collides-sel table {:id         1
-																																																						:x x-current
-																																																						:y y-current
-																																																						:width 1
-																																																						:height 1
-																																																						:rect-right (inc x-current)
-																																																						:rect-bottom (inc y-current)} 0)]
-																																 :when (not= false dir)]
-																														 dir)))]
-										 (if (empty? direction)
-											 (do
-												 (reset! tables-analize/selected-current tables-analize/selected-init)
-												 (swap! table-data/tables-state #(->> %
-																															(compiled-setval selection-start start)
-																															(compiled-setval selection-end start)
-																															(compiled-setval selection-active true)
-																															(compiled-setval selected nil)
-																															(compiled-setval tabale-selected false))))
+								     (.preventDefault e)
+										 (let [
+													 bcr (.getBoundingClientRect (.-target e))
+													 [x-bcr y-bcr] [(.-left bcr) (.-top bcr)]
+													 x-current (- (.-clientX e)  x-bcr)
+													 y-current (- (.-clientY e)  y-bcr)
+													 start {:x x-current :y y-current}
+													 direction (filterv boolean (doall (for [table
+																																	 (conj (into (vals tables) (:borders @table-data/base-settings))
+																																				{:id         :1
+																																				 :x          x-sel-start :y y-sel-start
+																																				 :width      (- x-sel-end x-sel-start (- 0))
+																																				 :height     (- y-sel-end y-sel-start (- 0))
+																																				 :rect-right x-sel-end :rect-bottom y-sel-end})
+																																	:let [dir (table-utils/collides-sel table {:id         1
+																																																						 :x x-current
+																																																						 :y y-current
+																																																						 :width 1
+																																																						 :height 1
+																																																						 :rect-right (inc x-current)
+																																																						 :rect-bottom (inc y-current)} 0)]
+																																	:when (not= false dir)]
+																															dir)))]
 
-											 (if (some #(= :1 %) direction)
-												 (swap! table-data/tables-state #(->> %
-																															(compiled-setval selection-offset {:x  (- x-current (:x (:start selection)))
-																																																 :y  (- y-current (:y (:start selection)))
-																																																 :x1  (- x-current (:x (:end selection)))
-																																																 :y1 (- y-current (:y (:end selection)))})
-																															(compiled-setval selection-active false)))
-												 (do (reset! tables-analize/selected-current tables-analize/selected-init)
-														 (swap! table-data/tables-state
-																		#(compiled-setval tabale-selected false
-																											(->> %
-																													 (compiled-setval selection-show false)
-																													 (compiled-setval selected nil)
-																													 (compiled-setval selection-end nil)
-																													 (compiled-setval selection-start nil)))))))))
+											(if (empty? direction)
+												(do
+													(reset! tables-analize/selected-current tables-analize/selected-init)
+													(swap! table-data/tables-state #(->> %
+																															 (compiled-setval selection-start start)
+																															 (compiled-setval selection-end start)
+																															 (compiled-setval selection-active true)
+																															 (compiled-setval selected nil)
+																															 (compiled-setval tabale-selected false))))
+
+												(if (some #(= :1 %) direction)
+													(swap! table-data/tables-state #(->> %
+																															 (compiled-setval selection-offset {:x  (- x-current (:x (:start selection)))
+																																																	:y  (- y-current (:y (:start selection)))
+																																																	:x1  (- x-current (:x (:end selection)))
+																																																	:y1 (- y-current (:y (:end selection)))})
+																															 (compiled-setval selection-active false)))
+													(do (reset! tables-analize/selected-current tables-analize/selected-init)
+															(swap! table-data/tables-state
+																		 #(compiled-setval tabale-selected false
+																											 (->> %
+																														(compiled-setval selection-show false)
+																														(compiled-setval selected nil)
+																														(compiled-setval selection-end nil)
+																														(compiled-setval selection-start nil)))))))))
 		 :mouse-move (fn [e]
 									 (.preventDefault e)
-									 (let [x-current (+ (.-clientX e) (.-pageXOffset js/window) x)
-												 y-current (+ (.-clientY e) (.-pageYOffset js/window) y)
+									 (let [
+												 ;bcr (.getBoundingClientRect (.-target e))
+												 x-bcr (.-left (.getBoundingClientRect (.-target e)))
+												 y-bcr (.-top (.getBoundingClientRect (.-target e)))
+												 x-current (- (.-clientX e)  x-bcr)
+												 y-current (- (.-clientY e)  y-bcr)
 												 start (:start selection)
 												 end {:x x-current :y y-current}
 												 [[x y] [x1 y1]] (table-utils/start-end start end)]
-
+										 ;(js/console.log x-bcr y-bcr)
 										 (when (:active selection)
 											 (let [sel (filterv boolean (mapv (fn [table]
 																													(table-utils/collides-sel-active table {:id         1 :x x :y y
