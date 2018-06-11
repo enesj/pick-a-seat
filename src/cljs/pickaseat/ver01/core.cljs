@@ -45,10 +45,6 @@
                {:component-did-mount
                 (fn [this]
                   (let []
-                    ;bcr (.getBoundingClientRect (r/dom-node this))]
-                    ;    x (.-left bcr)
-                    ;    y (+ (.-top bcr) 0)]  ;; 28 pxela visina naslova !!!
-                    ;(swap! common/data assoc-in [:left-top-bounding-rect] [x y])
                     (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)
                     (reset! table-data/history {:performed [@table-data/tables-state] :recalled []})
                     (events/listen js/window EventType.RESIZE (helper/resize))

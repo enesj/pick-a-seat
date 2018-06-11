@@ -24,14 +24,12 @@
         (swap! table-data/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (set (conj x d2)))))
         (swap! table-data/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (set (conj x d1)))))))))
 
-
-(defn move-table [selected-tables svg-root]
+(defn move-table [selected-tables]
   (fn [x-current y-current start-xy tables-data ctrl]
     (let [tables-collection (into (vals tables-data) (:borders @table-data/base-settings))
           common-data @common/data
           {:keys [selected show active offset]} (:selection @table-data/tables-state)
-          bcr (common/get-bcr svg-root)
-          [x-bcr y-bcr] [(.-left bcr) (.-top bcr)]
+          [x-bcr y-bcr] (mapv - (:bcr-tables @common/data))
           snap (:snap-tables common-data)
           [x-start y-start] start-xy
           sel? (> (count selected-tables) 1)
@@ -122,10 +120,10 @@
               result)
         ;(swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])))) !!!!! _?????
         (when (not (and test-block selected))
-          (swap! update-data #(let [x-sel (- (+ x-current (.-pageXOffset js/window) x-bcr) (:x offset))
-                                    y-sel (- (+ y-current (.-pageYOffset js/window) y-bcr) (:y offset))
-                                    x1-sel (- (+ x-current (.-pageXOffset js/window) x-bcr) (:x1 offset))
-                                    y1-sel (- (+ y-current (.-pageYOffset js/window) y-bcr) (:y1 offset))
+          (swap! update-data #(let [x-sel (- (+ x-current  x-bcr) (:x offset))
+                                    y-sel (- (+ y-current  y-bcr) (:y offset))
+                                    x1-sel (- (+ x-current  x-bcr) (:x1 offset))
+                                    y1-sel (- (+ y-current  y-bcr) (:y1 offset))
                                     x-sel (if (pos? x-sel) x-sel 0)
                                     y-sel (if (pos? y-sel) y-sel 0)
                                     x1-sel (if (pos? x1-sel) x1-sel 0)
@@ -135,6 +133,8 @@
                                                                        :y y-sel})
                                     (assoc-in [1 [:selection :end]] {:x x1-sel
                                                                      :y y1-sel})))))
+          ;(js/console.log "bcr" [x-current y-current offset]))
+
         (swap! table-data/tables-state (fn [x] (reduce #(assoc-in %1 (first %2) (second %2)) x
                                                        (compiled-select (:all table-data/specter-paths)
                                                                         (mapv vec (compiled-select (:all-last table-data/specter-paths) @update-data))))))))))

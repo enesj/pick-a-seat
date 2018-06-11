@@ -3,17 +3,17 @@
 ;"rgb(225,222,210)"
 
 (def data
-  (r/atom {:left-top-bounding-rect []
-           :w                      2000
-           :h                      2000
-           :snap-layout            5
-           :snap-tables            10
-           :wide-snap-faktor       10
-           :grid-back-color        "rgba(255,255,255,1)"
-           :grid-color             "rgba(200,200,200,1)"
-           :snap-width             0.7
-           :restaurant             "Mala pivnica"
-           :hall                   "Velika sala"}))
+  (r/atom {:bcr-tables       []
+           :w                2000
+           :h                2000
+           :snap-layout      5
+           :snap-tables      10
+           :wide-snap-faktor 10
+           :grid-back-color  "rgba(255,255,255,1)"
+           :grid-color       "rgba(200,200,200,1)"
+           :snap-width       0.7
+           :restaurant       "Mala pivnica"
+           :hall             "Velika sala"}))
 
 
 
