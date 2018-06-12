@@ -42,10 +42,9 @@
   [numbers]
   (/ (apply + numbers) (count numbers)))
 
-(defn move-poly-point [figure-id point-id points  bcr]
+(defn move-poly-point [figure-id point-id points]
   (fn [x-current y-current]
-    (let [x-bcr (.-left (.getBoundingClientRect @bcr))
-          y-bcr (.-top (.getBoundingClientRect @bcr))
+    (let [[x-bcr y-bcr] (:bcr-layout @common/data)
           x-offset (- x-current x-bcr)
           y-offset (- y-current y-bcr)
           new-poly (assoc-in (vec points) [point-id] (mapv common/layout-snap [x-offset y-offset]))
@@ -75,11 +74,10 @@
     ;(println x-min-index coords)
     (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon] coords)))
 
-(defn resize-poly-by-midpoint [figure-id points mid-point bcr]
+(defn resize-poly-by-midpoint [figure-id points mid-point]
   (fn [x-current y-current start-xy]
     (let [
-          x-bcr (.-left (.getBoundingClientRect @bcr))
-          y-bcr (.-top (.getBoundingClientRect @bcr))
+          [x-bcr y-bcr] (:bcr-layout @common/data)
           central-coords (mapv #(mapv - % mid-point) points)
           start-xy (map - start-xy [ x-bcr y-bcr])
           xy-offset (map - [x-current y-current] [ x-bcr y-bcr])
@@ -90,16 +88,14 @@
           coords (mapv #(mapv + % mid-point) new-central-coords)
           ;rounded-coords (mapv #(mapv cd/snap-round %) coords)
           no-borders-intersection (zero? (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
-      ;(js/console.log coords )
       (if no-borders-intersection
         (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon] coords)
         (do (max-resize figure-id) (max-resize figure-id))))))
 
 
-(defn resize-circle [figure-id center bcr]
+(defn resize-circle [figure-id center]
   (fn [x-current _]
-    (let [x-bcr (.-left (.getBoundingClientRect @bcr))
-          ;y-bcr (.-top (.getBoundingClientRect @bcr))
+    (let [[x-bcr y-bcr] (:bcr-layout @common/data)
           x-offset (- x-current x-bcr)
           ;y-offset (- y-current y-bcr)
           [center-x ] center
@@ -107,11 +103,11 @@
       (swap! floor-data/floor-state assoc-in [:figures figure-id :circle] [center new-r]))))
 
 
-(defn resize-points [data bcr]
+(defn resize-points [data]
   (let [poly-id (first (:selected (:selection data)))]
     (if (= (ffirst ((:figures data) poly-id)) :polygon)
       (let [points (:polygon ((:figures data) poly-id))
-            resize-ponts-offset 50
+            resize-ponts-offset (:resize-ponts-offset floor-data/base-settings)
             x-points (mapv first points)
             y-points (mapv second points)
             x-min (- (apply min x-points) resize-ponts-offset)
@@ -134,16 +130,16 @@
                         ;  control-points
                         ;  nil)]
                        (mapv #(floor-components/circle % 0 (:resize-point-style floor-data/base-settings) false
-                                                       (fn [] (resize-poly-by-midpoint poly-id (vec points) mid-point bcr)))
+                                                       (fn [] (resize-poly-by-midpoint poly-id (vec points) mid-point)))
                              control-points)
 
                        (mapv #(floor-components/circle (second %) 0 (:poly-points-style floor-data/base-settings) false
-                                                       (fn [] (move-poly-point poly-id (first %) points bcr)))
+                                                       (fn [] (move-poly-point poly-id (first %) points)))
                              indexed-points)))))
       (let [[center r] (:circle ((:figures data) poly-id))
             [center-x center-y] center]
         (floor-components/circle [(+ center-x r) center-y] 0 (:resize-point-style floor-data/base-settings) false
-                                 (fn [] (resize-circle poly-id center  bcr)))))))
+                                 (fn [] (resize-circle poly-id center)))))))
 
 
 
@@ -179,5 +175,5 @@
       (when (seq figures) (floor-components/draw-figures figures nil
                                                      {:circle move-circle, :polygon move-poly}
                                                      (first (:selected (:selection data)))))]
-     [resize-points data bcr]]))
+     [resize-points data]]))
 

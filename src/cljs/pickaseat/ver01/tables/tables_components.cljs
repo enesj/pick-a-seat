@@ -101,7 +101,7 @@
                     :let [stool-data (second stool)
                           id (:id stool-data)]]
                 ^{:key id} [:g stool])))
-     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 } (str id " b:" block)]
+     [:text {:x (+ x 10) :y (+ y 20) :font-size 11 } (str id)]
      [:rect (merge table-data/table-defaults {:class    (or class (table-data/table-defaults :class))
                                               :id               id
                                               :x                x
@@ -112,7 +112,8 @@
                                               :rx               (* width 0.2)
                                               :ry               (* height 0.2)
                                               :fill-opacity     (or fill-opacity 0.3)
-                                              :stroke           (or stroke (table-data/table-defaults :stroke))
+                                              :stroke           (if block "rgb(250, 50, 50)"
+                                                                          (or stroke (table-data/table-defaults :stroke)))
                                               :stroke-dasharray (when selected "5,5")
                                               :d                (when selected "M5 20 l215 0")
                                               :on-mouse-down    (if move-tables   (fn [e] (dragging move-tables [(.-clientX e) (.-clientY e)]
@@ -124,6 +125,7 @@
                                               :y      (second block)
                                               :rx     (* x 0.01)
                                               :ry     (* y 0.01)
+                                              ;:stroke  "rgb(250, 50, 50)"
                                               :width  width
                                               :height height})])]))
 

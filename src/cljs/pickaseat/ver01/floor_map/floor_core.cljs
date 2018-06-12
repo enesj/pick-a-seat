@@ -60,20 +60,28 @@
                :x             380 :y 20}
         (if draw-circle? "circle" "poly")])]))
 
-
-(defn floor [svg-root]
-  (let [data floor-data/floor-state
+(defn layout-svg [data ui-channel]
+  (let [
         {:keys [mode turtle figures]} @data
         {:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle
-        opacity-mode (if (> (count polyline) 1) :low  :high)
+        opacity-mode (if (> (count polyline) 1) :low  :high)]
+    (if (= mode :drawing)
+      (floor-draw/draw-floor turtle figures snap-points line opacity-mode circle
+                             shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line ui-channel)
+      (floor-edit/edit-floor figures))))
+
+(defn floor [svg-root]
+  (let [
+        data floor-data/floor-state
+        {:keys [mode turtle figures]} @data
+        {:keys [draw-circle?]} turtle
+        ;{:keys [snap-points line shadow-raw shadow-polyline shadow? polyline circle pen cut-poly cut-line draw-circle?]} turtle
+
         ui-channel (chan)
         _ (draw-events/process-channel ui-channel data)
-        x-bcr (atom 0)
-        y-bcr (atom 0)
-        svg (if (= mode :drawing)
-              (floor-draw/draw-floor turtle figures snap-points line opacity-mode circle
-                                     shadow-raw shadow-polyline shadow? polyline pen cut-poly cut-line ui-channel x-bcr y-bcr)
-              (floor-edit/edit-floor figures))]
+        ;x-bcr (atom 0)
+        ;y-bcr (atom 0)]
+        svg (layout-svg data ui-channel)]
     ;(js/console.log opacity)
     [:div {:style {:font-size "20px" :margin-top "-20px"}}
      (draw-menu data ui-channel mode draw-circle?)

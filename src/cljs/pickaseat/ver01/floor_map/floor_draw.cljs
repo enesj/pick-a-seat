@@ -37,24 +37,24 @@
 
 
 (defn draw-floor [ turtle figures snap-points line opacity-mode circle
-                  shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line  ui-channel x-bcr y-bcr]
+                  shadow-raw  shadow-polyline shadow polyline pen cut-poly cut-line  ui-channel]
   (let [[center r] circle
         commn-data  @common/data
         {:keys [new-point-style start-point-style end-point-style connection-point-style circle-point-style opacity]} floor-data/base-settings]
     [:svg
      {
-      :style {:background-color (:grid-back-color commn-data)}
+      :style         {:background-color (:grid-back-color commn-data)}
       :width         (:w commn-data)
       :height        (:h commn-data)
       :ref           #(when %
-                        (reset! x-bcr (.-left (.getBoundingClientRect %)))
-                        (reset! y-bcr (.-top (.getBoundingClientRect %))))
+                        (swap! common/data assoc-in [:bcr-layout] [(.-left (.getBoundingClientRect %)) (.-top (.getBoundingClientRect %))]))
       :on-mouse-down (fn [e]
                        (.preventDefault e)
-                       (floor-draw-events/run-program ui-channel
-                                                      (floor-draw-events/draw-start
-                                                       (- (.-clientX e) @x-bcr)
-                                                       (- (.-clientY e) @y-bcr))))
+                       (let [[x-bcr y-bcr] (:bcr-tables @common/data)]
+                         (floor-draw-events/run-program ui-channel
+                                                        (floor-draw-events/draw-start
+                                                           (- (.-clientX e) x-bcr)
+                                                           (- (.-clientY e) y-bcr)))))
       :on-mouse-up   (fn [e]
                        (.preventDefault e)
                        (floor-draw-events/run-program ui-channel
@@ -62,10 +62,11 @@
 
       :on-mouse-move (fn [e]
                        (.preventDefault e)
-                       (floor-draw-events/run-program ui-channel
-                                                      (floor-draw-events/draw-line
-                                                       (- (.-clientX e) @x-bcr)
-                                                       (- (.-clientY e) @y-bcr))))}
+                       (let [[x-bcr y-bcr] (:bcr-layout @common/data)]
+                         (floor-draw-events/run-program ui-channel
+                                                        (floor-draw-events/draw-line
+                                                          (- (.-clientX e) x-bcr)
+                                                          (- (.-clientY e) y-bcr)))))}
      ;floor-data/filters
 
      (background/snap-lines-horizontal :snap-layout)
@@ -92,11 +93,4 @@
         [:g
          (floor-components/circle (first polyline) 0 start-point-style true nil)
          (floor-components/circle (last polyline) 0 new-point-style true nil)])]]))
-
-
-;(defcard-rg floor-plan
-;            (fn [app _] [draw-floor])
-;            s/data
-;            {:component-did-mount (events/listen js/window EventType.MOUSEUP (eev/mouse-up))})
-;             ;:inspect-data true})
 

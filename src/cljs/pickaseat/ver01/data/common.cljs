@@ -4,6 +4,7 @@
 
 (def data
   (r/atom {:bcr-tables       []
+           :bcr-layout       []
            :w                2000
            :h                2000
            :snap-layout      5
