@@ -69,7 +69,7 @@
         x2 (* x1 x1)
         y1 (- (:y p1) (:y p2))
         y2 (* y1 y1)]
-    (if (< (Math/sqrt (+ x2 y2)) (+ d 6) ) true false)))
+    (if (< (Math/sqrt (+ x2 y2)) (+ d 6) ) (Math/sqrt (+ x2 y2)) false)))
 
 (defn corners [table]
   (let [{:keys [x y rect-right rect-bottom]} table]
@@ -84,22 +84,23 @@
         {:keys [id x y width height]} other-table
         {width-my :width height-my :height} my-table]
     (letfn [(ac [other-corner my-corner] [[other-corner (other-corner corners-other)] [my-corner (my-corner corners-my)]])]
-      (doall
-        (for [[other-corner my-corner]
-              (mapv #(apply ac %) [[:lt :ld] [:lt :rt] [:ld :lt] [:ld :rd]  [:rt :lt] [:rt :rd] [:rd :rt] [:rd :ld]])
-              :let [first-corner (first other-corner)
-                    second-corner (first my-corner)]]
-            (when (distance (second other-corner) (second my-corner))
-              (cond
-                (and (= first-corner :lt) (= second-corner :ld)) [x (- y height-my) id :ltd]
-                (and (= first-corner :lt) (= second-corner :rt)) [(- x width-my) y id :tlr]
-                (and (= first-corner :ld) (= second-corner :lt)) [x (+ y height) id :ldt]
-                (and (= first-corner :ld) (= second-corner :rd)) [(- x width-my) (- (+ y height) height-my) id :dlr]
-                (and (= first-corner :rd) (= second-corner :rt)) [(- (+ x width) width-my) (+ y height) id :rdt]
-                (and (= first-corner :rd) (= second-corner :ld)) [(+ x width) (- (+ y height) height-my) id :drl]
-                (and (= first-corner :rt) (= second-corner :lt)) [(+ x width) y id :trl]
-                (and (= first-corner :rt) (= second-corner :rd)) [(- (+ x width) width-my) (- y height-my) id :rtd]
-                :else false)))))))
+        (remove nil?
+          (for [[other-corner my-corner]
+                (mapv #(apply ac %) [[:lt :ld] [:lt :rt] [:ld :lt] [:ld :rd]  [:rt :lt] [:rt :rd] [:rd :rt] [:rd :ld]])
+                :let [first-corner (first other-corner)
+                      second-corner (first my-corner)
+                      distance (distance (second other-corner) (second my-corner))]]
+              (when distance
+                (cond
+                  (and (= first-corner :lt) (= second-corner :ld)) [x (- y height-my) id :ltd distance]
+                  (and (= first-corner :lt) (= second-corner :rt)) [(- x width-my) y id :tlr distance]
+                  (and (= first-corner :ld) (= second-corner :lt)) [x (+ y height) id :ldt distance]
+                  (and (= first-corner :ld) (= second-corner :rd)) [(- x width-my) (- (+ y height) height-my) id :dlr distance]
+                  (and (= first-corner :rd) (= second-corner :rt)) [(- (+ x width) width-my) (+ y height) id :rdt distance]
+                  (and (= first-corner :rd) (= second-corner :ld)) [(+ x width) (- (+ y height) height-my) id :drl distance]
+                  (and (= first-corner :rt) (= second-corner :lt)) [(+ x width) y id :trl distance]
+                  (and (= first-corner :rt) (= second-corner :rd)) [(- (+ x width) width-my) (- y height-my) id :rtd distance]
+                  :else false)))))))
 
 
 

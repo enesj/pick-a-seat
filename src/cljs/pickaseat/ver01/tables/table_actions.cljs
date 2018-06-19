@@ -52,14 +52,14 @@
                                                  :let [dir (table-utils/collides-with table table-xy)]
                                                  :when dir]
                                              dir))
-                               close (when-not sel?
-                                       (let [close1 (mapv #(table-utils/close-table % table-my) tables-collision)
-                                             close1 (filterv boolean (flatten close1))]
-                                         (if (and (not-empty close1) (empty (for [table tables-collision
-                                                                                  :let [dir (table-utils/collides-with table table-xy)]
-                                                                                  :when (not= false dir)]
-                                                                              dir)))
-                                           close1)))]
+                               close (when (and (not-empty block-new)  (not sel?))
+                                       (let [close-all (first (remove empty? (mapv #(table-utils/close-table % table-my) tables-collision)))
+                                             closest (first (sort-by #(min (last %)) close-all))]
+                                         (if (and (not-empty closest) (empty (for [table tables-collision
+                                                                                   :let [dir (table-utils/collides-with table table-xy)]
+                                                                                   :when (not= false dir)]
+                                                                               dir)))
+                                           closest)))]
 
                            {:id          id
                             :block-new   block-new
@@ -87,14 +87,13 @@
                   ;(println close)
                   (when block (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))
                   (when-not (and sel? test-collision block)
-                    (if  close
-                      (do (swap! update-data #(-> %
-                                                  (assoc-in [id [:tables id :x]] x-close)
-                                                  (assoc-in [id [:tables id :y]] y-close)
-                                                  (assoc-in [id [:tables id :rect-bottom]] (+ y-close height))
-                                                  (assoc-in [id [:tables id :rect-right]] (+ x-close width))))
-                          (remove-seats close id))
-                      (reset-seats id tables-data))
+                    (when  close
+                      (swap! update-data #(-> %
+                                              (assoc-in [id [:tables id :x]] x-close)
+                                              (assoc-in [id [:tables id :y]] y-close)
+                                              (assoc-in [id [:tables id :rect-bottom]] (+ y-close height))
+                                              (assoc-in [id [:tables id :rect-right]] (+ x-close width)))))
+
                     (do
                       (when (or show hide-stools)
 
