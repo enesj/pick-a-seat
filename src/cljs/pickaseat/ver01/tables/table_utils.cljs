@@ -3,12 +3,11 @@
 (defn start-end [start end]
   ((juxt (partial mapv min) (partial mapv max)) (vals start) (vals end)))
 
-(def d 16)
-(def d1 25)
+(def d 10)
+
 
 (defn >+ [d x y]
   (> x (+ y d)))
-
 
 
 (defn <+ [d x y]

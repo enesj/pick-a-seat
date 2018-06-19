@@ -52,15 +52,13 @@
                                                  :let [dir (table-utils/collides-with table table-xy)]
                                                  :when dir]
                                              dir))
+                               colision-new (set (mapv (comp val first) block-new))
                                close (when (and (not-empty block-new)  (not sel?))
-                                       (let [close-all (first (remove empty? (mapv #(table-utils/close-table % table-my) tables-collision)))
+                                       (let [close-all (first (remove empty? (mapv #(table-utils/close-table % table-my)
+                                                                                   (filterv #(colision-new (:id %)) tables-collision))))
                                              closest (first (sort-by #(min (last %)) close-all))]
-                                         (if (and (not-empty closest) (empty (for [table tables-collision
-                                                                                   :let [dir (table-utils/collides-with table table-xy)]
-                                                                                   :when (not= false dir)]
-                                                                               dir)))
-                                           closest)))]
-
+                                         closest))]
+                           (println (filterv #(colision-new (:id %)) tables-collision))
                            {:id          id
                             :block-new   block-new
                             :show        show
@@ -93,10 +91,8 @@
                                               (assoc-in [id [:tables id :y]] y-close)
                                               (assoc-in [id [:tables id :rect-bottom]] (+ y-close height))
                                               (assoc-in [id [:tables id :rect-right]] (+ x-close width)))))
-
                     (do
                       (when (or show hide-stools)
-
                         (swap! update-data #(-> %
                                                 (assoc-in [id [:selection :show]] false)
                                                 (assoc-in [id [:selection :active]] false)
