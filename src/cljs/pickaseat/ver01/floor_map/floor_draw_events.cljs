@@ -136,7 +136,7 @@
 (defn redo []
   (exec [(->Redo)]))
 
-(defn draw-poly []
+(defn draw-figure []
   (exec [(->Penup)]))
 
 (defn draw-start [x y]

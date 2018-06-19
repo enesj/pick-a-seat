@@ -64,40 +64,43 @@
        (>+ d y1 rect-bottom) false
        :else {:xy id1}))))
 
-;(defn distance [p1 p2]
-;  (let [x1 (- (:x p1) (:x p2))
-;        x2 (* x1 x1)
-;        y1 (- (:y p1) (:y p2))
-;        y2 (* y1 y1)]
-;    (if (< (Math/sqrt (+ x2 y2)) (+ d 3) ) true false)))
-;
-;(defn angles [table]
-;  (let [{:keys [x y rect-right rect-bottom]} table]
-;    {:lt {:x x :y y}
-;     :ld {:x x :y rect-bottom}
-;     :rt {:x rect-right :y y}
-;     :rd {:x rect-right :y rect-bottom}}))
+(defn distance [p1 p2]
+  (let [x1 (- (:x p1) (:x p2))
+        x2 (* x1 x1)
+        y1 (- (:y p1) (:y p2))
+        y2 (* y1 y1)]
+    (if (< (Math/sqrt (+ x2 y2)) (+ d 6) ) true false)))
 
-;(defn close-table [one t-xy]
-;  (let [one-a (angles one)
-;        two-a (angles t-xy)
-;        {:keys [id x y width height]} one
-;        {width-t :width height-t :height} t-xy]
-;    (letfn [(ac [one-p two-p] [[one-p (one-p one-a)] [two-p (two-p two-a)]])]
-;      (for [[one-p two-p]
-;            (mapv #(apply ac %) [[:lt :ld] [:lt :rt] [:rd :rt] [:rd :ld] [:ld :lt] [:rt :lt] [:rt :rd] [:ld :rd]])
-;            :let [one-k (key one-p) two-k (key two-p)]]
-;        (if (distance (val one-p) (val two-p))
-;          (cond
-;            (and (= one-k :lt) (= two-k :ld)) [x (- y height-t) id :ltd]
-;            (and (= one-k :lt) (= two-k :rt)) [(- x width-t) y id :tlr]
-;            (and (= one-k :rd) (= two-k :rt)) [(- (+ x width) width-t) (+ y height) id :rdt]
-;            (and (= one-k :rd) (= two-k :ld)) [(+ x width) (- (+ y height) height-t) id :drl]
-;            (and (= one-k :ld) (= two-k :lt)) [x (+ y height) id :ldt]
-;            (and (= one-k :rt) (= two-k :lt)) [(+ x width) y id :trl]
-;            (and (= one-k :rt) (= two-k :rd)) [(- (+ x width) width-t) (- y height-t) id :rtd]
-;            (and (= one-k :ld) (= two-k :rd)) [(- x width-t) (- (+ y height) height-t) id :dlr]
-;            :else false) false)))))
+(defn corners [table]
+  (let [{:keys [x y rect-right rect-bottom]} table]
+    {:lt {:x x :y y}
+     :ld {:x x :y rect-bottom}
+     :rt {:x rect-right :y y}
+     :rd {:x rect-right :y rect-bottom}}))
+
+(defn close-table [other-table my-table]
+  (let [corners-other (corners other-table)
+        corners-my (corners my-table)
+        {:keys [id x y width height]} other-table
+        {width-my :width height-my :height} my-table]
+    (letfn [(ac [other-corner my-corner] [[other-corner (other-corner corners-other)] [my-corner (my-corner corners-my)]])]
+      (doall
+        (for [[other-corner my-corner]
+              (mapv #(apply ac %) [[:lt :ld] [:lt :rt] [:ld :lt] [:ld :rd]  [:rt :lt] [:rt :rd] [:rd :rt] [:rd :ld]])
+              :let [first-corner (first other-corner)
+                    second-corner (first my-corner)]]
+            (when (distance (second other-corner) (second my-corner))
+              (cond
+                (and (= first-corner :lt) (= second-corner :ld)) [x (- y height-my) id :ltd]
+                (and (= first-corner :lt) (= second-corner :rt)) [(- x width-my) y id :tlr]
+                (and (= first-corner :ld) (= second-corner :lt)) [x (+ y height) id :ldt]
+                (and (= first-corner :ld) (= second-corner :rd)) [(- x width-my) (- (+ y height) height-my) id :dlr]
+                (and (= first-corner :rd) (= second-corner :rt)) [(- (+ x width) width-my) (+ y height) id :rdt]
+                (and (= first-corner :rd) (= second-corner :ld)) [(+ x width) (- (+ y height) height-my) id :drl]
+                (and (= first-corner :rt) (= second-corner :lt)) [(+ x width) y id :trl]
+                (and (= first-corner :rt) (= second-corner :rd)) [(- (+ x width) width-my) (- y height-my) id :rtd]
+                :else false)))))))
+
 
 
 

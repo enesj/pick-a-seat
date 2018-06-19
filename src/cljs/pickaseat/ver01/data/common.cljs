@@ -22,8 +22,9 @@
   (let [snap (:snap-layout @data)]
     (* (Math/round (/ x snap)) snap)))
 
-(defn tables-snap [snap x]
-    (* (Math/round (/ x snap)) snap))
+(defn tables-snap [ x]
+  (let [snap (:snap-tables @data)]
+    (* (Math/round (/ x snap)) snap)))
 
 (defn get-bcr [svg-root]
   (-> svg-root

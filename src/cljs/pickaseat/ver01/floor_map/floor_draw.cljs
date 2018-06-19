@@ -53,12 +53,12 @@
                        (let [[x-bcr y-bcr] (:bcr-tables @common/data)]
                          (floor-draw-events/run-program ui-channel
                                                         (floor-draw-events/draw-start
-                                                           (- (.-clientX e) x-bcr)
-                                                           (- (.-clientY e) y-bcr)))))
+                                                          (- (.-clientX e) x-bcr)
+                                                          (- (.-clientY e) y-bcr)))))
       :on-mouse-up   (fn [e]
                        (.preventDefault e)
                        (floor-draw-events/run-program ui-channel
-                                                      (floor-draw-events/draw-poly)))
+                                                      (floor-draw-events/draw-figure)))
 
       :on-mouse-move (fn [e]
                        (.preventDefault e)

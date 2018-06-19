@@ -5,18 +5,39 @@
     [pickaseat.ver01.data.common :as common]
     [pickaseat.ver01.data.table_data :as table-data]))
 
+
+(defn reset-seats [id tables]
+  (let [rs (:rs (tables id))]
+    (swap! table-data/tables-state assoc-in [:tables id :rs] nil)
+    (doseq [idrs (map key rs)]
+      (let [ids (filterv #(= % id)
+                         (select [(keypath idrs) :rs FIRST FIRST] tables))]
+        (doseq [idm ids]
+          (swap! table-data/tables-state update-in [:tables idrs :rs] #(dissoc % idm)))))))
+
+(defn remove-seats [close id]
+  (let [cs (->> (partition 4 close) (map #(zipmap [:w :h :id :dir] %)) (group-by :id) (map #(first (val %))))]
+    (doseq [c cs]
+      (let [id1 (:id c)
+            d (rest (name (:dir c)))
+            d1 (keyword (first d))
+            d2 (keyword (second d))]
+        (doall
+          (swap! table-data/tables-state update-in [:tables id :rs] #(update-in % [id1] (fn [x] (set (conj x d2)))))
+          (swap! table-data/tables-state update-in [:tables id1 :rs] #(update-in % [id] (fn [x] (set (conj x d1))))))))))
+
+
+
 (defn move-table [selected-tables]
   (fn [x-current y-current start-xy tables-data ctrl]
     (let [tables-collection (into (vals tables-data) (:borders @table-data/base-settings))
           common-data @common/data
           {:keys [selected show active offset]} (:selection @table-data/tables-state)
           [x-bcr y-bcr] (:bcr-tables common-data)
-          snap (:snap-tables common-data)
           [x-start y-start] start-xy
           sel? (> (count selected-tables) 1)
           result (mapv (fn [selected-tables]
-                         (let [id (first selected-tables)
-                               [xp yp] (second selected-tables)
+                         (let [[id [xp yp]]  selected-tables
                                x-new-corr (- x-current (- x-start xp))
                                y-new-corr (- y-current (- y-start yp))
                                table-my (first (filterv #(= (:id %) id) tables-collection))
@@ -30,53 +51,74 @@
                                            (for [table tables-collision
                                                  :let [dir (table-utils/collides-with table table-xy)]
                                                  :when dir]
-                                             dir))]
+                                             dir))
+                               close (when-not sel?
+                                       (let [close1 (mapv #(table-utils/close-table % table-my) tables-collision)
+                                             close1 (filterv boolean (flatten close1))]
+                                         (if (and (not-empty close1) (empty (for [table tables-collision
+                                                                                  :let [dir (table-utils/collides-with table table-xy)]
+                                                                                  :when (not= false dir)]
+                                                                              dir)))
+                                           close1)))]
+
                            {:id          id
                             :block-new   block-new
                             :show        show
                             :block       block
                             :active      active
                             :hide-stools hide-stools
-                            :x           (common/tables-snap snap x)
-                            :y           (common/tables-snap snap y)
-                            :x-new       (common/tables-snap snap x-new)
-                            :y-new       (common/tables-snap snap y-new)
+                            :x           (common/tables-snap x)
+                            :y           (common/tables-snap y)
+                            :x-new       (common/tables-snap x-new)
+                            :y-new       (common/tables-snap y-new)
                             :slected-ids selected
                             :sel?        sel?
                             :width       (:width table-my)
                             :height      (:height table-my)
-                            :table-xy    table-xy}))
+                            :table-xy    table-xy
+                            :close       close}))
                        selected-tables)
           test-collision (seq (flatten (mapv :block-new result)))
           update-data (atom {})]
       (do
         (mapv (fn [x]
-                (let [{:keys [id x-new y-new show block hide-stools block-new sel? width height]} x]
+                (let [{:keys [id x-new y-new show block hide-stools block-new sel? width height close]} x
+                      [x-close y-close] close]
+                  ;(println close)
                   (when block (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new]))
                   (when-not (and sel? test-collision block)
-                    (if (or show hide-stools)
-                      (do
+                    (if  close
+                      (do (swap! update-data #(-> %
+                                                  (assoc-in [id [:tables id :x]] x-close)
+                                                  (assoc-in [id [:tables id :y]] y-close)
+                                                  (assoc-in [id [:tables id :rect-bottom]] (+ y-close height))
+                                                  (assoc-in [id [:tables id :rect-right]] (+ x-close width))))
+                          (remove-seats close id))
+                      (reset-seats id tables-data))
+                    (do
+                      (when (or show hide-stools)
+
                         (swap! update-data #(-> %
                                                 (assoc-in [id [:selection :show]] false)
                                                 (assoc-in [id [:selection :active]] false)
-                                                (assoc-in [id [:tables id :hide-stools]] true)))))
-                    (if test-collision
-                      (when (not-empty block-new)
-                        (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])
-                        (aset js/document "body" "style" "cursor" "not-allowed"))
-                      (do (aset js/document "body" "style" "cursor" "move")
-                          (swap! update-data #(-> %
-                                                  (assoc-in [id [:tables id :block]] nil)
-                                                  (assoc-in [id [:tables id :x]] x-new)
-                                                  (assoc-in [id [:tables id :y]] y-new)
-                                                  (assoc-in [id [:tables id :rect-right]] (+ x-new width))
-                                                  (assoc-in [id [:tables id :rect-bottom]] (+ y-new height)))))))))
+                                                (assoc-in [id [:tables id :hide-stools]] true))))
+                      (if test-collision
+                        (when (not-empty block-new)
+                          (swap! update-data assoc-in [id [:tables id :block]] [x-new y-new])
+                          (aset js/document "body" "style" "cursor" "not-allowed"))
+                        (do (aset js/document "body" "style" "cursor" "move")
+                            (swap! update-data #(-> %
+                                                    (assoc-in [id [:tables id :block]] nil)
+                                                    (assoc-in [id [:tables id :x]] x-new)
+                                                    (assoc-in [id [:tables id :y]] y-new)
+                                                    (assoc-in [id [:tables id :rect-right]] (+ x-new width))
+                                                    (assoc-in [id [:tables id :rect-bottom]] (+ y-new height))))))))))
               result)
         (when (not (and test-collision selected))
-          (swap! update-data #(let [x-sel (common/tables-snap snap (- x-current x-bcr (:x offset)))
-                                    y-sel (common/tables-snap snap (- y-current y-bcr (:y offset)))
-                                    x1-sel (common/tables-snap snap (- x-current x-bcr (:x1 offset)))
-                                    y1-sel (common/tables-snap snap (- y-current y-bcr (:y1 offset)))
+          (swap! update-data #(let [x-sel (common/tables-snap  (- x-current x-bcr (:x offset)))
+                                    y-sel (common/tables-snap  (- y-current y-bcr (:y offset)))
+                                    x1-sel (common/tables-snap  (- x-current x-bcr (:x1 offset)))
+                                    y1-sel (common/tables-snap  (- y-current y-bcr (:y1 offset)))
                                     x-sel (if (pos? x-sel) x-sel 0)
                                     y-sel (if (pos? y-sel) y-sel 0)
                                     x1-sel (if (pos? x1-sel) x1-sel 0)
