@@ -6,7 +6,8 @@
             [pickaseat.ver01.tables.table-utils :as table-utils]
             [pickaseat.ver01.tables.selecetion-analize :as  tables-analize]
             [pickaseat.ver01.tables.selection-utils :as selection-utils]
-            [pickaseat.ver01.tables.table-svg :as table-svg])
+            [pickaseat.ver01.tables.table-svg :as table-svg]
+            [pickaseat.ver01.floor-map.floor-components :as floor-components])
   (:import [goog.events EventType]))
 
 (defn drag-move-fn [on-drag start]
@@ -90,10 +91,11 @@
 
 
 
-(defn table [table-data-atom move-tables]
+(defn table [table-data-atom move-tables edit]
   (let [table-data @table-data-atom
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
+        edit-point-offset 6
         [width height] (table-data/table-dims stools)]
     [:g
      (if-not hide-stools
@@ -120,6 +122,12 @@
                                                                                                       [[(:id table-data) ((juxt :x :y) table-data)]]))
                                                                                   (fn [e] nil))})]
      (if del (table-svg/delete-tables x y width height))
+
+     (when edit
+       [:g (map #(floor-components/circle % 3 {:stroke "gray" :fill "rgba(255,255,255,0.1)"} nil nil) [[(- x edit-point-offset) (- y edit-point-offset)]
+                                                                                                       [(+ x width edit-point-offset) (- y edit-point-offset)]
+                                                                                                       [(+ x width edit-point-offset) (+ y height edit-point-offset)]
+                                                                                                       [(- x edit-point-offset) (+ y height edit-point-offset)]])])
      (when (and  block move-tables)
        [:rect (merge table-data/sel-defaults {:x      (first block)
                                               :y      (second block)
@@ -147,7 +155,7 @@
           (if (seq ids)
             (doall (for [id ids
                          :when (not-empty ((:tables selected-current) id))]
-                     ^{:key id} [table (r/cursor tables-analize/selected-current [:tables id]) nil])))
+                     ^{:key id} [table (r/cursor tables-analize/selected-current [:tables id]) nil nil])))
           [:rect (merge table-data/sel-defaults
                         {:x             x-s
                          :y             y-s

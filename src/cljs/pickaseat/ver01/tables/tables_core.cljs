@@ -40,7 +40,7 @@
   (let [move-tables (fn [selected-tables] (table-actions/move-table selected-tables))]
     [:g
      (doall (for [id ids]
-              ^{:key id} [tables-components/table (r/cursor tables [id]) move-tables]))
+              ^{:key id} [tables-components/table (r/cursor tables [id]) move-tables nil]))
      (if (:show (:selection state))
        [(tables-components/selection-rect move-tables state)])]))
 

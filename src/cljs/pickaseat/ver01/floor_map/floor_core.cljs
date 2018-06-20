@@ -13,7 +13,7 @@
 (defn root-preview [ tables ids]
   [:g {:opacity "0.4"}
    (doall (for [id ids]
-            ^{:key id} [tables-components/table (r/cursor tables [id]) nil]))])
+            ^{:key id} [tables-components/table (r/cursor tables [id]) nil nil]))])
 
 (defn tables-back []
   (let [full-state @table-data/tables-state

@@ -58,7 +58,6 @@
                                                                                    (filterv #(colision-new (:id %)) tables-collision))))
                                              closest (first (sort-by #(min (last %)) close-all))]
                                          closest))]
-                           (println (filterv #(colision-new (:id %)) tables-collision))
                            {:id          id
                             :block-new   block-new
                             :show        show

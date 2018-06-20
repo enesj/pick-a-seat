@@ -102,40 +102,38 @@
           new-r (Math/abs (- x-offset center-x))]
       (swap! floor-data/floor-state assoc-in [:figures figure-id :circle] [center new-r]))))
 
-
 (defn resize-points [data]
   (let [poly-id (first (:selected (:selection data)))]
     (if (= (ffirst ((:figures data) poly-id)) :polygon)
       (let [points (:polygon ((:figures data) poly-id))
-            resize-ponts-offset (:resize-ponts-offset floor-data/base-settings)
+            resize-points-offset (:resize-ponts-offset floor-data/base-settings)
             x-points (mapv first points)
             y-points (mapv second points)
-            x-min (- (apply min x-points) resize-ponts-offset)
-            x-max (+ (apply max x-points) resize-ponts-offset)
-            y-min (- (apply min y-points) resize-ponts-offset)
-            y-max (+ (apply max y-points) resize-ponts-offset)
+            x-min (- (apply min x-points) resize-points-offset)
+            x-max (+ (apply max x-points) resize-points-offset)
+            y-min (- (apply min y-points) resize-points-offset)
+            y-max (+ (apply max y-points) resize-points-offset)
             control-points [[x-min y-min] [x-max y-min] [x-max y-max] [x-min y-max]]
             indexed-points (map-indexed (fn [idx itm] [idx itm]) points)
             mid-point [(average x-points) (average y-points)]]
         ;(println control-points)
-        (if (= (ffirst ((:figures data) poly-id)) :polygon)
-          (vec (concat [:g
-                        (floor-components/circle mid-point 0 (:connection-point-style floor-data/base-settings) false nil)]
-                        ;(comps/polygon
-                        ;  {:stroke  "black"
-                        ;   :stroke-width 2
-                        ;   :fill    "none"
-                        ;   :opacity 0.2}
-                        ;  ;:filter  "url(#s1)"}
-                        ;  control-points
-                        ;  nil)]
-                       (mapv #(floor-components/circle % 0 (:resize-point-style floor-data/base-settings) false
-                                                       (fn [] (resize-poly-by-midpoint poly-id (vec points) mid-point)))
-                             control-points)
+        (vec (concat [:g
+                      (floor-components/circle mid-point 0 (:connection-point-style floor-data/base-settings) false nil)]
+                      ;(comps/polygon
+                      ;  {:stroke  "black"
+                      ;   :stroke-width 2
+                      ;   :fill    "none"
+                      ;   :opacity 0.2}
+                      ;  ;:filter  "url(#s1)"}
+                      ;  control-points
+                      ;  nil)]
+                     (mapv #(floor-components/circle % 0 (:resize-point-style floor-data/base-settings) false
+                                                     (fn [] (resize-poly-by-midpoint poly-id (vec points) mid-point)))
+                           control-points)
 
-                       (mapv #(floor-components/circle (second %) 0 (:poly-points-style floor-data/base-settings) false
-                                                       (fn [] (move-poly-point poly-id (first %) points)))
-                             indexed-points)))))
+                     (mapv #(floor-components/circle (second %) 0 (:poly-points-style floor-data/base-settings) false
+                                                     (fn [] (move-poly-point poly-id (first %) points)))
+                           indexed-points))))
       (let [[center r] (:circle ((:figures data) poly-id))
             [center-x center-y] center]
         (floor-components/circle [(+ center-x r) center-y] 0 (:resize-point-style floor-data/base-settings) false
@@ -145,16 +143,11 @@
 
 (defn edit-floor [figures]
   (let [data @floor-data/floor-state
-        comm-data @common/data
-        move-poly move-poly
-        move-circle move-circle
-        bcr (atom nil)]
+        comm-data @common/data]
     [:svg
      {:style         {:background-color (:grid-back-color common/data)}
       :width         (:w comm-data)
       :height        (:h comm-data)
-      :ref           #(when %
-                        (reset! bcr %))
       :on-mouse-down (fn [e]
                        (.preventDefault e)
                        (swap! floor-data/floor-state assoc-in [:selection :selected] []))
