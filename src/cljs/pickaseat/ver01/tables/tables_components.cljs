@@ -2,12 +2,12 @@
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath]])
   (:require [reagent.core :as r]
             [goog.events :as events]
-            [pickaseat.ver01.data.table_data :as table-data]
+            [pickaseat.ver01.data.table-data :as table-data]
             [pickaseat.ver01.tables.table-utils :as table-utils]
             [pickaseat.ver01.tables.selecetion-analize :as  tables-analize]
             [pickaseat.ver01.tables.selection-utils :as selection-utils]
             [pickaseat.ver01.tables.table-svg :as table-svg]
-            [pickaseat.ver01.floor-map.floor-components :as floor-components])
+            [pickaseat.ver01.tables.table-edit :as table-edit])
   (:import [goog.events EventType]))
 
 (defn drag-move-fn [on-drag start]
@@ -96,7 +96,7 @@
         {:keys [x y id rs selected block stools stroke class hide-stools fill-opacity del]} table-data
         rs-dir (vals rs)
         edit-point-offset 6
-        [width height] (table-data/table-dims stools)]
+        [width height] (table-data/table-dims-by-stools stools)]
     [:g
      (if-not hide-stools
        (doall (for [stool (stool-maps x y width height rs-dir stools)
@@ -123,11 +123,11 @@
                                                                                   (fn [e] nil))})]
      (if del (table-svg/delete-tables x y width height))
 
-     (when edit
-       [:g (map #(floor-components/circle % 3 {:stroke "gray" :fill "rgba(255,255,255,0.1)"} nil nil) [[(- x edit-point-offset) (- y edit-point-offset)]
-                                                                                                       [(+ x width edit-point-offset) (- y edit-point-offset)]
-                                                                                                       [(+ x width edit-point-offset) (+ y height edit-point-offset)]
-                                                                                                       [(- x edit-point-offset) (+ y height edit-point-offset)]])])
+     (when true?
+       [:g (map #(table-edit/circle % 3 {:stroke "gray" :fill "rgba(255,255,255,0.1)"} nil nil) [[(- x edit-point-offset) (- y edit-point-offset)]
+                                                                                                 [(+ x width edit-point-offset) (- y edit-point-offset)]
+                                                                                                 [(+ x width edit-point-offset) (+ y height edit-point-offset)]
+                                                                                                 [(- x edit-point-offset) (+ y height edit-point-offset)]])])
      (when (and  block move-tables)
        [:rect (merge table-data/sel-defaults {:x      (first block)
                                               :y      (second block)
@@ -136,6 +136,8 @@
                                               ;:stroke  "rgb(250, 50, 50)"
                                               :width  width
                                               :height height})])]))
+
+
 
 
 (defn selection-rect [on-drag full-state]

@@ -1,6 +1,6 @@
 (ns pickaseat.ver01.tables.selecetion-analize
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
-  (:require [pickaseat.ver01.data.table_data :as table-data]
+  (:require [pickaseat.ver01.data.table-data :as table-data]
             [pickaseat.ver01.tables.table-utils :as table-utils]
             [reagent.core :as r]))
 
@@ -58,7 +58,7 @@
               extern-collision (set (test-collision selection-table all-tables))
               extern-tables (filter #(extern-collision (:id %)) all-tables)
               table-types table-data/table-types
-              table-types (map #(let [t-dims (table-data/table-dims (:stools %))]
+              table-types (map #(let [t-dims (table-data/table-dims-by-stools (:stools %))]
                                   (merge {:id next-id :x x-sel :y y-sel
                                           :width (first t-dims)
                                           :height (second t-dims)

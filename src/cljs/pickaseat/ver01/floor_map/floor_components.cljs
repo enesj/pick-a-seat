@@ -67,8 +67,9 @@
                       :on-mouse-up   (fn [e]
                                        (when (:id attributes)
                                          (swap! floor-data/floor-state assoc-in [:selection :selected] [(:id attributes)])))
-                      :on-mouse-down (if on-drag (fn [e] (.stopPropagation e)
-                                                   (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
+                      :on-mouse-down (when on-drag (fn [e]
+                                                     (.stopPropagation e)
+                                                     (dragging on-drag [(.-clientX e) (.-clientY e)] [(:id attributes) [center radius] nil])))}
                      attributes)]
      (if show-center? (circle center 0 {:r 2 :fill "rgba(0,0,0,0.8)"} false nil))]))
 

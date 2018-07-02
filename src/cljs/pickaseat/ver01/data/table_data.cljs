@@ -1,4 +1,4 @@
-(ns pickaseat.ver01.data.table_data
+(ns pickaseat.ver01.data.table-data
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath
                                 filterer srange comp-paths compiled-select compiled-transform
                                 collect-one compiled-setval]])
@@ -113,12 +113,14 @@
    :stroke-width 0.5})
 
 
-
-
-(defn table-dims [stools]
-  (let [[base per-stool] (:table-stool @base-settings)
-        w (+ base (* per-stool (dec (apply max (take 2 stools)))))
-        h (+ base (* per-stool (dec (apply max (take-last 2 stools)))))]
+(defn table-dims-by-stools [stools]
+  (let [
+        stool-width (:w (:normal (:stool-dims @base-settings)))
+        stools-count-h (apply max (take 2 stools))
+        stools-count-v (apply max (take-last 2 stools))
+        w (* (+ (dec stools-count-h) stools-count-h 2) stool-width)
+        h (* (+ (dec stools-count-v) stools-count-v 2) stool-width)]
+    ;(println stools [w h] (apply max (take-last 2 stools)))
     [w h]))
 
 (defn table-props []
@@ -131,7 +133,7 @@
                :let [id (key table)
                      table-v (val table)
                      {:keys [x y stools]} table-v
-                     [width height] (table-dims stools)
+                     [width height] (table-dims-by-stools stools)
                      rect-right (+ x width)
                      rect-bottom (+ y height)
                      rect {:width (Math/round width) :height (Math/round height) :rect-right (Math/round rect-right)
@@ -164,10 +166,16 @@
                             (compiled-setval (:zoom specter-paths) zoom-new))))
         (when (not (empty? (:selected (:selection @tables-state))))
           (swap! tables-state
-                 (fn [x] (->> x (compiled-transform (:sel-start specter-paths) #(Math/round (* zoom %)))
+                 (fn [x] (->> x
+                              (compiled-transform (:sel-start specter-paths) #(Math/round (* zoom %)))
+
                               (compiled-transform (:sel-end specter-paths) #(Math/round (* zoom %)))))))
         (when settings?
-          (swap! floor-data/floor-state (fn [x] (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)))
+          (swap! floor-data/floor-state (fn [x]
+                                          (->> x
+                                            (compiled-transform (:polygon floor-data/specter-paths) #(Math/round (* zoom %)) x)
+                                            (compiled-transform (:circle-center floor-data/specter-paths) #(Math/round (* zoom %)))
+                                            (compiled-transform (:circle-radius floor-data/specter-paths) #(Math/round (* zoom %))))))
           (settings zoom))
         (table-props)))))
 

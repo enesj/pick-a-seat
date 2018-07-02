@@ -3,7 +3,7 @@
 	(:require
 		[pickaseat.ver01.tables.table-utils :as table-utils]
 		[pickaseat.ver01.tables.selecetion-analize :as tables-analize]
-		[pickaseat.ver01.data.table_data :as table-data]
+		[pickaseat.ver01.data.table-data :as table-data]
 		[pickaseat.ver01.data.common :as common]))
 
 

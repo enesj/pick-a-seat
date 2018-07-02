@@ -7,7 +7,7 @@
     [pickaseat.ver01.floor-map.floor-draw :as floor-draw]
     [pickaseat.ver01.floor-map.floor-edit :as floor-edit]
     [pickaseat.ver01.tables.tables-components :as tables-components]
-    [pickaseat.ver01.data.table_data :as table-data]))
+    [pickaseat.ver01.data.table-data :as table-data]))
 
 
 (defn root-preview [ tables ids]

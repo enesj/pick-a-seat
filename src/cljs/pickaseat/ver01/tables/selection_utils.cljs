@@ -1,6 +1,6 @@
 (ns pickaseat.ver01.tables.selection-utils
   (:use [com.rpl.specter :only [select transform setval FIRST LAST ALL keypath filterer srange comp-paths compiled-select collect-one compiled-setval]])
-  (:require [pickaseat.ver01.data.table_data :as table-data]
+  (:require [pickaseat.ver01.data.table-data :as table-data]
             [pickaseat.ver01.tables.table-svg :as table-svg]
             [pickaseat.ver01.tables.selecetion-analize :as  tables-analize]))
 

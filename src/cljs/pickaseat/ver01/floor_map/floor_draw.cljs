@@ -50,7 +50,7 @@
                         (swap! common/data assoc-in [:bcr-layout] [(.-left (.getBoundingClientRect %)) (.-top (.getBoundingClientRect %))]))
       :on-mouse-down (fn [e]
                        (.preventDefault e)
-                       (let [[x-bcr y-bcr] (:bcr-tables @common/data)]
+                       (let [[x-bcr y-bcr] (:bcr-layout @common/data)]
                          (floor-draw-events/run-program ui-channel
                                                         (floor-draw-events/draw-start
                                                           (- (.-clientX e) x-bcr)

@@ -2,7 +2,7 @@
   (:require
     [reagent.core :as r]
     [pickaseat.ver01.tables.tables-components :as tables-components]
-    [pickaseat.ver01.data.table_data :as table-data]
+    [pickaseat.ver01.data.table-data :as table-data]
     [pickaseat.ver01.tables.table-utils :as table-utils]
     [pickaseat.ver01.tables.table-events :as table-events]
     [pickaseat.ver01.tables.table-actions :as table-actions]

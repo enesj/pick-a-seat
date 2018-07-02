@@ -65,6 +65,8 @@
    :selection-end    (comp-paths :selection :end)
    :selection-start  (comp-paths :selection :start)
    :polygon          (comp-paths :figures ALL LAST :polygon ALL ALL)
+   :circle-center    (comp-paths :figures ALL LAST :circle FIRST ALL)
+   :circle-radius    (comp-paths :figures ALL LAST :circle LAST)
    :zoom             (comp-paths :scale :zoom)
    :all              (comp-paths ALL ALL)
    :all-last         (comp-paths ALL LAST)})

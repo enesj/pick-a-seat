@@ -6,7 +6,7 @@
             [goog.dom :as gdom]
             [goog.dom.forms :as gforms]
             [goog.net.XhrIo :as xhr]
-            [pickaseat.ver01.data.table_data :as table-data])
+            [pickaseat.ver01.data.table-data :as table-data])
             ;[ajax.core :as ajax]
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
