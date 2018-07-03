@@ -6,7 +6,8 @@
    [ghostwheel.core :as g
     :refer [>defn >defn- >fdef => | <- ?]]))
 
-
+(s/def ::poly (s/and (s/coll-of nat-int?) #(even? (count %))))
+(s/def ::rect (s/tuple pos-int? pos-int? pos-int? pos-int?))
 
 (defn points-str [points]
   (loop [point-str ""
@@ -35,7 +36,7 @@
   ^::g/outstrument
        line-rect-intersections
        [poly rect]
-       [(s/coll-of pos-int?) (s/tuple pos-int? pos-int? pos-int?  pos-int?) | #(even? (count poly))
+       [::poly ::rect
         => nat-int?]
        (let [[x y width height] rect
              points (.-points
