@@ -17,6 +17,8 @@
                  [complex/complex "0.1.10"]
                  [binaryage/devtools "0.9.10"]
                  [cljsjs/svg-intersections "0.3.0-0"]
+                 [gnl/ghostwheel "0.2.2"]
+                 [spec-provider "0.4.14"]
                  [com.rpl/specter "1.1.1"]]
 
 
@@ -31,14 +33,15 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
   :cljsbuild
-  {:builds {:dev {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                  :figwheel     {:on-jsload "closp-tables.dev/main"}
-                  :compiler     {:main       "closp-tables.dev"
-                                 :asset-path "/js/compiled/out"
-                                 :output-to  "resources/public/js/compiled/app.js"
-                                 :output-dir "resources/public/js/compiled/out"
-                                 :source-map      true
-                                 :source-map-timestamp true}}
+  {:builds {:dev {:source-paths    ["src/cljs" "src/cljc" "env/dev/cljs"]
+                  :figwheel        {:on-jsload "closp-tables.dev/main"}
+                  :compiler        {:main                 "closp-tables.dev"
+                                    :asset-path           "/js/compiled/out"
+                                    :output-to            "resources/public/js/compiled/app.js"
+                                    :output-dir           "resources/public/js/compiled/out"
+                                    :source-map           true
+                                    :source-map-timestamp true
+                                    :external-config {:ghostwheel {}}}}
             :adv {:source-paths ["src/cljs" "src/cljc"]
                   :compiler     {:output-to     "resources/public/js/compiled/app.js"
                                  ; leaving this commented because of: https://github.com/cursiveclojure/cursive/issues/369
