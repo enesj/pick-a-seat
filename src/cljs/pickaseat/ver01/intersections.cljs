@@ -1,13 +1,15 @@
 (ns pickaseat.ver01.intersections
   #:ghostwheel.core {:check     true
-                     :num-tests 5}
+                     :num-tests 10}
  (:require
    [clojure.spec.alpha :as s]
    [ghostwheel.core :as g
     :refer [>defn >defn- >fdef => | <- ?]]))
 
 (s/def ::poly (s/and (s/coll-of nat-int?) #(even? (count %))))
+(s/def ::polys (s/coll-of ::poly))
 (s/def ::rect (s/tuple pos-int? pos-int? pos-int? pos-int?))
+(s/def ::circle (s/tuple (s/spec (s/tuple pos-int? pos-int?)) pos-int?))
 
 (defn points-str [points]
   (loop [point-str ""
@@ -31,10 +33,7 @@
     point))
 
 
-
-(>defn
-  ^::g/outstrument
-       line-rect-intersections
+(defn ^::g/outstrument line-rect-intersections
        [poly rect]
        [::poly ::rect
         => nat-int?]
@@ -45,7 +44,10 @@
                         (js/SvgIntersections.shape "polyline" #js {:points (points-str poly)})))]
          (count points)))
 
-(defn circle-rect-intersections [circle rect]
+(>defn ^::g/outstrument circle-rect-intersections
+  [circle rect]
+  [::circle ::rect
+   => nat-int?]
   (let [[[cx cy] r] circle
         [x y width height ] rect
         points (.-points
@@ -54,7 +56,11 @@
                    (js/SvgIntersections.shape "circle" #js {:cx cx :cy cy :r r})))]
     (count points)))
 
-(defn poly-poly-intersection [poly-1 poly-2]
+
+(>defn ^::g/outstrument poly-poly-intersection
+  [poly-1 poly-2]
+  [::poly ::polys
+   => nat-int?]
   (count (.-points
            (js/SvgIntersections.intersect
              (js/SvgIntersections.shape "polyline" #js {:points (points-str (flatten poly-1))})

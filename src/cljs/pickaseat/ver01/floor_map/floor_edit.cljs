@@ -72,7 +72,7 @@
         coords (mapv #(mapv + % mid-point) new-central-coords)]
     ;no-borders-intersection (= 0 (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
     ;(println x-min-index coords)
-    (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon] coords)))
+    (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon]  coords)))
 
 (defn resize-poly-by-midpoint [figure-id points mid-point]
   (fn [x-current y-current start-xy]
@@ -89,8 +89,9 @@
           ;rounded-coords (mapv #(mapv cd/snap-round %) coords)
           no-borders-intersection (zero? (intersections/line-rect-intersections (flatten coords) [5 5 1990 1990]))]
       (if no-borders-intersection
-        (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon] coords)
-        (do (max-resize figure-id) (max-resize figure-id))))))
+        (swap! floor-data/floor-state assoc-in [:figures figure-id :polygon]  coords)
+        (do (max-resize figure-id)
+            (max-resize figure-id))))))
 
 
 (defn resize-circle [figure-id center]
