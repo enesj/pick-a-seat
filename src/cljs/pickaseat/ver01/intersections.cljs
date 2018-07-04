@@ -57,7 +57,9 @@
     (count points)))
 
 
-(>defn ^::g/outstrument poly-poly-intersection
+(>defn
+  ^::g/outstrument
+  poly-poly-intersection
   [poly-1 poly-2]
   [::poly ::polys
    => nat-int?]
