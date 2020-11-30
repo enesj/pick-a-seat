@@ -22,7 +22,6 @@
       (run-jetty {:join? false
                   :port port})))
 
-
 (defstate www
   :start (www-server 3000)
   :stop (.stop www))

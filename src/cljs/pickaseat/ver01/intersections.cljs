@@ -85,4 +85,4 @@
                    end-2 (subvec flat-poly-segments (if (= current  (dec (count poly))) (inc current) (+ current 2)) (if (zero? current) (dec (count poly)) (count poly)))]]
          (if (and (> 1 (poly-poly-intersection start end-1)) (> 1 (poly-poly-intersection start end-2))) false index))))
 
-(g/check)
+;(g/check)
