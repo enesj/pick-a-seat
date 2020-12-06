@@ -1,4 +1,4 @@
-# closp-tables
+# Pick a seat
 
 
 
