@@ -1,8 +1,8 @@
 (ns pickaseat.floor-map.floor-draw-actions
   (:require
-    [complex.vector :as complex-vector]
-    [complex.number :as complex-number]
-    [complex.geometry :as complex-geometry]
+    [pickaseat.complex.vector :as complex-vector]
+    [pickaseat.complex.number :as complex-number]
+    [pickaseat.complex.geometry :as complex-geometry]
     [cljsjs.svg-intersections]
     [cljs.core.match :refer-macros [match]]
     [pickaseat.intersections :as intersections]

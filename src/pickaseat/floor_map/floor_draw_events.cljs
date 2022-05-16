@@ -1,6 +1,6 @@
 (ns pickaseat.floor-map.floor-draw-events
   (:require
-    [complex.number :as complex-number]
+    [pickaseat.complex.number :as complex-number]
     [pickaseat.data.floor-data :as floor-data]
     [cljs.core.async :as async :refer [>! <! put! chan alts! timeout]]
     [pickaseat.floor-map.floor-draw-actions :as floor-draw-actions])

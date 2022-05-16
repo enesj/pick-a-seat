@@ -35,20 +35,14 @@
      (first (take-mode  @current-mode))]]
    [(second (take-mode  @current-mode)) (r/current-component)]])
 
-
-;(defn resize []
-;  (fn [evt]
-;    (td/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)))))
-
 (def mount-app
     (with-meta app
                {:component-did-mount
                 (fn [this]
-                  (let []
                     (table-data/settings-pos (* (/ (.-innerWidth js/window) 1000) (.-devicePixelRatio js/window)) true)
                     (reset! table-data/history {:performed [@table-data/tables-state] :recalled []})
-                    (events/listen js/window EventType.RESIZE (helper/resize))
-                    (events/listen js/window EventType.MOUSEUP (table-events/mouse-up))))}))
+                    (events/listen js/window EventType.MOUSEUP (table-events/mouse-up))
+                    (events/listen js/window EventType.RESIZE (helper/resize)))}))
 
 
 (defn ^:export main []

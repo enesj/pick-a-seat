@@ -38,6 +38,7 @@
 
 (defn draw-tables [state tables ids svg-root]
   (let [move-tables (fn [selected-tables] (table-actions/move-table selected-tables))]
+    (js/console.log (:selection state))
     [:g
      (doall (for [id ids]
               ^{:key id} [tables-components/table (r/cursor tables [id]) move-tables nil]))

@@ -10,7 +10,7 @@
     [cljs.core.async :as async :refer [chan]]
     [pickaseat.data.common :as common]
     [pickaseat.intersections :as intersections]
-    [complex.number :as complex-number]
+    [pickaseat.complex.number :as complex-number]
     [pickaseat.data.background :as background]
     [clojure.spec.alpha :as s]
     [ghostwheel.core :as g

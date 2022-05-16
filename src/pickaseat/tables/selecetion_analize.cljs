@@ -207,8 +207,8 @@
             (vec (remove nil? [{} (first tables-new) tables-h-space tables-h-join del-sel-tables]))
             :else [{}])))
       (if (= sel-type :empty)
-          (vec (conj (filter #(empty? (test-collision (first (map val %)) extern-tables)) table-types) {}))))))
-        ;(let [table (tables-state (first selected))]
-        ;  [{}])))))
+          (vec (conj (filter #(empty? (test-collision (first (map val %)) extern-tables)) table-types) {}))
+        (let [table (tables-state (first selected))]
+          [{}])))))
 
 

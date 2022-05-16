@@ -1,20 +1,21 @@
 {:deps
-          {org.clojure/clojure             {:mvn/version "1.10.1"},
-           org.clojure/clojurescript       {:mvn/version "1.10.520"},
-           org.clojure/core.async          {:mvn/version "1.3.610"}
-           com.bhauman/figwheel-main       {:mvn/version "0.2.12"}
-           reagent/reagent                 {:mvn/version "0.8.0"},
-           mount/mount                     {:mvn/version "0.1.16"},
-           compojure/compojure             {:mvn/version "1.6.2"},
-           gnl/ghostwheel                  {:mvn/version "0.3.9"},
-           ring/ring-jetty-adapter         {:mvn/version "1.8.2"},
-           spec-provider/spec-provider     {:mvn/version "0.4.14"},
-           org.clojure/tools.namespace     {:mvn/version "1.0.0"},
-           org.clojure/tools.nrepl         {:mvn/version "0.2.13"},
-           binaryage/devtools              {:mvn/version "1.0.2"},
-           cljsjs/svg-intersections        {:mvn/version "0.3.0-0"},
-           complex/complex                 {:mvn/version "0.1.10"},
-           com.rpl/specter                 {:mvn/version "1.1.3"}}
+ {org.clojure/clojure         {:mvn/version "1.10.1"},
+  org.clojure/clojurescript   {:mvn/version "1.10.520"},
+  org.clojure/core.async      {:mvn/version "1.3.610"}
+  org.clojure/core.match      {:mvn/version "1.0.0"}
+  com.bhauman/figwheel-main   {:mvn/version "0.2.12"}
+  reagent/reagent             {:mvn/version "0.8.0"},
+  mount/mount                 {:mvn/version "0.1.16"},
+  compojure/compojure         {:mvn/version "1.6.2"},
+  gnl/ghostwheel              {:mvn/version "0.3.9"},
+  ring/ring-jetty-adapter     {:mvn/version "1.8.2"},
+  spec-provider/spec-provider {:mvn/version "0.4.14"},
+  org.clojure/tools.namespace {:mvn/version "1.0.0"},
+  org.clojure/tools.nrepl     {:mvn/version "0.2.13"},
+  binaryage/devtools          {:mvn/version "1.0.2"},
+  cljsjs/svg-intersections    {:mvn/version "0.3.0-0"},
+  complex/complex             {:mvn/version "0.1.10"},
+  com.rpl/specter             {:mvn/version "1.1.3"}}
 
  :paths   ["src" "resources" "target" "dev"]
  :aliases {:fig {:main-opts ["-m" "figwheel.main"]}}}

@@ -165,7 +165,8 @@
                          :height        height
                          :on-mouse-down (fn [e] (dragging on-drag [(.-clientX e) (.-clientY e)] selected-tables))
                          :on-mouse-up   (fn [e]
-                                          ;(.preventDefault e)
+                                          ;(js/console.log "UP " (:show (:selection full-state)))
+                                          (.preventDefault e)
                                           (let [all-states (tables-analize/test-all)
                                                 new-state (if (and (or
                                                                      (= (:start selection) (:start selected-current))
